@@ -10,8 +10,6 @@ A collection of model adapters for OpenAI Agents SDK, allowing you to use variou
 - 🔄 **Unified Interface**: Use the same OpenAI Agents SDK interface with multiple model providers
 - 🧩 **Multiple Models**: Support for Ollama, Google Gemini, and Anthropic Claude
 - 📊 **Structured Output**: All models support structured output using Pydantic models
-- 🌊 **Streaming**: Support for streaming responses (where available)
-- 🤔 **Thinking**: Enable extended thinking capabilities for complex reasoning (Claude)
 
 ## 🛠️ Installation
 
