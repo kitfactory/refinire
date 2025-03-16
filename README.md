@@ -15,9 +15,21 @@ A collection of model adapters for OpenAI Agents SDK, allowing you to use variou
 
 ## 🛠️ Installation
 
+### From PyPI (Recommended)
+
+```bash
+# Install from PyPI
+pip install agents-sdk-models
+
+# For examples with structured output
+pip install agents-sdk-models[examples]
+```
+
+### From Source
+
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/agents-sdk-models.git
+git clone https://github.com/kitfactory/agents-sdk-models.git
 cd agents-sdk-models
 
 # Create and activate a virtual environment
@@ -167,8 +179,7 @@ weather_report = response.final_output  # This is a WeatherReport object
 - **Dependencies**: 
   - openai>=1.66.2
   - openai-agents==0.0.4
-  - pydantic>=2.10, <3
-  - ollama>=0.4.7 (for Ollama support)
+  - pydantic>=2.10, <3 (for examples with structured output)
 
 ## 📝 License
 

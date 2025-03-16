@@ -15,9 +15,21 @@ OpenAI Agents SDKのモデルアダプターコレクションで、様々なLLM
 
 ## 🛠️ インストール
 
+### PyPIから（推奨）
+
+```bash
+# PyPIからインストール
+pip install agents-sdk-models
+
+# 構造化出力を使用する例のために
+pip install agents-sdk-models[examples]
+```
+
+### ソースから
+
 ```bash
 # リポジトリをクローン
-git clone https://github.com/yourusername/agents-sdk-models.git
+git clone https://github.com/kitfactory/agents-sdk-models.git
 cd agents-sdk-models
 
 # 仮想環境を作成して有効化
@@ -167,8 +179,7 @@ weather_report = response.final_output  # これはWeatherReportオブジェク�
 - **依存関係**: 
   - openai>=1.66.2
   - openai-agents==0.0.4
-  - pydantic>=2.10, <3
-  - ollama>=0.4.7 (Ollamaサポート用)
+  - pydantic>=2.10, <3 (構造化出力を使用する例のため)
 
 ## 📝 ライセンス
 
