@@ -1,5 +1,7 @@
 # Agents SDK Models 🤖🔌
 
+[![PyPI Downloads](https://static.pepy.tech/badge/agents-sdk-models)](https://pepy.tech/projects/agents-sdk-models)
+
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents](https://img.shields.io/badge/OpenAI-Agents-green.svg)](https://github.com/openai/openai-agents-python)
 

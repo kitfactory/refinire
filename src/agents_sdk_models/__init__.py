@@ -10,6 +10,7 @@ __version__ = "0.1.0"
 from .ollama import OllamaModel, OllamaAIChatCompletionsModel
 from .gemini import GeminiModel, GeminiAIChatCompletionsModel
 from .anthropic import ClaudeModel, AnthropicAIChatCompletionsModel
+from .unify import UnifiedModel, UnifiedChatCompletionModel
 
 __all__ = [
     "OllamaModel",
@@ -18,5 +19,7 @@ __all__ = [
     "GeminiAIChatCompletionsModel",
     "ClaudeModel",
     "AnthropicAIChatCompletionsModel",
+    "UnifiedModel",
+    "UnifiedChatCompletionModel",
 ]
 

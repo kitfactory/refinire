@@ -45,10 +45,10 @@ async def main():
     """
     # Get API key from environment variable
     # 環境変数からAPIキーを取得
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("GOOGLE_API_KEY")
 
     if not api_key:
-        raise ValueError("GEMINI_API_KEY environment variable is not set")
+        raise ValueError("GOOGLE_API_KEY environment variable is not set")
     
     # Create an agent with Gemini model
     # GeminiモデルでAgentを作成
