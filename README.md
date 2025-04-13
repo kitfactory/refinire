@@ -2,8 +2,8 @@
 
 [![PyPI Downloads](https://static.pepy.tech/badge/agents-sdk-models)](https://pepy.tech/projects/agents-sdk-models)
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![OpenAI Agents](https://img.shields.io/badge/OpenAI-Agents-green.svg)](https://github.com/openai/openai-agents-python)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![OpenAI Agents 0.0.9](https://img.shields.io/badge/OpenAI-Agents_0.0.9-green.svg)](https://github.com/openai/openai-agents-python)
 
 A collection of model adapters for OpenAI Agents SDK, allowing you to use various LLM providers with a unified interface! 🚀
 
@@ -175,10 +175,10 @@ weather_report = response.final_output  # This is a WeatherReport object
 ## 🔧 Supported Environments
 
 - **Operating Systems**: Windows, macOS, Linux
-- **Python Version**: 3.11+
+- **Python Version**: 3.9+
 - **Dependencies**: 
-  - openai>=1.66.2
-  - openai-agents==0.0.4
+  - openai>=1.73.0
+  - openai-agents==0.0.9
   - pydantic>=2.10, <3 (for examples with structured output)
 
 ## 📝 License

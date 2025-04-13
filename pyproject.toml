@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agents-sdk-models"
-version = "0.0.5"
+version = "0.0.9"
 description = "Model adapters for OpenAI Agents SDK"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 dependencies = [
     "openai>=1.68.0",
-    "openai-agents==0.0.6",
+    "openai-agents>=0.0.6",
 ]
 
 [project.optional-dependencies]
