@@ -231,14 +231,8 @@ if __name__ == "__main__":
   - **Core Dependencies** (defined in `pyproject.toml`):
     - `openai>=1.68.0`
     - `openai-agents>=0.0.6`
-  - **Provider-Specific Dependencies** (installed automatically when needed):
-    - `google-generativeai` (Required for Google Gemini)
-    - `anthropic` (Required for Anthropic Claude)
-    - `httpx` (Required for Ollama)
   - **Optional Dependencies** (for examples, especially structured output):
     - `pydantic>=2.10,<3` (Can be installed via `pip install agents-sdk-models[examples]` or separately)
-
-*Note: Provider-specific dependencies (google, anthropic, httpx) are installed automatically when needed by the respective models.*
 
 ## 📝 License
 
