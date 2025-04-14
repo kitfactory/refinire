@@ -23,8 +23,10 @@ OpenAI Agents SDK のモデルアダプターコレクションで、`get_llm` �
 pip install agents-sdk-models
 
 # 構造化出力を使用する例のために (pydantic を含む)
-# pip install agents-sdk-models[examples] # 現在 pyproject.toml で設定されていないオプション
-pip install agents-sdk-models pydantic>=2.0,<3
+# オプションの依存関係は以下でインストールできます:
+# pip install agents-sdk-models[examples]
+# または pydantic を直接インストール:
+pip install agents-sdk-models pydantic>=2.10,<3
 ```
 
 ### ソースから
@@ -226,11 +228,15 @@ if __name__ == "__main__":
 - **オペレーティングシステム**: Windows、macOS、Linux
 - **Pythonバージョン**: 3.9以上
 - **依存関係**:
-  - `openai-agents>=0.0.9` (コア依存関係)
-  - `google-generativeai` (Google Gemini に必要)
-  - `anthropic` (Anthropic Claude に必要)
-  - `httpx` (Ollama に必要)
-  - `pydantic>=2.0,<3` (構造化出力の例に必要)
+  - **コア依存関係** (`pyproject.toml` で定義):
+    - `openai>=1.68.0`
+    - `openai-agents>=0.0.6`
+  - **プロバイダー固有の依存関係** (必要に応じて自動インストール):
+    - `google-generativeai` (Google Gemini に必要)
+    - `anthropic` (Anthropic Claude に必要)
+    - `httpx` (Ollama に必要)
+  - **オプション依存関係** (例、特に構造化出力用):
+    - `pydantic>=2.10,<3` (`pip install agents-sdk-models[examples]` または別途インストール可能)
 
 *注意: プロバイダー固有の依存関係 (google, anthropic, httpx) は、それぞれのモデルが必要とする際に自動的にインストールされます。*
 

@@ -23,8 +23,10 @@ A collection of model adapters for OpenAI Agents SDK, allowing you to use variou
 pip install agents-sdk-models
 
 # For examples with structured output (includes pydantic)
-# pip install agents-sdk-models[examples] # Option currently not configured in pyproject.toml
-pip install agents-sdk-models pydantic>=2.0,<3
+# You can install the optional dependencies using:
+# pip install agents-sdk-models[examples]
+# Or install pydantic directly:
+pip install agents-sdk-models pydantic>=2.10,<3
 ```
 
 ### From Source
@@ -226,11 +228,15 @@ if __name__ == "__main__":
 - **Operating Systems**: Windows, macOS, Linux
 - **Python Version**: 3.9+
 - **Dependencies**:
-  - `openai-agents>=0.0.9` (Core dependency)
-  - `google-generativeai` (Required for Google Gemini)
-  - `anthropic` (Required for Anthropic Claude)
-  - `httpx` (Required for Ollama)
-  - `pydantic>=2.0,<3` (Required for structured output examples)
+  - **Core Dependencies** (defined in `pyproject.toml`):
+    - `openai>=1.68.0`
+    - `openai-agents>=0.0.6`
+  - **Provider-Specific Dependencies** (installed automatically when needed):
+    - `google-generativeai` (Required for Google Gemini)
+    - `anthropic` (Required for Anthropic Claude)
+    - `httpx` (Required for Ollama)
+  - **Optional Dependencies** (for examples, especially structured output):
+    - `pydantic>=2.10,<3` (Can be installed via `pip install agents-sdk-models[examples]` or separately)
 
 *Note: Provider-specific dependencies (google, anthropic, httpx) are installed automatically when needed by the respective models.*
 
