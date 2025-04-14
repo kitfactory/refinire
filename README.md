@@ -43,20 +43,20 @@ pip install -e .
 
 ## 🚀 Quick Start
 
-### Unified Model (Example: OpenAI)
+### LlmModel (Example: OpenAI)
 
 ```python
 import asyncio
 import os
 from agents import Agent, Runner
-from agents_sdk_models import UnifiedModel
+from agents_sdk_models import LlmModel
 
 async def main():
     # Get API key from environment variable (if needed)
     # api_key = os.environ.get("OPENAI_API_KEY") # Uncomment if using OpenAI, Google, or Anthropic
 
-    # Initialize the Unified model (Example uses OpenAI's gpt-4o-mini)
-    model = UnifiedModel(
+    # Initialize the LlmModel model (Example uses OpenAI's gpt-4o-mini)
+    model = LlmModel(
         provider="openai",  # Can be "openai", "google", "anthropic", or "ollama"
         model="gpt-4o-mini", # Specify the model name for the chosen provider
         temperature=0.7,

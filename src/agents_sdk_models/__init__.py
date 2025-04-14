@@ -11,6 +11,7 @@ from .ollama import OllamaModel, OllamaAIChatCompletionsModel
 from .gemini import GeminiModel, GeminiAIChatCompletionsModel
 from .anthropic import ClaudeModel, AnthropicAIChatCompletionsModel
 from .unify import UnifiedModel, UnifiedChatCompletionModel
+LlmModel = UnifiedModel
 
 __all__ = [
     "OllamaModel",
@@ -21,5 +22,6 @@ __all__ = [
     "AnthropicAIChatCompletionsModel",
     "UnifiedModel",
     "UnifiedChatCompletionModel",
+    "LlmModel",
 ]
 

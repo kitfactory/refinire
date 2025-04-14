@@ -43,20 +43,20 @@ pip install -e .
 
 ## 🚀 クイックスタート
 
-### 統合モデル (Unified Model) (例: OpenAI)
+### LlmModel (例: OpenAI)
 
 ```python
 import asyncio
 import os
 from agents import Agent, Runner
-from agents_sdk_models import UnifiedModel
+from agents_sdk_models import LlmModel
 
 async def main():
     # 環境変数からAPIキーを取得 (必要な場合)
     # api_key = os.environ.get("OPENAI_API_KEY") # OpenAI, Google, Anthropic を使用する場合はコメント解除
 
-    # Unifiedモデルを初期化 (例ではOpenAIのgpt-4o-miniを使用)
-    model = UnifiedModel(
+    # LlmModelモデルを初期化 (例ではOpenAIのgpt-4o-miniを使用)
+    model = LlmModel(
         provider="openai",  # "openai", "google", "anthropic", "ollama" のいずれか
         model="gpt-4o-mini", # 選択したプロバイダーのモデル名を指定
         temperature=0.7,
