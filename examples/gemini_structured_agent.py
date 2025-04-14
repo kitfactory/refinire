@@ -8,7 +8,7 @@ import os
 from typing import List
 from pydantic import BaseModel
 from agents import Agent, Runner
-from agents_sdk_models.gemini import GeminiAIChatCompletionsModel
+from agents_sdk_models import GeminiModel
 
 class WeatherInfo(BaseModel):
     """
@@ -52,7 +52,7 @@ async def main():
     
     # Create an agent with Gemini model
     # GeminiモデルでAgentを作成
-    model = GeminiAIChatCompletionsModel(
+    model = GeminiModel(
         model="gemini-2.0-flash",  # or "gemini-2.0-pro", "gemini-2.0-ultra"
         temperature=0.3,
         api_key=api_key

@@ -7,7 +7,7 @@ import asyncio
 import os
 from agents.agent import Agent
 from agents.run import Runner
-from agents_sdk_models.anthropic import ClaudeModel
+from agents_sdk_models import ClaudeModel
 
 async def main():
     # Get API key from environment variable

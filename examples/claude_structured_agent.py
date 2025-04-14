@@ -8,7 +8,7 @@ import os
 from typing import List
 from pydantic import BaseModel
 from agents import Agent, Runner
-from agents_sdk_models.anthropic import ClaudeModel
+from agents_sdk_models import ClaudeModel
 
 class WeatherInfo(BaseModel):
     """

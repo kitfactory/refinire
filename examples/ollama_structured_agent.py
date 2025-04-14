@@ -7,7 +7,7 @@ import asyncio
 from typing import List
 from pydantic import BaseModel
 from agents import Agent, Runner
-from agents_sdk_models import OllamaAIChatCompletionsModel
+from agents_sdk_models import OllamaModel
 
 class WeatherInfo(BaseModel):
     """
@@ -44,7 +44,7 @@ async def main():
     """
     # Create an agent with Ollama model
     # OllamaモデルでAgentを作成
-    model = OllamaAIChatCompletionsModel(model="phi4-mini:latest")
+    model = OllamaModel(model="phi4-mini:latest")
     agent = Agent(
         name="Weather Reporter",
         model=model,

@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
 
-class OllamaAIChatCompletionsModel(OpenAIChatCompletionsModel):
+class OllamaModel(OpenAIChatCompletionsModel):
     """
     Ollama model implementation that extends OpenAI's chat completions model
     OpenAIのチャット補完モデルを拡張したOllamaモデルの実装
@@ -34,6 +34,10 @@ class OllamaAIChatCompletionsModel(OpenAIChatCompletionsModel):
             **kwargs: Additional arguments to pass to the OpenAI API
                 OpenAI APIに渡す追加の引数
         """
+        # get_llm経由で base_url が None の場合はデフォルトの URL を設定
+        if base_url == None:
+            base_url = "http://localhost:11434/v1"
+
         # Create AsyncOpenAI client with Ollama base URL
         # OllamaのベースURLでAsyncOpenAIクライアントを作成
         openai_client = AsyncOpenAI(base_url=base_url, api_key="ollama")
@@ -57,7 +61,3 @@ class OllamaAIChatCompletionsModel(OpenAIChatCompletionsModel):
         kwargs["temperature"] = self.temperature
         kwargs.update(self.kwargs)
         return await super()._create_chat_completion(*args, **kwargs)
-
-# Create an alias for backward compatibility
-# 後方互換性のためのエイリアスを作成
-OllamaModel = OllamaAIChatCompletionsModel 

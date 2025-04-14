@@ -6,8 +6,9 @@ OpenAI AgentsのためのAnthropic Claude モデル実装
 from typing import Any, Dict, List, Optional, Union
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
+from agents.models.openai_responses import OpenAIResponsesModel
 
-class AnthropicAIChatCompletionsModel(OpenAIChatCompletionsModel):
+class ClaudeModel(OpenAIResponsesModel):
     """
     Anthropic Claude model implementation that extends OpenAI's chat completions model
     OpenAIのチャット補完モデルを拡張したAnthropic Claudeモデルの実装
@@ -40,8 +41,15 @@ class AnthropicAIChatCompletionsModel(OpenAIChatCompletionsModel):
             **kwargs: Additional arguments to pass to the OpenAI API
                 OpenAI APIに渡す追加の引数
         """
+        # get_llm経由で base_url が None の場合はデフォルトの URL を設定
+        if base_url == None:
+            base_url = "https://api.anthropic.com/v1/"
+
+        # api_key が None の場合は環境変数から取得
         if api_key is None:
-            raise ValueError("Anthropic API key is required. Get one from https://console.anthropic.com/")
+            api_key = os.environ.get("ANTHROPIC_API_KEY")
+            if api_key is None:
+                raise ValueError("Anthropic API key is required. Get one from https://console.anthropic.com/")
         
         # Create AsyncOpenAI client with Anthropic base URL
         # AnthropicのベースURLでAsyncOpenAIクライアントを作成
@@ -76,7 +84,3 @@ class AnthropicAIChatCompletionsModel(OpenAIChatCompletionsModel):
         kwargs.update(self.kwargs)
         
         return await super()._create_chat_completion(*args, **kwargs)
-
-# Create an alias for convenience
-# 利便性のためのエイリアスを作成
-ClaudeModel = AnthropicAIChatCompletionsModel 

@@ -7,7 +7,7 @@ import asyncio
 import sys
 from openai.types.responses import ResponseTextDeltaEvent
 from agents import Agent, Runner
-from agents_sdk_models import OllamaAIChatCompletionsModel
+from agents_sdk_models import OllamaModel
 
 async def main():
     """
@@ -20,7 +20,7 @@ async def main():
         name="Streaming Assistant",
         instructions="""You are a helpful assistant that responds in Japanese.
 あなたは日本語で応答する親切なアシスタントです。""",
-        model=OllamaAIChatCompletionsModel(
+        model=OllamaModel(
             model="phi4-mini:latest",
             temperature=0.3
         )

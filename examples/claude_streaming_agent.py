@@ -9,7 +9,7 @@ import sys
 from openai.types.responses import ResponseTextDeltaEvent
 from agents.agent import Agent
 from agents.run import Runner
-from agents_sdk_models.anthropic import ClaudeModel
+from agents_sdk_models import ClaudeModel
 
 async def main():
     """

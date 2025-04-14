@@ -9,7 +9,7 @@ import sys
 from openai.types.responses import ResponseTextDeltaEvent
 from agents.agent import Agent
 from agents.run import Runner
-from agents_sdk_models.gemini import GeminiAIChatCompletionsModel
+from agents_sdk_models import GeminiModel
 
 async def main():
     """
@@ -24,7 +24,7 @@ async def main():
     
     # Initialize the Gemini model
     # Geminiモデルを初期化
-    model = GeminiAIChatCompletionsModel(
+    model = GeminiModel(
         model="gemini-2.0-flash",  # or "gemini-2.0-pro", "gemini-2.0-ultra"
         temperature=0.3,
         api_key=api_key

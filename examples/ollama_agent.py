@@ -7,12 +7,12 @@ import asyncio
 from agents.agent import Agent
 from agents.run import Runner
 from agents.items import ItemHelpers
-from agents_sdk_models.ollama import OllamaAIChatCompletionsModel
+from agents_sdk_models import OllamaModel
 
 async def main():
     # Initialize the Ollama model
     # Ollamaモデルを初期化
-    model = OllamaAIChatCompletionsModel(
+    model = OllamaModel(
         model="phi4-mini:latest",
         temperature=0.3
     )

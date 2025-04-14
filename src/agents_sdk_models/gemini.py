@@ -6,8 +6,9 @@ OpenAI AgentsのためのGeminiモデル実装
 from typing import Any, Dict, List, Optional, Union
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
+from agents.models.openai_responses import OpenAIResponsesModel
 
-class GeminiAIChatCompletionsModel(OpenAIChatCompletionsModel):
+class GeminiModel(OpenAIResponsesModel):
     """
     Gemini model implementation that extends OpenAI's chat completions model
     OpenAIのチャット補完モデルを拡張したGeminiモデルの実装
@@ -37,8 +38,14 @@ class GeminiAIChatCompletionsModel(OpenAIChatCompletionsModel):
             **kwargs: Additional arguments to pass to the OpenAI API
                 OpenAI APIに渡す追加の引数
         """
+        if base_url == None:
+            base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+
+        # api_key が None の場合は環境変数から取得
         if api_key is None:
-            raise ValueError("Gemini API key is required. Get one from https://ai.google.dev/")
+            api_key = os.environ.get("GEMINI_API_KEY")
+            if api_key is None:
+                raise ValueError("Gemini API key is required. Get one from https://ai.google.dev/")
         
         # Create AsyncOpenAI client with Gemini base URL
         # GeminiのベースURLでAsyncOpenAIクライアントを作成
@@ -63,7 +70,3 @@ class GeminiAIChatCompletionsModel(OpenAIChatCompletionsModel):
         kwargs["temperature"] = self.temperature
         kwargs.update(self.kwargs)
         return await super()._create_chat_completion(*args, **kwargs)
-
-# Create an alias for convenience
-# 利便性のためのエイリアスを作成
-GeminiModel = GeminiAIChatCompletionsModel 
