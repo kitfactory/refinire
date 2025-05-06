@@ -1,6 +1,7 @@
 from typing import Literal, Optional, Any
 from agents.models.interface import Model
 from agents import OpenAIChatCompletionsModel  # Import from agents library
+from agents import set_tracing_disabled  # Import set_tracing_disabled for tracing control
 # English: Import OpenAI client
 # 日本語: OpenAI クライアントをインポート
 from openai import AsyncOpenAI
@@ -20,6 +21,7 @@ def get_llm(
     api_key: Optional[str] = None,
     base_url: Optional[str] = None,
     thinking: bool = False,
+    tracing: bool = False,
     **kwargs: Any,
 ) -> Model:
     """
@@ -44,6 +46,8 @@ def get_llm(
             プロバイダー API のベース URL (必要な場合、例: セルフホストの Ollama や OpenAI 互換 API)。
         thinking (bool): Enable thinking mode for Claude models. Defaults to False.
             Claude モデルの思考モードを有効にするか。デフォルトは False。
+        tracing (bool): Whether to enable tracing for the Agents SDK. Defaults to False.
+            Agents SDK のトレーシングを有効化するか。デフォルトは False。
         **kwargs (Any): Additional keyword arguments to pass to the model constructor.
             モデルのコンストラクタに渡す追加のキーワード引数。
 
@@ -55,6 +59,10 @@ def get_llm(
         ValueError: If an unsupported provider is specified.
                     サポートされていないプロバイダーが指定された場合。
     """
+    # English: Configure OpenAI Agents SDK tracing
+    # 日本語: OpenAI Agents SDK のトレーシングを設定する
+    set_tracing_disabled(not tracing)
+
     if provider == "openai":
         # Use the standard OpenAI model from the agents library
         # agentsライブラリの標準 OpenAI モデルを使用

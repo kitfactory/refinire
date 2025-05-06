@@ -2,7 +2,7 @@
 Ollama model implementation for OpenAI Agents
 OpenAI AgentsのためのOllamaモデル実装
 """
-
+import os
 from typing import Any, Dict, List, Optional, Union
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
@@ -17,7 +17,7 @@ class OllamaModel(OpenAIChatCompletionsModel):
         self,
         model: str = "phi4-mini:latest",
         temperature: float = 0.3,
-        base_url: str = "http://localhost:11434/v1",
+        base_url: str = "http://localhost:11434", # デフォルトのURL
         **kwargs: Any,
     ) -> None:
         """
@@ -36,7 +36,11 @@ class OllamaModel(OpenAIChatCompletionsModel):
         """
         # get_llm経由で base_url が None の場合はデフォルトの URL を設定
         if base_url == None:
-            base_url = "http://localhost:11434/v1"
+            base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+        else:
+            base_url = base_url.rstrip("/")
+            if not base_url.endswith("v1"):
+                base_url = base_url + "/v1"
 
         # Create AsyncOpenAI client with Ollama base URL
         # OllamaのベースURLでAsyncOpenAIクライアントを作成

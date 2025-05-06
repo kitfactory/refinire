@@ -2,7 +2,7 @@
 Anthropic model implementation for OpenAI Agents
 OpenAI AgentsのためのAnthropic Claude モデル実装
 """
-
+import os
 from typing import Any, Dict, List, Optional, Union
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
