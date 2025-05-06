@@ -6,9 +6,9 @@ import os
 from typing import Any, Dict, List, Optional, Union
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
-from agents.models.openai_responses import OpenAIResponsesModel
 
-class ClaudeModel(OpenAIResponsesModel):
+
+class ClaudeModel(OpenAIChatCompletionsModel):
     """
     Anthropic Claude model implementation that extends OpenAI's chat completions model
     OpenAIのチャット補完モデルを拡張したAnthropic Claudeモデルの実装
@@ -16,7 +16,7 @@ class ClaudeModel(OpenAIResponsesModel):
 
     def __init__(
         self,
-        model: str = "claude-3-sonnet-20240229",
+        model: str = "claude-3-5-sonnet-latest",
         temperature: float = 0.3,
         api_key: str = None,
         base_url: str = "https://api.anthropic.com/v1/",
@@ -28,8 +28,8 @@ class ClaudeModel(OpenAIResponsesModel):
         OpenAI互換インターフェースでAnthropic Claudeモデルを初期化する
 
         Args:
-            model (str): Name of the Claude model to use (e.g. "claude-3-opus-20240229")
-                使用するClaudeモデルの名前（例："claude-3-opus-20240229"）
+            model (str): Name of the Claude model to use (e.g. "claude-3-5-sonnet-latest")
+                使用するClaudeモデルの名前（例："claude-3-5-sonnet-latest"）
             temperature (float): Sampling temperature between 0 and 1
                 サンプリング温度（0から1の間）
             api_key (str): Anthropic API key

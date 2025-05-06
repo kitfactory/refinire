@@ -19,7 +19,7 @@ async def main():
     # Initialize the Claude model
     # Claudeモデルを初期化
     model = ClaudeModel(
-        model="claude-3-sonnet-20240229",  # or "claude-3-haiku-20240307", "claude-3-opus-20240229"
+        model="claude-3-7-sonnet-20250219",
         temperature=0.3,
         api_key=api_key,
         thinking=True  # Enable thinking for complex reasoning

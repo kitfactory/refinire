@@ -47,7 +47,17 @@ pip install -e .[dev] # Install with dev dependencies (pytest etc.)
 
 ## 🚀 Quick Start: Using `get_llm`
 
-The `get_llm` function provides a single entry point to obtain model instances for different providers.
+The `get_llm` function now supports specifying the model as the first argument, and provider as the second argument. You can also call `get_llm` with only the model argument, and the provider will be inferred automatically if possible.
+
+**New argument order:**
+```python
+get_llm(model="claude-3-5-sonnet-latest", provider="anthropic")
+# or simply
+get_llm("claude-3-5-sonnet-latest")
+```
+
+- If only the model is specified, the provider will be inferred based on the model name.
+- The previous usage with provider as the first argument is still supported for backward compatibility.
 
 ```python
 import asyncio
@@ -64,7 +74,6 @@ async def main():
         print("\nRunning OpenAI example...")
         # Get the model using get_llm
         model_openai = get_llm(
-            provider="openai",      # Specify the provider
             model="gpt-4o-mini",    # Specify the model name (optional, uses default if None)
             temperature=0.7,
             api_key=openai_api_key # Pass API key if required
@@ -85,7 +94,6 @@ async def main():
     try:
         # Get the model using get_llm
         model_ollama = get_llm(
-            provider="ollama",
             model="llama3", # Specify the model name available in your Ollama instance
             temperature=0.7
             # base_url="http://localhost:11434" # Optional: specify if not default
@@ -109,7 +117,6 @@ async def main():
         print("\nRunning Google Gemini example...")
         # Get the model using get_llm
         model_gemini = get_llm(
-            provider="google",
             model="gemini-1.5-flash", # Specify the model name
             temperature=0.7,
             api_key=google_api_key
@@ -132,7 +139,6 @@ async def main():
         print("\nRunning Anthropic Claude example...")
         # Get the model using get_llm
         model_claude = get_llm(
-            provider="anthropic",
             model="claude-3-haiku-20240307", # Specify the model name
             temperature=0.7,
             api_key=anthropic_api_key,
@@ -190,7 +196,6 @@ async def run_structured_example():
         return
 
     model = get_llm(
-        provider="openai",
         model="gpt-4o-mini",
         api_key=openai_api_key
     )

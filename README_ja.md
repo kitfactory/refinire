@@ -47,7 +47,17 @@ pip install -e .[dev] # 開発依存関係 (pytest など) と共にインスト
 
 ## 🚀 クイックスタート: `get_llm` の使用
 
-`get_llm` 関数は、異なるプロバイダーのモデルインスタンスを取得するための単一のエントリーポイントを提供します。
+`get_llm` 関数は、引数の順番が (model, provider) となりました。また、model だけを指定することもでき、その場合はモデル名からプロバイダーが自動推論されます。
+
+**新しい引数順:**
+```python
+get_llm(model="claude-3-5-sonnet-latest", provider="anthropic")
+# またはシンプルに
+get_llm("claude-3-5-sonnet-latest")
+```
+
+- model のみ指定した場合、モデル名からプロバイダーが自動的に推論されます。
+- 以前の provider を先頭にした使い方も後方互換としてサポートされています。
 
 ```python
 import asyncio
@@ -64,7 +74,6 @@ async def main():
         print("\nOpenAI の例を実行中...")
         # get_llm を使用してモデルを取得
         model_openai = get_llm(
-            provider="openai",      # プロバイダーを指定
             model="gpt-4o-mini",    # モデル名を指定 (オプション、None の場合はデフォルトを使用)
             temperature=0.7,
             api_key=openai_api_key # 必要に応じて API キーを渡す
@@ -85,7 +94,6 @@ async def main():
     try:
         # get_llm を使用してモデルを取得
         model_ollama = get_llm(
-            provider="ollama",
             model="llama3", # Ollama インスタンスで利用可能なモデル名を指定
             temperature=0.7
             # base_url="http://localhost:11434" # オプション: デフォルトでない場合に指定
@@ -109,7 +117,6 @@ async def main():
         print("\nGoogle Gemini の例を実行中...")
         # get_llm を使用してモデルを取得
         model_gemini = get_llm(
-            provider="google",
             model="gemini-1.5-flash", # モデル名を指定
             temperature=0.7,
             api_key=google_api_key
@@ -132,7 +139,6 @@ async def main():
         print("\nAnthropic Claude の例を実行中...")
         # get_llm を使用してモデルを取得
         model_claude = get_llm(
-            provider="anthropic",
             model="claude-3-haiku-20240307", # モデル名を指定
             temperature=0.7,
             api_key=anthropic_api_key,
@@ -190,7 +196,6 @@ async def run_structured_example():
         return
 
     model = get_llm(
-        provider="openai",
         model="gpt-4o-mini",
         api_key=openai_api_key
     )

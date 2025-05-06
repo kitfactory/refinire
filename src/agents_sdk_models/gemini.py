@@ -6,9 +6,9 @@ import os
 from typing import Any, Dict, List, Optional, Union
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from openai import AsyncOpenAI
-from agents.models.openai_responses import OpenAIResponsesModel
 
-class GeminiModel(OpenAIResponsesModel):
+
+class GeminiModel(OpenAIChatCompletionsModel):
     """
     Gemini model implementation that extends OpenAI's chat completions model
     OpenAIのチャット補完モデルを拡張したGeminiモデルの実装

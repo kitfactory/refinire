@@ -14,9 +14,11 @@ from .ollama import OllamaModel
 # Define the provider type hint
 ProviderType = Literal["openai", "google", "anthropic", "ollama"]
 
+import os
+
 def get_llm(
-    provider: ProviderType = "openai",
     model: Optional[str] = None,
+    provider: Optional[ProviderType] = None,
     temperature: float = 0.3,
     api_key: Optional[str] = None,
     base_url: Optional[str] = None,
@@ -62,6 +64,25 @@ def get_llm(
     # English: Configure OpenAI Agents SDK tracing
     # 日本語: OpenAI Agents SDK のトレーシングを設定する
     set_tracing_disabled(not tracing)
+
+
+    if model is None:
+        model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
+
+    def get_provider_canditate(model: str) -> ProviderType:
+        if "gpt" in model:
+            return "openai"
+        if "o3" in model or "o4" in model:
+            return "openai"
+        elif "gemini" in model:
+            return "google"
+        elif "claude" in model:
+            return "anthropic"
+        else:
+            return "ollama"
+
+    if provider is None:
+        provider = get_provider_canditate(model)
 
     if provider == "openai":
         # Use the standard OpenAI model from the agents library
