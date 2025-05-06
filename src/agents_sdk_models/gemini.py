@@ -43,9 +43,9 @@ class GeminiModel(OpenAIChatCompletionsModel):
 
         # api_key が None の場合は環境変数から取得
         if api_key is None:
-            api_key = os.environ.get("GEMINI_API_KEY")
+            api_key = os.environ.get("GOOGLE_API_KEY")
             if api_key is None:
-                raise ValueError("Gemini API key is required. Get one from https://ai.google.dev/")
+                raise ValueError("Google API key is required. Get one from https://ai.google.dev/")
         
         # Create AsyncOpenAI client with Gemini base URL
         # GeminiのベースURLでAsyncOpenAIクライアントを作成
