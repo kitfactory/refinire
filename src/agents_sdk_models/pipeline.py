@@ -47,8 +47,8 @@ class Pipeline:
     def __init__(
         self,
         name: str,
-        generation_template: str,
-        evaluation_template: Optional[str],
+        generation_instructions: str,
+        evaluation_instructions: Optional[str],
         *,
         input_guardrails: Optional[list] = None,
         output_guardrails: Optional[list] = None,
@@ -70,8 +70,8 @@ class Pipeline:
 
         Args:
             name: Pipeline name / パイプライン名
-            generation_template: Template for content generation / コンテンツ生成用テンプレート
-            evaluation_template: Template for content evaluation / コンテンツ評価用テンプレート
+            generation_instructions: System prompt for generation / 生成用システムプロンプト
+            evaluation_instructions: System prompt for evaluation / 評価用システムプロンプト
             input_guardrails: Guardrails for generation / 生成用ガードレール
             output_guardrails: Guardrails for evaluation / 評価用ガードレール
             output_model: Model for output formatting / 出力フォーマット用モデル
@@ -87,8 +87,8 @@ class Pipeline:
             improvement_callback: Callback for improvement suggestions / 改善提案用コールバック
         """
         self.name = name
-        self.generation_template = generation_template.strip()
-        self.evaluation_template = evaluation_template.strip() if evaluation_template else None
+        self.generation_instructions = generation_instructions.strip()
+        self.evaluation_instructions = evaluation_instructions.strip() if evaluation_instructions else None
         self.output_model = output_model
 
         self.model = model
@@ -112,7 +112,7 @@ class Pipeline:
             name=f"{name}_generator",
             model=llm,
             tools=self.generation_tools,
-            instructions=self.generation_template,
+            instructions=self.generation_instructions,
             input_guardrails=self.input_guardrails,
         )
         self.eval_agent = (
@@ -120,10 +120,10 @@ class Pipeline:
                 name=f"{name}_evaluator",
                 model=llm,
                 tools=self.evaluation_tools,
-                instructions=self.evaluation_template,
+                instructions=self.evaluation_instructions,
                 output_guardrails=self.output_guardrails,
             )
-            if self.evaluation_template
+            if self.evaluation_instructions
             else None
         )
 
@@ -164,7 +164,7 @@ class Pipeline:
         """
         json_instr = "上記を JSON で次の形式にしてください:\n{\n  \"score\": int,\n  \"comment\": [str]\n}"
         parts = [
-            self.evaluation_template or "",
+            self.evaluation_instructions or "",
             json_instr,
             "----",
             f"ユーザー入力:\n{user_input}",

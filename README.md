@@ -87,11 +87,11 @@ from agents_sdk_models.pipeline import Pipeline
 
 pipeline = Pipeline(
     name="simple_generator",
-    generation_template="""
+    generation_instructions="""
     You are a helpful assistant that generates creative stories.
     Please generate a short story based on the user's input.
     """,
-    evaluation_template=None,  # No evaluation
+    evaluation_instructions=None,  # No evaluation
     model="gpt-4o"
 )
 result = pipeline.run("A story about a robot learning to paint")
@@ -101,11 +101,11 @@ result = pipeline.run("A story about a robot learning to paint")
 ```python
 pipeline = Pipeline(
     name="evaluated_generator",
-    generation_template="""
+    generation_instructions="""
     You are a helpful assistant that generates creative stories.
     Please generate a short story based on the user's input.
     """,
-    evaluation_template="""
+    evaluation_instructions="""
     You are a story evaluator. Please evaluate the generated story based on:
     1. Creativity (0-100)
     2. Coherence (0-100)
@@ -136,14 +136,14 @@ tools = [search_web, get_weather]
 
 pipeline = Pipeline(
     name="tooled_generator",
-    generation_template="""
+    generation_instructions="""
     You are a helpful assistant that can use tools to gather information.
     You have access to the following tools:
     1. search_web: Search the web for information
     2. get_weather: Get current weather for a location
     Please use these tools when appropriate to provide accurate information.
     """,
-    evaluation_template=None,
+    evaluation_instructions=None,
     model="gpt-4o",
     generation_tools=tools
 )
@@ -176,10 +176,10 @@ async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
 
 pipeline = Pipeline(
     name="guardrail_pipeline",
-    generation_template="""
+    generation_instructions="""
     You are a helpful assistant. Please answer the user's question.
     """,
-    evaluation_template=None,
+    evaluation_instructions=None,
     model="gpt-4o",
     input_guardrails=[math_guardrail],
 )

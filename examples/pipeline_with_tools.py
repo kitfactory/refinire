@@ -36,7 +36,7 @@ def main():
 
     pipeline = Pipeline(
         name="tooled_generator",
-        generation_template="""
+        generation_instructions="""
         You are a helpful assistant that can use tools to gather information.
         あなたは情報を収集するためにツールを使用できる役立つアシスタントです。
 
@@ -51,8 +51,8 @@ def main():
         Please use these tools when appropriate to provide accurate information.
         適切な場合は、これらのツールを使用して正確な情報を提供してください。
         """,
-        evaluation_template=None,  # No evaluation
-        model="gpt-3.5-turbo",  # Using GPT-3.5
+        evaluation_instructions=None,  # No evaluation
+        model="gpt-4o",
         generation_tools=tools
     )
 

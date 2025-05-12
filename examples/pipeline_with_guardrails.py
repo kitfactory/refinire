@@ -36,11 +36,11 @@ def main():
     # パイプラインのエージェントにガードレールを設定（input_guardrailsで渡す）
     pipeline = Pipeline(
         name="guardrail_pipeline",
-        generation_template="""
+        generation_instructions="""
         You are a helpful assistant. Please answer the user's question.
         あなたは役立つアシスタントです。ユーザーの質問に答えてください。
         """,
-        evaluation_template=None,
+        evaluation_instructions=None,
         model="gpt-4o",
         input_guardrails=[math_guardrail],  # ここで明示的に渡す
     )

@@ -10,14 +10,14 @@ def main():
     # 生成テンプレートのみでパイプラインを初期化
     pipeline = Pipeline(
         name="simple_generator",
-        generation_template="""
+        generation_instructions="""
         You are a helpful assistant that generates creative stories.
         あなたは創造的な物語を生成する役立つアシスタントです。
 
         Please generate a short story based on the user's input.
         ユーザーの入力に基づいて短い物語を生成してください。
         """,
-        evaluation_template=None,  # No evaluation
+        evaluation_instructions=None,  # No evaluation
         model="gpt-3.5-turbo"  # Using GPT-3.5
     )
 

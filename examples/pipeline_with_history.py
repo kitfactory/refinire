@@ -9,11 +9,11 @@ def main():
     # 直近2件の履歴をプロンプトに含める
     pipeline = Pipeline(
         name="history_example",
-        generation_template="""
+        generation_instructions="""
         You are a helpful assistant. Answer concisely.
         あなたは親切なアシスタントです。簡潔に答えてください。
         """,
-        evaluation_template=None,
+        evaluation_instructions=None,
         model="gpt-4o",
         history_size=2,  # 直近2件のみ履歴に含める
     )

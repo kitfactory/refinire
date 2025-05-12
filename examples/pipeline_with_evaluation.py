@@ -10,14 +10,14 @@ def main():
     # 生成と評価のテンプレートでパイプラインを初期化
     pipeline = Pipeline(
         name="evaluated_generator",
-        generation_template="""
+        generation_instructions="""
         You are a helpful assistant that generates creative stories.
         あなたは創造的な物語を生成する役立つアシスタントです。
 
         Please generate a short story based on the user's input.
         ユーザーの入力に基づいて短い物語を生成してください。
         """,
-        evaluation_template="""
+        evaluation_instructions="""
         You are a story evaluator. Please evaluate the generated story based on:
         あなたは物語の評価者です。以下の基準で生成された物語を評価してください：
 

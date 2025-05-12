@@ -87,11 +87,11 @@ from agents_sdk_models.pipeline import Pipeline
 
 pipeline = Pipeline(
     name="simple_generator",
-    generation_template="""
+    generation_instructions="""
     あなたは創造的な物語を生成する役立つアシスタントです。
     ユーザーの入力に基づいて短い物語を生成してください。
     """,
-    evaluation_template=None,  # 評価不要
+    evaluation_instructions=None,  # 評価不要
     model="gpt-4o"
 )
 result = pipeline.run("ロボットが絵を学ぶ物語")
@@ -101,11 +101,11 @@ result = pipeline.run("ロボットが絵を学ぶ物語")
 ```python
 pipeline = Pipeline(
     name="evaluated_generator",
-    generation_template="""
+    generation_instructions="""
     あなたは創造的な物語を生成する役立つアシスタントです。
     ユーザーの入力に基づいて短い物語を生成してください。
     """,
-    evaluation_template="""
+    evaluation_instructions="""
     あなたは物語の評価者です。以下の基準で生成された物語を評価してください：
     1. 創造性（0-100）
     2. 一貫性（0-100）
@@ -136,14 +136,14 @@ tools = [search_web, get_weather]
 
 pipeline = Pipeline(
     name="tooled_generator",
-    generation_template="""
+    generation_instructions="""
     あなたは情報を収集するためにツールを使用できる役立つアシスタントです。
     以下のツールにアクセスできます：
     1. search_web: 情報をWebで検索する
     2. get_weather: 場所の現在の天気を取得する
     適切な場合は、これらのツールを使用して正確な情報を提供してください。
     """,
-    evaluation_template=None,
+    evaluation_instructions=None,
     model="gpt-4o",
     generation_tools=tools
 )
@@ -176,10 +176,10 @@ async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
 
 pipeline = Pipeline(
     name="guardrail_pipeline",
-    generation_template="""
+    generation_instructions="""
     あなたは役立つアシスタントです。ユーザーの質問に答えてください。
     """,
-    evaluation_template=None,
+    evaluation_instructions=None,
     model="gpt-4o",
     input_guardrails=[math_guardrail],
 )
