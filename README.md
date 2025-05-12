@@ -191,6 +191,28 @@ except InputGuardrailTripwireTriggered:
     print("[Guardrail Triggered] Math homework detected. Request blocked.")
 ```
 
+### With Dynamic Prompt
+```python
+# You can provide a custom function to dynamically build the prompt.
+from agents_sdk_models.pipeline import Pipeline
+
+def my_dynamic_prompt(user_input: str) -> str:
+    # Example: Uppercase the user input and add a prefix
+    return f"[DYNAMIC PROMPT] USER SAID: {user_input.upper()}"
+
+pipeline = Pipeline(
+    name="dynamic_prompt_example",
+    generation_instructions="""
+    You are a helpful assistant. Respond to the user's request.
+    """,
+    evaluation_instructions=None,
+    model="gpt-4o",
+    dynamic_prompt=my_dynamic_prompt
+)
+result = pipeline.run("Tell me a joke.")
+print(result)
+```
+
 ---
 
 ## 🖥️ Supported Environments

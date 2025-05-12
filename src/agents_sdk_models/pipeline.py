@@ -63,6 +63,7 @@ class Pipeline:
         retries: int = 3,
         debug: bool = False,
         improvement_callback: Optional[Callable[[Any, EvaluationResult], None]] = None,
+        dynamic_prompt: Optional[Callable[[str], str]] = None,
     ) -> None:
         """
         Initialize the Pipeline with configuration parameters
@@ -85,6 +86,7 @@ class Pipeline:
             retries: Number of retry attempts / リトライ試行回数
             debug: Debug mode flag / デバッグモードフラグ
             improvement_callback: Callback for improvement suggestions / 改善提案用コールバック
+            dynamic_prompt: Optional function to dynamically build prompt / 動的プロンプト生成関数（任意）
         """
         self.name = name
         self.generation_instructions = generation_instructions.strip()
@@ -103,6 +105,7 @@ class Pipeline:
         self.retries = retries
         self.debug = debug
         self.improvement_callback = improvement_callback
+        self.dynamic_prompt = dynamic_prompt
 
         # Get LLM instance
         llm = get_llm(model) if model else None
@@ -263,7 +266,10 @@ class Pipeline:
         attempt = 0
         while attempt <= self.retries:
             # ---------------- Generation ----------------
-            gen_prompt = self._build_generation_prompt(user_input)
+            if self.dynamic_prompt:
+                gen_prompt = self.dynamic_prompt(user_input)
+            else:
+                gen_prompt = self._build_generation_prompt(user_input)
             if self.debug:
                 print("[Generation prompt]\n", gen_prompt)
 

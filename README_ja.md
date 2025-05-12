@@ -191,6 +191,28 @@ except InputGuardrailTripwireTriggered:
     print("[Guardrail Triggered] 数学の宿題依頼を検出し、リクエストをブロックしました。")
 ```
 
+### dynamic_promptによる動的プロンプト生成
+```python
+# dynamic_prompt引数にカスタム関数を渡すことで、プロンプト生成を柔軟にカスタマイズできます。
+from agents_sdk_models.pipeline import Pipeline
+
+def my_dynamic_prompt(user_input: str) -> str:
+    # 例: ユーザー入力を大文字化し、接頭辞を付与
+    return f"[DYNAMIC PROMPT] USER SAID: {user_input.upper()}"
+
+pipeline = Pipeline(
+    name="dynamic_prompt_example",
+    generation_instructions="""
+    あなたは親切なアシスタントです。ユーザーのリクエストに答えてください。
+    """,
+    evaluation_instructions=None,
+    model="gpt-4o",
+    dynamic_prompt=my_dynamic_prompt
+)
+result = pipeline.run("面白いジョークを教えて")
+print(result)
+```
+
 ---
 
 ## 🖥️ サポート環境
