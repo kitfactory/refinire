@@ -165,7 +165,7 @@ class Pipeline:
         Returns:
             str: Formatted prompt for evaluation / 評価用のフォーマット済みプロンプト
         """
-        json_instr = "上記を JSON で次の形式にしてください:\n{\n  \"score\": int,\n  \"comment\": [str]\n}"
+        json_instr = "上記を JSON で必ず次の形式にしてください:\n{\n  \"score\": int(0～100),\n  \"comment\": [str]\n}"
         parts = [
             self.evaluation_instructions or "",
             json_instr,
