@@ -33,7 +33,7 @@ async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
     )
 
 def main():
-    # パイプラインのエージェントにガードレールを設定
+    # パイプラインのエージェントにガードレールを設定（input_guardrailsで渡す）
     pipeline = Pipeline(
         name="guardrail_pipeline",
         generation_template="""
@@ -41,10 +41,9 @@ def main():
         あなたは役立つアシスタントです。ユーザーの質問に答えてください。
         """,
         evaluation_template=None,
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
+        input_guardrails=[math_guardrail],  # ここで明示的に渡す
     )
-    # gen_agentにガードレールを追加
-    pipeline.gen_agent.input_guardrails = [math_guardrail]
 
     user_inputs = [
         "Can you help me solve for x: 2x + 3 = 11?",

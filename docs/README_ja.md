@@ -1,15 +1,32 @@
 # agents-sdk-models ドキュメント
 
-## 概要
+## 🌟 はじめに
 
-このプロジェクトは、OpenAI Agents SDKを活用したエージェント・パイプラインの構築を支援するPythonライブラリです。
-
-- LLMによる生成・評価・ツール連携・ガードレール（入力制御）など、実践的なAIワークフローを簡単に実装できます。
-- サンプルは `examples/` フォルダに多数収録されています。
+このプロジェクトは、OpenAI Agents SDKを活用したエージェント・パイプラインの構築を支援するPythonライブラリです。  
+**生成・評価・ツール連携・ガードレール**など、実践的なAIワークフローを最小限の記述で実現できます。
 
 ---
 
-## Pipelineクラスの使い方
+## 🚀 特徴・メリット
+
+- 🧩 生成・評価・ツール・ガードレールを柔軟に組み合わせたワークフローを簡単に構築
+- 🛠️ Python関数をそのままツールとして利用可能
+- 🛡️ ガードレールで安全・堅牢な入力/出力制御
+- 📦 豊富なサンプル（`examples/`）ですぐに試せる
+- 🚀 最小限の記述で素早くプロトタイピング
+
+---
+
+## ⚡ インストール
+
+```bash
+pip install agents-sdk-models
+```
+- OpenAI Agents SDK, pydantic 2.x などが必要です。詳細は[公式ドキュメント](https://openai.github.io/openai-agents-python/)も参照してください。
+
+---
+
+## 🏗️ Pipelineクラスの使い方
 
 `Pipeline` クラスは、生成テンプレート・評価テンプレート・ツール・ガードレールなどを柔軟に組み合わせて、LLMエージェントのワークフローを簡単に構築できます。
 
@@ -74,11 +91,31 @@ except InputGuardrailTripwireTriggered:
 
 ---
 
-## サンプル事例
+## 💡 サンプル事例
 
 - シンプルな生成: `examples/pipeline_simple_generation.py`
 - 生成物の評価: `examples/pipeline_with_evaluation.py`
 - ツール連携: `examples/pipeline_with_tools.py`
 - ガードレール: `examples/pipeline_with_guardrails.py`
 
-詳細は [docs/pipeline_examples.md](pipeline_examples.md) を参照してください。 
+詳細は [docs/pipeline_examples.md](pipeline_examples.md) を参照してください。
+
+---
+
+## 🖥️ サポート環境
+- Python 3.10以上
+- Windows, macOS, Linux
+- OpenAI Agents SDK（[公式ドキュメント](https://openai.github.io/openai-agents-python/)参照）
+
+---
+
+## 🎯 なぜ使うのか？
+- 🚀 **素早いプロトタイピング**: 数分でエージェントワークフローを構築・検証
+- 🧑‍💻 **開発者フレンドリー**: 最小限の記述で最大限の柔軟性
+- 🔒 **安全**: ガードレールや評価で堅牢な運用が可能
+- 🎉 **楽しい**: サンプルが豊富で拡張も簡単
+
+---
+
+## 📝 ライセンス
+MIT 

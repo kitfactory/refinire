@@ -50,14 +50,14 @@ class Pipeline:
         generation_template: str,
         evaluation_template: Optional[str],
         *,
-        generation_guardrails: Optional[list] = None,
-        evaluation_guardrails: Optional[list] = None,
+        input_guardrails: Optional[list] = None,
+        output_guardrails: Optional[list] = None,
         output_model: Optional[Type[Any]] = None,
         model: str | None = None,
         generation_tools: Optional[list] = None,
         evaluation_tools: Optional[list] = None,
         routing_func: Optional[Callable[[Any], Any]] = None,
-        session_history: Optional[Dict[str, Any]] = None,
+        session_history: Optional[list] = None,
         history_size: int = 10,
         threshold: int = 85,
         retries: int = 3,
@@ -72,8 +72,8 @@ class Pipeline:
             name: Pipeline name / パイプライン名
             generation_template: Template for content generation / コンテンツ生成用テンプレート
             evaluation_template: Template for content evaluation / コンテンツ評価用テンプレート
-            generation_guardrails: Guardrails for generation / 生成用ガードレール
-            evaluation_guardrails: Guardrails for evaluation / 評価用ガードレール
+            input_guardrails: Guardrails for generation / 生成用ガードレール
+            output_guardrails: Guardrails for evaluation / 評価用ガードレール
             output_model: Model for output formatting / 出力フォーマット用モデル
             model: LLM model name / LLMモデル名
             generation_tools: Tools for generation / 生成用ツール
@@ -94,10 +94,10 @@ class Pipeline:
         self.model = model
         self.generation_tools = generation_tools or []
         self.evaluation_tools = evaluation_tools or []
-        self.generation_guardrails = generation_guardrails or []
-        self.evaluation_guardrails = evaluation_guardrails or []
+        self.input_guardrails = input_guardrails or []
+        self.output_guardrails = output_guardrails or []
         self.routing_func = routing_func
-        self.session_history = session_history
+        self.session_history = session_history if session_history is not None else []
         self.history_size = history_size
         self.threshold = threshold
         self.retries = retries
@@ -113,8 +113,7 @@ class Pipeline:
             model=llm,
             tools=self.generation_tools,
             instructions=self.generation_template,
-            # Guardrails are now part of the instructions
-            # ガードレールは指示の一部として扱う
+            input_guardrails=self.input_guardrails,
         )
         self.eval_agent = (
             Agent(
@@ -122,8 +121,7 @@ class Pipeline:
                 model=llm,
                 tools=self.evaluation_tools,
                 instructions=self.evaluation_template,
-                # Guardrails are now part of the instructions
-                # ガードレールは指示の一部として扱う
+                output_guardrails=self.output_guardrails,
             )
             if self.evaluation_template
             else None
@@ -147,15 +145,10 @@ class Pipeline:
         Returns:
             str: Formatted prompt for generation / 生成用のフォーマット済みプロンプト
         """
-        recent_history = self._pipeline_history[-self.history_size :]
-        history_text = "\n".join(
-            f"User: {h['input']}\nAI: {h['output']}" for h in recent_history
-        )
-        session_text = "\n".join(
-            f"{k}: {v}" for k, v in (self.session_history or {}).items()
-        )
-        parts = [self.generation_template, session_text, history_text, f"UserInput: {user_input}"]
-        return "\n".join(filter(None, parts)).strip()
+        recent = "\n".join(f"User: {h['input']}\nAI: {h['output']}"
+                          for h in self._pipeline_history[-self.history_size:])
+        session = "\n".join(self.session_history)
+        return "\n".join(filter(None, [session, recent, f"UserInput: {user_input}"]))
 
     def _build_evaluation_prompt(self, user_input: str, generated_output: str) -> str:
         """
@@ -237,8 +230,7 @@ class Pipeline:
         """
         if self.session_history is None:
             return
-        key = f"turn{len(self.session_history)+1}"
-        self.session_history[key] = f"User: {user_input}\nAI: {raw_output}"
+        self.session_history.append(f"User: {user_input}\nAI: {raw_output}")
 
     def _route(self, parsed_output):
         """

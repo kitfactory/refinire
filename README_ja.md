@@ -1,251 +1,225 @@
 # Agents SDK Models 🤖🔌
 
 [![PyPI Downloads](https://static.pepy.tech/badge/agents-sdk-models)](https://pepy.tech/projects/agents-sdk-models)
-
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.9](https://img.shields.io/badge/OpenAI-Agents_0.0.9-green.svg)](https://github.com/openai/openai-agents-python)
 
-OpenAI Agents SDK のモデルアダプターコレクションで、`get_llm` 関数を通じて様々な LLM プロバイダーを統一されたインターフェースで使用できます！🚀
+OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡張集です。様々なLLMプロバイダーを統一インターフェースで利用し、実践的なエージェントパイプラインを簡単に構築できます！
+
+---
 
 ## 🌟 特徴
 
-- 🔄 **統一ファクトリ**: `get_llm` 関数を使用して、異なるプロバイダーのモデルインスタンスを簡単に取得。
-- 🧩 **複数プロバイダー対応**: OpenAI, Ollama, Google Gemini, Anthropic Claude をサポート。
-- 📊 **構造化出力**: `get_llm` を介してインスタンス化されたすべてのモデルが Pydantic モデルを使用した構造化出力をサポート。
-- 🏭 **シンプルなインターフェース**: プロバイダーを指定し、オプションでモデル名を指定するだけ。
+- 🔄 **統一ファクトリ**: `get_llm` 関数で各種プロバイダーのモデルを簡単取得
+- 🧩 **複数プロバイダー対応**: OpenAI, Ollama, Google Gemini, Anthropic Claude
+- 📊 **構造化出力**: `get_llm` で取得したモデルはPydanticモデルによる構造化出力に対応
+- 🏗️ **Pipelineクラス**: 生成・評価・ツール・ガードレールを1つのワークフローで簡単統合
+- 🛡️ **ガードレール**: 入力・出力ガードレールで安全・コンプライアンス対応
+- 🛠️ **シンプルなインターフェース**: 最小限の記述で最大限の柔軟性
+
+---
 
 ## 🛠️ インストール
 
 ### PyPI から（推奨）
-
 ```bash
-# PyPIからインストール
 pip install agents-sdk-models
-
-# 構造化出力を使用する例のために (pydantic を含む)
-# オプションの依存関係は以下でインストールできます:
-# pip install agents-sdk-models[examples]
-# または pydantic を直接インストール:
-pip install agents-sdk-models pydantic>=2.10,<3
+# 構造化出力例などを使う場合（pydantic含む）
+pip install agents-sdk-models[examples]
 ```
 
 ### ソースから
-
 ```bash
-# リポジトリをクローン
 git clone https://github.com/kitfactory/agents-sdk-models.git
 cd agents-sdk-models
-
-# 仮想環境を作成して有効化
 python -m venv .venv
 .venv\Scripts\activate  # Windows
 source .venv/bin/activate  # Linux/Mac
-
-# 開発モードでパッケージをインストール
-pip install -e .[dev] # 開発依存関係 (pytest など) と共にインストール
+pip install -e .[dev]
 ```
 
-## 🚀 クイックスタート: `get_llm` の使用
+---
 
-`get_llm` 関数は、引数の順番が (model, provider) となりました。また、model だけを指定することもでき、その場合はモデル名からプロバイダーが自動推論されます。
+## 🚀 クイックスタート: `get_llm` の使い方
 
-**新しい引数順:**
-```python
-get_llm(model="claude-3-5-sonnet-latest", provider="anthropic")
-# またはシンプルに
-get_llm("claude-3-5-sonnet-latest")
-```
-
-- model のみ指定した場合、モデル名からプロバイダーが自動的に推論されます。
-- 以前の provider を先頭にした使い方も後方互換としてサポートされています。
+`get_llm` 関数はモデル名・プロバイダー名の指定、またはモデル名だけで（プロバイダー自動推論）利用できます。
 
 ```python
-import asyncio
-import os
-from agents import Agent, Runner
-# ファクトリ関数をインポート
 from agents_sdk_models import get_llm
 
-async def main():
-    # --- 例: OpenAI ---
-    # OPENAI_API_KEY 環境変数が必要
-    openai_api_key = os.environ.get("OPENAI_API_KEY")
-    if openai_api_key:
-        print("\nOpenAI の例を実行中...")
-        # get_llm を使用してモデルを取得
-        model_openai = get_llm(
-            model="gpt-4o-mini",    # モデル名を指定 (オプション、None の場合はデフォルトを使用)
-            temperature=0.7,
-            api_key=openai_api_key # 必要に応じて API キーを渡す
-        )
-        agent_openai = Agent(
-            name="アシスタント",
-            instructions="あなたは役立つアシスタントです。",
-            model=model_openai
-        )
-        response_openai = await Runner.run(agent_openai, "あなたの名前と何ができるか教えてください。")
-        print(response_openai.final_output)
-    else:
-        print("OPENAI_API_KEY が見つかりません。OpenAI の例をスキップします。")
-
-    # --- 例: Ollama ---
-    # Ollama サーバーがローカルで実行されていることを想定
-    print("\nOllama の例を実行中...")
-    try:
-        # get_llm を使用してモデルを取得
-        model_ollama = get_llm(
-            model="llama3", # Ollama インスタンスで利用可能なモデル名を指定
-            temperature=0.7
-            # base_url="http://localhost:11434" # オプション: デフォルトでない場合に指定
-        )
-        agent_ollama = Agent(
-            name="アシスタント",
-            instructions="あなたは役立つアシスタントです。",
-            model=model_ollama
-        )
-        response_ollama = await Runner.run(agent_ollama, "あなたの名前と何ができるか教えてください。")
-        print(response_ollama.final_output)
-    except Exception as e:
-        print(f"Ollama の例を実行できませんでした: {e}")
-        print("Ollama サーバーが実行中で、モデル 'llama3' が利用可能であることを確認してください。")
-
-
-    # --- 例: Google Gemini ---
-    # GOOGLE_API_KEY 環境変数が必要
-    google_api_key = os.environ.get("GOOGLE_API_KEY")
-    if google_api_key:
-        print("\nGoogle Gemini の例を実行中...")
-        # get_llm を使用してモデルを取得
-        model_gemini = get_llm(
-            model="gemini-1.5-flash", # モデル名を指定
-            temperature=0.7,
-            api_key=google_api_key
-        )
-        agent_gemini = Agent(
-            name="アシスタント",
-            instructions="あなたは役立つアシスタントです。",
-            model=model_gemini
-        )
-        response_gemini = await Runner.run(agent_gemini, "あなたの名前と何ができるか教えてください。")
-        print(response_gemini.final_output)
-    else:
-        print("GOOGLE_API_KEY が見つかりません。Google Gemini の例をスキップします。")
-
-
-    # --- 例: Anthropic Claude ---
-    # ANTHROPIC_API_KEY 環境変数が必要
-    anthropic_api_key = os.environ.get("ANTHROPIC_API_KEY")
-    if anthropic_api_key:
-        print("\nAnthropic Claude の例を実行中...")
-        # get_llm を使用してモデルを取得
-        model_claude = get_llm(
-            model="claude-3-haiku-20240307", # モデル名を指定
-            temperature=0.7,
-            api_key=anthropic_api_key,
-            thinking=True # Claude のようなプロバイダー固有の引数 'thinking' を渡す
-        )
-        agent_claude = Agent(
-            name="アシスタント",
-            instructions="あなたは役立つアシスタントです。",
-            model=model_claude
-        )
-        response_claude = await Runner.run(agent_claude, "あなたの名前と何ができるか教えてください。")
-        print(response_claude.final_output)
-    else:
-        print("ANTHROPIC_API_KEY が見つかりません。Anthropic Claude の例をスキップします。")
-
-
-if __name__ == "__main__":
-    # 必要に応じて OpenAI 以外のプロバイダーのトレースを無効にする
-    # import sys
-    # provider = sys.argv[1] if len(sys.argv) > 1 else "openai"
-    # if provider != "openai":
-    #     from agents import set_tracing_disabled
-    #     set_tracing_disabled(True)
-    asyncio.run(main())
+# モデル・プロバイダー両方指定
+llm = get_llm(model="gpt-4o-mini", provider="openai")
+# モデル名だけ指定（プロバイダー自動推論）
+llm = get_llm("claude-3-5-sonnet-latest")
 ```
 
-## 📊 `get_llm` による構造化出力
-
-`get_llm` を介して取得されたすべてのモデルは、Pydantic モデルを使用した構造化出力をサポートしています:
-
+### 構造化出力例
 ```python
-import asyncio
-import os
 from agents import Agent, Runner
 from agents_sdk_models import get_llm
 from pydantic import BaseModel
-from typing import List
 
-# --- Pydantic モデルを定義 ---
 class WeatherInfo(BaseModel):
     location: str
     temperature: float
     condition: str
-    recommendation: str
 
-class WeatherReport(BaseModel):
-    report_date: str
-    locations: List<WeatherInfo>
-
-# --- モデルインスタンスを取得 (例: OpenAI) ---
-async def run_structured_example():
-    openai_api_key = os.environ.get("OPENAI_API_KEY")
-    if not openai_api_key:
-        print("OPENAI_API_KEY が見つかりません。構造化出力の例をスキップします。")
-        return
-
-    model = get_llm(
-        model="gpt-4o-mini",
-        api_key=openai_api_key
-    )
-
-    # --- 構造化出力を持つエージェントを作成 ---
-    agent = Agent(
-        name="天気レポーター",
-        model=model,
-        instructions="あなたは役立つ天気レポーターです。日付を YYYY-MM-DD 形式で提供してください。",
-        output_type=WeatherReport # Pydantic モデルを指定
-    )
-
-    # --- エージェントを実行し、構造化レスポンスを取得 ---
-    print("\n構造化出力の例を実行中...")
-    response = await Runner.run(agent, "今日の東京、大阪、札幌の天気はどうですか？")
-
-    # --- 構造化出力にアクセス ---
-    if response.final_output:
-        weather_report: WeatherReport = response.final_output
-        print(f"レポート日付: {weather_report.report_date}")
-        for info in weather_report.locations:
-            print(f"- 場所: {info.location}, 気温: {info.temperature}, 状態: {info.condition}")
-            print(f"  推奨事項: {info.recommendation}")
-    else:
-        print("構造化出力の取得に失敗しました。")
-        print(f"生出力: {response.raw_output}") # デバッグ用に生出力を表示
-
-if __name__ == "__main__":
-    asyncio.run(run_structured_example())
-
+llm = get_llm("gpt-4o-mini")
+agent = Agent(
+    name="天気レポーター",
+    model=llm,
+    instructions="あなたは役立つ天気レポーターです。",
+    output_type=WeatherInfo
+)
+result = Runner.run_sync(agent, "東京の天気は？")
+print(result.final_output)
 ```
 
-## 🔧 サポートされている環境
+---
 
-- **オペレーティングシステム**: Windows、macOS、Linux
-- **Pythonバージョン**: 3.9以上
-- **依存関係**:
-  - **コア依存関係** (`pyproject.toml` で定義):
-    - `openai>=1.68.0`
-    - `openai-agents>=0.0.6`
-  - **オプション依存関係** (例、特に構造化出力用):
-    - `pydantic>=2.10,<3` (`pip install agents-sdk-models[examples]` または別途インストール可能)
+## 🏗️ Pipelineクラス: LLMワークフローを簡単構築
 
-## 📝 ライセンス
+`Pipeline` クラスは、生成テンプレート・評価テンプレート・ツール・ガードレールを柔軟に組み合わせてLLMエージェントワークフローを簡単に構築できます。
 
-このプロジェクトはMITライセンスの下で提供されています - 詳細はLICENSEファイルをご覧ください。
+### 基本構成
+```python
+from agents_sdk_models.pipeline import Pipeline
 
-## 🙏 謝辞
+pipeline = Pipeline(
+    name="simple_generator",
+    generation_template="""
+    あなたは創造的な物語を生成する役立つアシスタントです。
+    ユーザーの入力に基づいて短い物語を生成してください。
+    """,
+    evaluation_template=None,  # 評価不要
+    model="gpt-4o"
+)
+result = pipeline.run("ロボットが絵を学ぶ物語")
+```
 
-- [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
-- [Ollama](https://ollama.ai/)
-- [Google Gemini](https://ai.google.dev/)
-- [Anthropic Claude](https://www.anthropic.com/claude) 
+### 評価付き
+```python
+pipeline = Pipeline(
+    name="evaluated_generator",
+    generation_template="""
+    あなたは創造的な物語を生成する役立つアシスタントです。
+    ユーザーの入力に基づいて短い物語を生成してください。
+    """,
+    evaluation_template="""
+    あなたは物語の評価者です。以下の基準で生成された物語を評価してください：
+    1. 創造性（0-100）
+    2. 一貫性（0-100）
+    3. 感情的な影響（0-100）
+    平均スコアを計算し、各側面について具体的なコメントを提供してください。
+    """,
+    model="gpt-4o",
+    threshold=70
+)
+result = pipeline.run("ロボットが絵を学ぶ物語")
+```
+
+### ツール連携
+```python
+from agents import function_tool
+
+@function_tool
+def search_web(query: str) -> str:
+    # 実際のWeb検索APIを呼ぶ場合はここを実装
+    return f"Search results for: {query}"
+
+@function_tool
+def get_weather(location: str) -> str:
+    # 実際の天気APIを呼ぶ場合はここを実装
+    return f"Weather in {location}: Sunny, 25°C"
+
+tools = [search_web, get_weather]
+
+pipeline = Pipeline(
+    name="tooled_generator",
+    generation_template="""
+    あなたは情報を収集するためにツールを使用できる役立つアシスタントです。
+    以下のツールにアクセスできます：
+    1. search_web: 情報をWebで検索する
+    2. get_weather: 場所の現在の天気を取得する
+    適切な場合は、これらのツールを使用して正確な情報を提供してください。
+    """,
+    evaluation_template=None,
+    model="gpt-4o",
+    generation_tools=tools
+)
+result = pipeline.run("東京の天気は？")
+```
+
+### ガードレール連携（input_guardrails）
+```python
+from agents import Agent, input_guardrail, GuardrailFunctionOutput, InputGuardrailTripwireTriggered, Runner, RunContextWrapper
+from agents_sdk_models.pipeline import Pipeline
+from pydantic import BaseModel
+
+class MathHomeworkOutput(BaseModel):
+    is_math_homework: bool
+    reasoning: str
+
+guardrail_agent = Agent(
+    name="Guardrail check",
+    instructions="ユーザーが数学の宿題を依頼しているか判定してください。",
+    output_type=MathHomeworkOutput,
+)
+
+@input_guardrail
+async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
+    result = await Runner.run(guardrail_agent, input, context=ctx.context)
+    return GuardrailFunctionOutput(
+        output_info=result.final_output,
+        tripwire_triggered=result.final_output.is_math_homework,
+    )
+
+pipeline = Pipeline(
+    name="guardrail_pipeline",
+    generation_template="""
+    あなたは役立つアシスタントです。ユーザーの質問に答えてください。
+    """,
+    evaluation_template=None,
+    model="gpt-4o",
+    input_guardrails=[math_guardrail],
+)
+
+try:
+    result = pipeline.run("2x + 3 = 11 を解いてください")
+    print(result)
+except InputGuardrailTripwireTriggered:
+    print("[Guardrail Triggered] 数学の宿題依頼を検出し、リクエストをブロックしました。")
+```
+
+---
+
+## 🖥️ サポート環境
+
+- Python 3.9+
+- OpenAI Agents SDK 0.0.9+
+- Windows, Linux, MacOS
+
+---
+
+## 💡 このライブラリのメリット
+
+- **統一**: 主要なLLMプロバイダーを1つのインターフェースで
+- **柔軟**: 生成・評価・ツール・ガードレールを自由に組み合わせ
+- **簡単**: 最小限の記述ですぐ使える、上級用途にも対応
+- **安全**: コンプライアンス・安全性のためのガードレール
+
+---
+
+## 📂 利用例
+
+`examples/` ディレクトリにより高度な使い方例があります：
+- `pipeline_simple_generation.py`: 最小構成の生成
+- `pipeline_with_evaluation.py`: 生成＋評価
+- `pipeline_with_tools.py`: ツール連携生成
+- `pipeline_with_guardrails.py`: ガードレール（入力フィルタリング）
+
+---
+
+## 📄 ライセンス・謝辞
+
+MIT License。 [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) により実現。
