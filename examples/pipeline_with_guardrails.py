@@ -3,7 +3,7 @@ Pipeline example with input guardrails
 ガードレール（入力ガードレール）を使ったPipelineの例
 """
 
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 from agents import Agent, input_guardrail, GuardrailFunctionOutput, InputGuardrailTripwireTriggered, Runner, RunContextWrapper
 from pydantic import BaseModel
 import asyncio
@@ -34,7 +34,7 @@ async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
 
 def main():
     # パイプラインのエージェントにガードレールを設定（input_guardrailsで渡す）
-    pipeline = Pipeline(
+    pipeline = AgentPipeline(
         name="guardrail_pipeline",
         generation_instructions="""
         You are a helpful assistant. Please answer the user's question.

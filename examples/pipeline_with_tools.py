@@ -3,7 +3,7 @@ Pipeline example with tools for enhanced generation
 ツールを使用した拡張生成のPipelineの例
 """
 
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 from agents import function_tool
 
 @function_tool
@@ -34,7 +34,7 @@ def main():
     # パイプライン用のツールを定義
     tools = [search_web, get_weather]
 
-    pipeline = Pipeline(
+    pipeline = AgentPipeline(
         name="tooled_generator",
         generation_instructions="""
         You are a helpful assistant that can use tools to gather information.

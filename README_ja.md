@@ -13,9 +13,10 @@ OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡�
 - 🔄 **統一ファクトリ**: `get_llm` 関数で各種プロバイダーのモデルを簡単取得
 - 🧩 **複数プロバイダー対応**: OpenAI, Ollama, Google Gemini, Anthropic Claude
 - 📊 **構造化出力**: `get_llm` で取得したモデルはPydanticモデルによる構造化出力に対応
-- 🏗️ **Pipelineクラス**: 生成・評価・ツール・ガードレールを1つのワークフローで簡単統合
+- 🏗️ **AgentPipelineクラス**: 生成・評価・ツール・ガードレールを1つのワークフローで簡単統合
 - 🛡️ **ガードレール**: 入力・出力ガードレールで安全・コンプライアンス対応
 - 🛠️ **シンプルなインターフェース**: 最小限の記述で最大限の柔軟性
+- ✨ **ノーコード評価＆自己改善**: モデル名とプロンプトだけで生成・評価を実行し、自動的なフィードバックループで改善可能
 
 ---
 
@@ -77,15 +78,15 @@ print(result.final_output)
 
 ---
 
-## 🏗️ Pipelineクラス: LLMワークフローを簡単構築
+## 🏗️ AgentPipelineクラス: LLMワークフローを簡単構築
 
-`Pipeline` クラスは、生成テンプレート・評価テンプレート・ツール・ガードレールを柔軟に組み合わせてLLMエージェントワークフローを簡単に構築できます。
+`AgentPipeline` クラスは、生成指示・評価指示・ツール・ガードレールを柔軟に組み合わせてLLMエージェントワークフローを簡単に構築できます。
 
 ### 基本構成
 ```python
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="simple_generator",
     generation_instructions="""
     あなたは創造的な物語を生成する役立つアシスタントです。
@@ -99,7 +100,7 @@ result = pipeline.run("ロボットが絵を学ぶ物語")
 
 ### 評価付き
 ```python
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="evaluated_generator",
     generation_instructions="""
     あなたは創造的な物語を生成する役立つアシスタントです。
@@ -134,7 +135,7 @@ def get_weather(location: str) -> str:
 
 tools = [search_web, get_weather]
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="tooled_generator",
     generation_instructions="""
     あなたは情報を収集するためにツールを使用できる役立つアシスタントです。
@@ -153,7 +154,7 @@ result = pipeline.run("東京の天気は？")
 ### ガードレール連携（input_guardrails）
 ```python
 from agents import Agent, input_guardrail, GuardrailFunctionOutput, InputGuardrailTripwireTriggered, Runner, RunContextWrapper
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 from pydantic import BaseModel
 
 class MathHomeworkOutput(BaseModel):
@@ -174,7 +175,7 @@ async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
         tripwire_triggered=result.final_output.is_math_homework,
     )
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="guardrail_pipeline",
     generation_instructions="""
     あなたは役立つアシスタントです。ユーザーの質問に答えてください。
@@ -194,13 +195,13 @@ except InputGuardrailTripwireTriggered:
 ### dynamic_promptによる動的プロンプト生成
 ```python
 # dynamic_prompt引数にカスタム関数を渡すことで、プロンプト生成を柔軟にカスタマイズできます。
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
 def my_dynamic_prompt(user_input: str) -> str:
     # 例: ユーザー入力を大文字化し、接頭辞を付与
     return f"[DYNAMIC PROMPT] USER SAID: {user_input.upper()}"
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="dynamic_prompt_example",
     generation_instructions="""
     あなたは親切なアシスタントです。ユーザーのリクエストに答えてください。
@@ -212,6 +213,24 @@ pipeline = Pipeline(
 result = pipeline.run("面白いジョークを教えて")
 print(result)
 ```
+
+### リトライ時のコメントフィードバック
+```python
+from agents_sdk_models.pipeline import AgentPipeline
+
+pipeline = AgentPipeline(
+    name="comment_retry",
+    generation_instructions="生成プロンプト",  # 生成用システムプロンプト
+    evaluation_instructions="評価プロンプト",   # 評価用システムプロンプト
+    model="gpt-4o-mini",
+    threshold=80,
+    retries=2,
+    retry_comment_importance=["serious", "normal"]
+)
+result = pipeline.run("入力テキスト")
+print(result)
+```
+リトライ時に前回の評価コメント（指定した重大度のみ）が生成プロンプトに自動で付与され、改善を促します。
 
 ---
 
@@ -228,6 +247,7 @@ print(result)
 - **統一**: 主要なLLMプロバイダーを1つのインターフェースで
 - **柔軟**: 生成・評価・ツール・ガードレールを自由に組み合わせ
 - **簡単**: 最小限の記述ですぐ使える、上級用途にも対応
+- **自己改善**: 評価指示とリトライ設定だけで、自動的に改善サイクルを実行
 - **安全**: コンプライアンス・安全性のためのガードレール
 
 ---

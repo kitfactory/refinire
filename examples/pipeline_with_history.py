@@ -1,13 +1,13 @@
 """
-Pipeline example with conversation history
-会話履歴（history）を活用したPipelineの例
+AgentPipeline example with conversation history
+会話履歴（history）を活用したAgentPipelineの例
 """
 
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
 def main():
     # 直近2件の履歴をプロンプトに含める
-    pipeline = Pipeline(
+    pipeline = AgentPipeline(
         name="history_example",
         generation_instructions="""
         You are a helpful assistant. Answer concisely.

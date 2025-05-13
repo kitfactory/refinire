@@ -13,9 +13,10 @@ A collection of model adapters and workflow utilities for the OpenAI Agents SDK,
 - 🔄 **Unified Factory**: Use the `get_llm` function to easily get model instances for different providers.
 - 🧩 **Multiple Providers**: Support for OpenAI, Ollama, Google Gemini, and Anthropic Claude.
 - 📊 **Structured Output**: All models instantiated via `get_llm` support structured output using Pydantic models.
-- 🏗️ **Pipeline Class**: Easily compose generation, evaluation, tool integration, and guardrails in one workflow.
+- 🏗️ **AgentPipeline Class**: Easily compose generation, evaluation, tool integration, and guardrails in one workflow.
 - 🛡️ **Guardrails**: Add input/output guardrails for safe and compliant agent behavior.
 - 🛠️ **Simple Interface**: Minimal code, maximum flexibility.
+- ✨ **Zero-Code Evaluation & Self-Improvement**: Just specify model names and system prompts to automatically run generation, evaluation, and feedback-driven retries.
 
 ---
 
@@ -77,15 +78,31 @@ print(result.final_output)
 
 ---
 
-## 🏗️ Pipeline Class: Easy LLM Workflows
+## 🏗️ AgentPipeline Class: Easy LLM Workflows
 
-The `Pipeline` class lets you flexibly build LLM agent workflows by combining generation templates, evaluation templates, tools, and guardrails.
+The `AgentPipeline` class provides an all-in-one solution for AI agent workflows. It:
+  - Generates content based on user-defined instructions
+  - Evaluates the generated content with scoring and comments
+  - Integrates custom tools (via `function_tool`) for external data or computation
+  - Applies input/output guardrails (via `input_guardrail`) for safety and compliance
+  - Manages session history and context
+  - Supports configurable retries with automatic feedback (via `retry_comment_importance`)
+
+Key initialization parameters:
+  - `generation_instructions` (str): System prompt for content generation
+  - `evaluation_instructions` (str, optional): System prompt for content evaluation
+  - `model` (str, optional): LLM model to use (e.g., "gpt-4o-mini")
+  - `generation_tools` (list, optional): Tools for generation stage
+  - `input_guardrails`, `output_guardrails` (list, optional): Guardrails for input/output
+  - `threshold` (int): Minimum score to accept generated content
+  - `retries` (int): Number of retry attempts on low evaluation
+  - `retry_comment_importance` (list[str], optional): Importance levels (`"serious"`, `"normal"`, `"minor"`) whose comments will be prepended to the prompt on retry
 
 ### Basic Usage
 ```python
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="simple_generator",
     generation_instructions="""
     You are a helpful assistant that generates creative stories.
@@ -99,7 +116,7 @@ result = pipeline.run("A story about a robot learning to paint")
 
 ### With Evaluation
 ```python
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="evaluated_generator",
     generation_instructions="""
     You are a helpful assistant that generates creative stories.
@@ -134,7 +151,7 @@ def get_weather(location: str) -> str:
 
 tools = [search_web, get_weather]
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="tooled_generator",
     generation_instructions="""
     You are a helpful assistant that can use tools to gather information.
@@ -153,7 +170,7 @@ result = pipeline.run("What's the weather like in Tokyo?")
 ### With Guardrails (input_guardrails)
 ```python
 from agents import Agent, input_guardrail, GuardrailFunctionOutput, InputGuardrailTripwireTriggered, Runner, RunContextWrapper
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 from pydantic import BaseModel
 
 class MathHomeworkOutput(BaseModel):
@@ -174,7 +191,7 @@ async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
         tripwire_triggered=result.final_output.is_math_homework,
     )
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="guardrail_pipeline",
     generation_instructions="""
     You are a helpful assistant. Please answer the user's question.
@@ -194,13 +211,13 @@ except InputGuardrailTripwireTriggered:
 ### With Dynamic Prompt
 ```python
 # You can provide a custom function to dynamically build the prompt.
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
 def my_dynamic_prompt(user_input: str) -> str:
     # Example: Uppercase the user input and add a prefix
     return f"[DYNAMIC PROMPT] USER SAID: {user_input.upper()}"
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="dynamic_prompt_example",
     generation_instructions="""
     You are a helpful assistant. Respond to the user's request.
@@ -229,6 +246,7 @@ print(result)
 - **Flexible**: Compose generation, evaluation, tools, and guardrails as you like
 - **Easy**: Minimal code to get started, powerful enough for advanced workflows
 - **Safe**: Guardrails for compliance and safety
+- **Self-Improving**: Automatic feedback and retry mechanism with minimal configuration
 
 ---
 

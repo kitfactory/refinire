@@ -3,14 +3,14 @@ Pipeline example with dynamic_prompt function
 動的プロンプト生成関数（dynamic_prompt）を使ったPipelineの例
 """
 
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
 def my_dynamic_prompt(user_input: str) -> str:
     # 例: ユーザー入力を大文字化し、履歴やセッションは含めないシンプルなカスタムプロンプト
     return f"[DYNAMIC PROMPT] USER SAID: {user_input.upper()}"
 
 def main():
-    pipeline = Pipeline(
+    pipeline = AgentPipeline(
         name="dynamic_prompt_example",
         generation_instructions="""
         You are a helpful assistant. Respond to the user's request.

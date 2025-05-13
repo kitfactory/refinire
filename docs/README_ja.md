@@ -26,18 +26,18 @@ pip install agents-sdk-models
 
 ---
 
-## 🏗️ Pipelineクラスの使い方
+## 🏗️ AgentPipelineクラスの使い方
 
-`Pipeline` クラスは、生成テンプレート・評価テンプレート・ツール・ガードレールなどを柔軟に組み合わせて、LLMエージェントのワークフローを簡単に構築できます。
+`AgentPipeline` クラスは、生成指示・評価指示・ツール・ガードレールなどを柔軟に組み合わせて、LLMエージェントのワークフローを簡単に構築できます。
 
 ### 基本構成
 ```python
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="my_pipeline",
-    generation_template="...",  # 生成指示
-    evaluation_template=None,    # 評価不要ならNone
+    generation_instructions="...",  # 生成指示
+    evaluation_instructions=None,    # 評価不要ならNone
     model="gpt-3.5-turbo"
 )
 result = pipeline.run("ユーザー入力")
@@ -45,10 +45,10 @@ result = pipeline.run("ユーザー入力")
 
 ### 生成物の自動評価
 ```python
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="evaluated_generator",
-    generation_template="...",
-    evaluation_template="...",  # 評価指示
+    generation_instructions="...",
+    evaluation_instructions="...",  # 評価指示
     model="gpt-3.5-turbo",
     threshold=70
 )
@@ -63,10 +63,10 @@ from agents import function_tool
 def search_web(query: str) -> str:
     ...
 
-pipeline = Pipeline(
+pipeline = AgentPipeline(
     name="tooled_generator",
-    generation_template="...",
-    evaluation_template=None,
+    generation_instructions="...",
+    evaluation_instructions=None,
     model="gpt-3.5-turbo",
     generation_tools=[search_web]
 )
@@ -80,8 +80,13 @@ from agents import input_guardrail, GuardrailFunctionOutput, InputGuardrailTripw
 async def math_guardrail(ctx, agent, input):
     ...
 
-pipeline = Pipeline(...)
-pipeline.gen_agent.input_guardrails = [math_guardrail]
+pipeline = AgentPipeline(
+    name="guardrail_pipeline",
+    generation_instructions="...",
+    evaluation_instructions=None,
+    model="gpt-4o",
+    input_guardrails=[math_guardrail]
+)
 
 try:
     result = pipeline.run("Can you help me solve for x: 2x + 3 = 11?")
@@ -89,33 +94,20 @@ except InputGuardrailTripwireTriggered:
     print("[Guardrail Triggered] Math homework detected. Request blocked.")
 ```
 
----
+### リトライ時のコメントフィードバック
+```python
+from agents_sdk_models.pipeline import AgentPipeline
 
-## 💡 サンプル事例
-
-- シンプルな生成: `examples/pipeline_simple_generation.py`
-- 生成物の評価: `examples/pipeline_with_evaluation.py`
-- ツール連携: `examples/pipeline_with_tools.py`
-- ガードレール: `examples/pipeline_with_guardrails.py`
-
-詳細は [docs/pipeline_examples.md](pipeline_examples.md) を参照してください。
-
----
-
-## 🖥️ サポート環境
-- Python 3.10以上
-- Windows, macOS, Linux
-- OpenAI Agents SDK（[公式ドキュメント](https://openai.github.io/openai-agents-python/)参照）
-
----
-
-## 🎯 なぜ使うのか？
-- 🚀 **素早いプロトタイピング**: 数分でエージェントワークフローを構築・検証
-- 🧑‍💻 **開発者フレンドリー**: 最小限の記述で最大限の柔軟性
-- 🔒 **安全**: ガードレールや評価で堅牢な運用が可能
-- 🎉 **楽しい**: サンプルが豊富で拡張も簡単
-
----
-
-## 📝 ライセンス
-MIT 
+pipeline = AgentPipeline(
+    name="comment_retry",
+    generation_instructions="生成プロンプト",
+    evaluation_instructions="評価プロンプト",
+    model="gpt-4o-mini",
+    threshold=80,
+    retries=2,
+    retry_comment_importance=["serious", "normal"]
+)
+result = pipeline.run("入力テキスト")
+print(result)
+```
+リトライ時に前回の評価コメント（指定した重大度のみ）が生成プロンプトに自動で付与され、改善を促します。

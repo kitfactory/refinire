@@ -5,7 +5,7 @@
 本システムはレイヤーアーキテクチャを採用し、以下のような構成となっています。
 
 - UI/利用例層（examples/）
-- ユースケース層（Pipelineクラス）
+- ユースケース層（AgentPipelineクラス）
 - 機能クラス層（ツール関数、ガードレール関数、評価関数など）
 - データクラス層（pydanticモデル、dataclass等）
 - ゲートウェイ層（get_llm等のモデル取得）
@@ -14,7 +14,7 @@
 ## 主要インターフェース
 | クラス名 | 役割 | レイヤー |
 |---|---|---|
-| Pipeline | ワークフロー統合・実行 | ユースケース |
+| AgentPipeline | ワークフロー統合・実行 | ユースケース |
 | Agent | LLMエージェント | 機能/ユースケース |
 | function_toolで定義した関数 | ツールとして利用 | 機能 |
 | input_guardrailで定義した関数 | 入力ガードレール | 機能 |
@@ -30,10 +30,10 @@
 ### ER図（PlantUML）
 ```plantuml
 @startuml
-class Pipeline {
+class AgentPipeline {
   - name
-  - generation_template
-  - evaluation_template
+  - generation_instructions
+  - evaluation_instructions
   - ...
 }
 class Agent {
@@ -50,7 +50,7 @@ class MathHomeworkOutput {
   is_math_homework: bool
   reasoning: str
 }
-Pipeline --> Agent
+AgentPipeline --> Agent
 Agent --> EvaluationResult
 Agent --> MathHomeworkOutput
 @enduml

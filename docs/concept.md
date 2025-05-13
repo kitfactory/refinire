@@ -1,6 +1,6 @@
 # 対応する課題
 
-OpenaAI Agents SDKライブラリではサポートされているのは、OpenAIが提供するLLMのみである。そのため、OllamaやAnthropic,Googleなどの有力モデルを使用することができない。
+OpenAI Agents SDKライブラリではサポートされているのは、OpenAIが提供するLLMのみである。そのため、OllamaやAnthropic,Googleなどの有力モデルを使用することができない。
 
 そこで、OpenAI Agentsで動作する各LLMプロバイダーをさぽーとできるようにするものである。
 

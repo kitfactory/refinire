@@ -55,6 +55,10 @@ class ClaudeModel(OpenAIChatCompletionsModel):
         # AnthropicのベースURLでAsyncOpenAIクライアントを作成
         openai_client = AsyncOpenAI(base_url=base_url, api_key=api_key)
         
+        # Store the AsyncOpenAI client on the instance for direct access
+        # テストで参照できるよう AsyncOpenAI クライアントをインスタンスに保存する
+        self.openai_client = openai_client
+        
         # Store parameters for later use in API calls
         # 後でAPIコールで使用するためにパラメータを保存
         self.temperature = temperature

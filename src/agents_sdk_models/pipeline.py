@@ -31,14 +31,14 @@ class EvaluationResult:
     comment: List[str]  # List of evaluation comments / 評価コメントのリスト
 
 
-class Pipeline:
+class AgentPipeline:
     """
-    Pipeline class for managing the generation and evaluation of content using OpenAI Agents SDK
+    AgentPipeline class for managing the generation and evaluation of content using OpenAI Agents SDK
     OpenAI Agents SDKを使用してコンテンツの生成と評価を管理するパイプラインクラス
 
     This class handles:
     このクラスは以下を処理します：
-    - Content generation using templates / テンプレートを使用したコンテンツ生成
+    - Content generation using instructions / instructionsを使用したコンテンツ生成
     - Content evaluation with scoring / スコアリングによるコンテンツ評価
     - Session history management / セッション履歴の管理
     - Output formatting and routing / 出力のフォーマットとルーティング
@@ -64,6 +64,7 @@ class Pipeline:
         debug: bool = False,
         improvement_callback: Optional[Callable[[Any, EvaluationResult], None]] = None,
         dynamic_prompt: Optional[Callable[[str], str]] = None,
+        retry_comment_importance: Optional[list[str]] = None,
     ) -> None:
         """
         Initialize the Pipeline with configuration parameters
@@ -87,6 +88,7 @@ class Pipeline:
             debug: Debug mode flag / デバッグモードフラグ
             improvement_callback: Callback for improvement suggestions / 改善提案用コールバック
             dynamic_prompt: Optional function to dynamically build prompt / 動的プロンプト生成関数（任意）
+            retry_comment_importance: Importance levels of comments to include on retry / リトライ時にプロンプトに含めるコメントの重大度レベル（任意）
         """
         self.name = name
         self.generation_instructions = generation_instructions.strip()
@@ -106,6 +108,7 @@ class Pipeline:
         self.debug = debug
         self.improvement_callback = improvement_callback
         self.dynamic_prompt = dynamic_prompt
+        self.retry_comment_importance = retry_comment_importance or []
 
         # Get LLM instance
         llm = get_llm(model) if model else None
@@ -264,12 +267,29 @@ class Pipeline:
             Any: Processed output or None if evaluation fails / 処理済み出力、または評価失敗時はNone
         """
         attempt = 0
+        last_eval_result: Optional[EvaluationResult] = None  # Store last evaluation result for retry
         while attempt <= self.retries:
             # ---------------- Generation ----------------
-            if self.dynamic_prompt:
-                gen_prompt = self.dynamic_prompt(user_input)
+            # On retry, include prior evaluation comments if configured
+            if attempt > 0 and last_eval_result and self.retry_comment_importance:
+                # Filter comments by importance
+                try:
+                    comments = [c for c in last_eval_result.comment if c.get("importance") in self.retry_comment_importance]
+                except Exception:
+                    comments = []
+                # Format comments
+                comment_lines = "\n".join(f"- ({c.get('importance')}) {c.get('content')}" for c in comments)
             else:
-                gen_prompt = self._build_generation_prompt(user_input)
+                comment_lines = ""
+            # Build base prompt
+            if attempt > 0 and comment_lines:
+                base = self.dynamic_prompt(user_input) if self.dynamic_prompt else self._build_generation_prompt(user_input)
+                gen_prompt = "\n".join([comment_lines, base])
+            else:
+                if self.dynamic_prompt:
+                    gen_prompt = self.dynamic_prompt(user_input)
+                else:
+                    gen_prompt = self._build_generation_prompt(user_input)
             if self.debug:
                 print("[Generation prompt]\n", gen_prompt)
 
@@ -304,6 +324,8 @@ class Pipeline:
                 self._append_to_session(user_input, raw_output_text)
                 return self._route(parsed_output)
 
+            # Store for next retry
+            last_eval_result = eval_result
             attempt += 1
 
         if self.improvement_callback:

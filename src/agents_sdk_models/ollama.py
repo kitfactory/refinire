@@ -17,7 +17,7 @@ class OllamaModel(OpenAIChatCompletionsModel):
         self,
         model: str = "phi4-mini:latest",
         temperature: float = 0.3,
-        base_url: str = "http://localhost:11434", # デフォルトのURL
+        base_url: str = None, # デフォルトのURL
         **kwargs: Any,
     ) -> None:
         """
@@ -36,15 +36,19 @@ class OllamaModel(OpenAIChatCompletionsModel):
         """
         # get_llm経由で base_url が None の場合はデフォルトの URL を設定
         if base_url == None:
-            base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434/v1")
-        else:
-            base_url = base_url.rstrip("/")
-            if not base_url.endswith("v1"):
-                base_url = base_url + "/v1"
+            base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        
+        base_url = base_url.rstrip("/")
+        if not base_url.endswith("v1"):
+            base_url = base_url + "/v1"
 
         # Create AsyncOpenAI client with Ollama base URL
         # OllamaのベースURLでAsyncOpenAIクライアントを作成
         openai_client = AsyncOpenAI(base_url=base_url, api_key="ollama")
+        
+        # Store the AsyncOpenAI client on the instance for direct access
+        # テストで参照できるよう AsyncOpenAI クライアントをインスタンスに保存する
+        self.openai_client = openai_client
         
         # Store parameters for later use in API calls
         # 後でAPIコールで使用するためにパラメータを保存

@@ -3,12 +3,12 @@ Pipeline example with generation and evaluation
 生成と評価を行うPipelineの例
 """
 
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
 def main():
     # Initialize pipeline with both generation and evaluation templates
     # 生成と評価のテンプレートでパイプラインを初期化
-    pipeline = Pipeline(
+    pipeline = AgentPipeline(
         name="evaluated_generator",
         generation_instructions="""
         You are a helpful assistant that generates creative stories.

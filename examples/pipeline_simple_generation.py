@@ -3,12 +3,12 @@ Simple generation example using Pipeline without evaluation
 評価なしのPipelineを使用したシンプルな生成の例
 """
 
-from agents_sdk_models.pipeline import Pipeline
+from agents_sdk_models.pipeline import AgentPipeline
 
 def main():
     # Initialize pipeline with generation template only
     # 生成テンプレートのみでパイプラインを初期化
-    pipeline = Pipeline(
+    pipeline = AgentPipeline(
         name="simple_generator",
         generation_instructions="""
         You are a helpful assistant that generates creative stories.
