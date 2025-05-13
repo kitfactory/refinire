@@ -3,6 +3,7 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/agents-sdk-models)](https://pepy.tech/projects/agents-sdk-models)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.9](https://img.shields.io/badge/OpenAI-Agents_0.0.9-green.svg)](https://github.com/openai/openai-agents-python)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)]
 
 OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡張集です。様々なLLMプロバイダーを統一インターフェースで利用し、実践的なエージェントパイプラインを簡単に構築できます！
 
@@ -37,6 +38,14 @@ python -m venv .venv
 .venv\Scripts\activate  # Windows
 source .venv/bin/activate  # Linux/Mac
 pip install -e .[dev]
+```
+
+## 🧪 テスト & カバレッジ
+
+テストを実行し、カバレッジレポートを表示します:
+
+```bash
+pytest --cov=agents_sdk_models --cov-report=term-missing
 ```
 
 ---

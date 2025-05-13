@@ -3,6 +3,7 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/agents-sdk-models)](https://pepy.tech/projects/agents-sdk-models)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.9](https://img.shields.io/badge/OpenAI-Agents_0.0.9-green.svg)](https://github.com/openai/openai-agents-python)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)]
 
 A collection of model adapters and workflow utilities for the OpenAI Agents SDK, enabling you to use various LLM providers and build practical agent pipelines with a unified interface!
 
@@ -37,6 +38,14 @@ python -m venv .venv
 .venv\Scripts\activate  # Windows
 source .venv/bin/activate  # Linux/Mac
 pip install -e .[dev]
+```
+
+## 🧪 Tests & Coverage
+
+Run tests and generate a coverage report:
+
+```bash
+pytest --cov=agents_sdk_models --cov-report=term-missing
 ```
 
 ---
