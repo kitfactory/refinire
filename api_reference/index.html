@@ -309,6 +309,30 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="get_llm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      引数
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      戻り値
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -318,10 +342,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="AgentPipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      引数
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      戻り値
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       モデルラッパークラス
     </span>
@@ -479,6 +527,30 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="get_llm">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      引数
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      戻り値
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -488,10 +560,34 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="AgentPipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      引数
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      戻り値
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
       モデルラッパークラス
     </span>
@@ -574,14 +670,48 @@
 <hr />
 <h2 id="get_llm">get_llm<a class="headerlink" href="#get_llm" title="Permanent link">&para;</a></h2>
 <ul>
-<li>モデル名・プロバイダー名からLLMインスタンスを返すファクトリ関数</li>
-<li>引数:<ul>
+<li>
+<p>モデル名・プロバイダー名からLLMインスタンスを返すファクトリ関数</p>
+</li>
+<li>
+<p>引数:</p>
+<ul>
 <li>model (str): モデル名</li>
 <li>provider (str, optional): プロバイダー名（省略時は自動推論）</li>
 </ul>
 </li>
 <li>戻り値: LLMインスタンス</li>
 </ul>
+<h3 id="_2">引数<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>名前</th>
+<th>型</th>
+<th>必須/オプション</th>
+<th>デフォルト</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>model</td>
+<td>str</td>
+<td>必須</td>
+<td>-</td>
+<td>使用するLLMモデル名</td>
+</tr>
+<tr>
+<td>provider</td>
+<td>str (optional)</td>
+<td>オプション</td>
+<td>None</td>
+<td>モデルのプロバイダー名（自動推論可）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_3">戻り値<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p><code>LLMインスタンス</code></p>
 <h2 id="agentpipeline">AgentPipeline<a class="headerlink" href="#agentpipeline" title="Permanent link">&para;</a></h2>
 <ul>
 <li>生成・評価・ツール・ガードレールを統合したパイプライン管理クラス</li>
@@ -603,7 +733,142 @@
 </li>
 <li>戻り値: 生成・評価結果</li>
 </ul>
-<h2 id="_2">モデルラッパークラス<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="_4">引数<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>名前</th>
+<th>型</th>
+<th>必須/オプション</th>
+<th>デフォルト</th>
+<th>説明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>str</td>
+<td>必須</td>
+<td>-</td>
+<td>パイプライン名</td>
+</tr>
+<tr>
+<td>generation_instructions</td>
+<td>str</td>
+<td>必須</td>
+<td>-</td>
+<td>生成用システムプロンプト</td>
+</tr>
+<tr>
+<td>evaluation_instructions</td>
+<td>str (optional)</td>
+<td>必須</td>
+<td>None</td>
+<td>評価用システムプロンプト</td>
+</tr>
+<tr>
+<td>model</td>
+<td>str or LLM</td>
+<td>オプション</td>
+<td>None</td>
+<td>使用するLLMモデル名またはLLMインスタンス</td>
+</tr>
+<tr>
+<td>generation_tools</td>
+<td>list (optional)</td>
+<td>オプション</td>
+<td>[]</td>
+<td>生成時に使用するツールのリスト</td>
+</tr>
+<tr>
+<td>evaluation_tools</td>
+<td>list (optional)</td>
+<td>オプション</td>
+<td>[]</td>
+<td>評価時に使用するツールのリスト</td>
+</tr>
+<tr>
+<td>input_guardrails</td>
+<td>list (optional)</td>
+<td>オプション</td>
+<td>[]</td>
+<td>生成時の入力ガードレールリスト</td>
+</tr>
+<tr>
+<td>output_guardrails</td>
+<td>list (optional)</td>
+<td>オプション</td>
+<td>[]</td>
+<td>評価時の出力ガードレールリスト</td>
+</tr>
+<tr>
+<td>routing_func</td>
+<td>Callable (optional)</td>
+<td>オプション</td>
+<td>None</td>
+<td>出力ルーティング用関数</td>
+</tr>
+<tr>
+<td>session_history</td>
+<td>list (optional)</td>
+<td>オプション</td>
+<td>[]</td>
+<td>セッション履歴</td>
+</tr>
+<tr>
+<td>history_size</td>
+<td>int</td>
+<td>オプション</td>
+<td>10</td>
+<td>履歴保持数</td>
+</tr>
+<tr>
+<td>threshold</td>
+<td>int</td>
+<td>オプション</td>
+<td>85</td>
+<td>評価スコアの閾値</td>
+</tr>
+<tr>
+<td>retries</td>
+<td>int</td>
+<td>オプション</td>
+<td>3</td>
+<td>リトライ試行回数</td>
+</tr>
+<tr>
+<td>debug</td>
+<td>bool</td>
+<td>オプション</td>
+<td>False</td>
+<td>デバッグモードフラグ</td>
+</tr>
+<tr>
+<td>improvement_callback</td>
+<td>Callable[[Any, EvaluationResult], None] (optional)</td>
+<td>オプション</td>
+<td>None</td>
+<td>改善提案用コールバック</td>
+</tr>
+<tr>
+<td>dynamic_prompt</td>
+<td>Callable[[str], str] (optional)</td>
+<td>オプション</td>
+<td>None</td>
+<td>動的プロンプト生成関数</td>
+</tr>
+<tr>
+<td>retry_comment_importance</td>
+<td>list[str] (optional)</td>
+<td>オプション</td>
+<td>[]</td>
+<td>リトライ時にプロンプトに含めるコメント重大度レベル</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_5">戻り値<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
+<p><code>生成・評価結果（</code>EvaluationResult<code>を含むオブジェクト）</code></p>
+<h2 id="_6">モデルラッパークラス<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
