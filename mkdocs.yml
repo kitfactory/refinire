@@ -7,10 +7,9 @@ repo_name: kitfactory/agents-sdk-models
 theme:
   name: material
   language: ja
-  features:
-    - mermaid
 
 plugins:
+  - mermaid2
   - search
 
 nav:
@@ -29,5 +28,5 @@ markdown_extensions:
       permalink: true
 
 # mermaid.js for client-side rendering
-extra_javascript:
-  - https://unpkg.com/mermaid@10.4.0/dist/mermaid.min.js 
+# extra_javascript:
+#   - https://unpkg.com/mermaid@10.4.0/dist/mermaid.min.js 
