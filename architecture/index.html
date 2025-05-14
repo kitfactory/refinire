@@ -515,33 +515,32 @@
 </tbody>
 </table>
 <h3 id="erplantuml">ER図（PlantUML）<a class="headerlink" href="#erplantuml" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="p">@</span><span class="n">startuml</span>
-<span class="k">class</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">name</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">generation_instructions</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">evaluation_instructions</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="p">...</span>
-<span class="p">}</span>
-<span class="k">class</span><span class="w"> </span><span class="n">Agent</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">name</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">model</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">instructions</span>
-<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="p">...</span>
-<span class="p">}</span>
-<span class="k">class</span><span class="w"> </span><span class="n">EvaluationResult</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nl">score</span><span class="p">:</span><span class="w"> </span><span class="kt">int</span>
-<span class="w">  </span><span class="nl">comment</span><span class="p">:</span><span class="w"> </span><span class="n">List</span><span class="o">~</span><span class="n">str</span><span class="o">~</span>
-<span class="p">}</span>
-<span class="k">class</span><span class="w"> </span><span class="n">MathHomeworkOutput</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="nl">is_math_homework</span><span class="p">:</span><span class="w"> </span><span class="kt">bool</span>
-<span class="w">  </span><span class="nl">reasoning</span><span class="p">:</span><span class="w"> </span><span class="n">str</span>
-<span class="p">}</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">Agent</span>
-<span class="n">Agent</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">EvaluationResult</span>
-<span class="n">Agent</span><span class="w"> </span><span class="o">--&gt;</span><span class="w"> </span><span class="n">MathHomeworkOutput</span>
-<span class="p">@</span><span class="n">enduml</span>
+<div class="highlight"><pre><span></span><code>@startuml
+class AgentPipeline {
+  - name
+  - generation_instructions
+  - evaluation_instructions
+  - ...
+}
+class Agent {
+  - name
+  - model
+  - instructions
+  - ...
+}
+class EvaluationResult {
+  score: int
+  comment: List~str~
+}
+class MathHomeworkOutput {
+  is_math_homework: bool
+  reasoning: str
+}
+AgentPipeline --&gt; Agent
+Agent --&gt; EvaluationResult
+Agent --&gt; MathHomeworkOutput
+@enduml
 </code></pre></div>
-
 <hr />
 <h2 id="_5">参考<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <ul>

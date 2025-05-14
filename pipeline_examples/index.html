@@ -529,7 +529,7 @@
 <li>概要: ユーザー入力に基づき、評価なしで直接生成結果を返す最小構成の例。</li>
 </ul>
 <h3 id="_1">コード例<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;simple_generator&quot;</span><span class="p">,</span>
     <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    You are a helpful assistant that generates creative stories.</span>
@@ -542,7 +542,6 @@
 <span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;A story about a robot learning to paint&quot;</span><span class="p">)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="2">2. 生成物の評価付き生成<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
 <ul>
@@ -550,7 +549,7 @@
 <li>概要: 生成物に対して自動評価を行い、閾値を満たした場合のみ結果を返す例。</li>
 </ul>
 <h3 id="_2">コード例<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;evaluated_generator&quot;</span><span class="p">,</span>
     <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
     <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
@@ -559,7 +558,6 @@
 <span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;A story about a robot learning to paint&quot;</span><span class="p">)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="3">3. ツール連携による生成<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
 <ul>
@@ -567,7 +565,7 @@
 <li>概要: <code>@function_tool</code>で定義したPython関数をツールとして組み込み、外部情報取得や計算などを組み合わせた生成を行う例。</li>
 </ul>
 <h3 id="_3">コード例<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">function_tool</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">function_tool</span>
 
 <span class="nd">@function_tool</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">search_web</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -586,7 +584,6 @@
 <span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather like in Tokyo?&quot;</span><span class="p">)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="4">4. ガードレール（入力ガードレール）による入力制御<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
 <ul>
@@ -594,7 +591,7 @@
 <li>概要: 入力内容に対してガードレール（例: 数学の宿題依頼の検出）を設け、不適切なリクエストをブロックする例。</li>
 </ul>
 <h3 id="_4">コード例<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_guardrail</span><span class="p">,</span> <span class="n">GuardrailFunctionOutput</span><span class="p">,</span> <span class="n">InputGuardrailTripwireTriggered</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_guardrail</span><span class="p">,</span> <span class="n">GuardrailFunctionOutput</span><span class="p">,</span> <span class="n">InputGuardrailTripwireTriggered</span>
 
 <span class="nd">@input_guardrail</span>
 <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">math_guardrail</span><span class="p">(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
@@ -613,7 +610,6 @@
 <span class="k">except</span> <span class="n">InputGuardrailTripwireTriggered</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Guardrail Triggered] Math homework detected. Request blocked.&quot;</span><span class="p">)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="5">5. リトライ時のコメントフィードバック<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
 <ul>
@@ -622,7 +618,7 @@
 <li><code>retry_comment_importance</code>: <code>serious</code>, <code>normal</code>, <code>minor</code> のいずれかを指定可能</li>
 </ul>
 <h3 id="_5">コード例<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
 
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;comment_retry&quot;</span><span class="p">,</span>
@@ -636,7 +632,6 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;評価対象のテキスト&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="_6">参考<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
 <ul>

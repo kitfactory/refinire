@@ -443,19 +443,18 @@
 <li>ユーザーが入力文を与える</li>
 <li>AgentPipelineが生成指示をもとにLLMで生成</li>
 <li>結果を返す</li>
-<li>ユースケースフロー図</li>
+<li>ユースケースフロー図
+<div class="highlight"><pre><span></span><code>@startuml
+actor User
+participant AgentPipeline
+participant Agent
+User -&gt; AgentPipeline: 入力文
+AgentPipeline -&gt; Agent: 生成指示+入力
+Agent -&gt; AgentPipeline: 生成結果
+AgentPipeline -&gt; User: 結果返却
+@enduml
+</code></pre></div></li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="p">@</span><span class="n">startuml</span>
-<span class="n">actor</span><span class="w"> </span><span class="n">User</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">AgentPipeline</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">Agent</span>
-<span class="n">User</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">入力文</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Agent</span><span class="o">:</span><span class="w"> </span><span class="n">生成指示</span><span class="o">+</span><span class="n">入力</span>
-<span class="n">Agent</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">生成結果</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="o">:</span><span class="w"> </span><span class="n">結果返却</span>
-<span class="p">@</span><span class="n">enduml</span>
-</code></pre></div>
-
 <h2 id="2">2. 生成物の評価付き生成<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
 <ul>
 <li>ユースケース手順</li>
@@ -463,26 +462,25 @@
 <li>AgentPipelineが生成指示で生成</li>
 <li>AgentPipelineが評価指示で評価</li>
 <li>評価スコアが閾値以上なら結果返却、未満ならリトライor失敗</li>
-<li>ユースケースフロー図</li>
+<li>ユースケースフロー図
+<div class="highlight"><pre><span></span><code>@startuml
+actor User
+participant AgentPipeline
+participant Agent as Generator
+participant Agent as Evaluator
+User -&gt; AgentPipeline: 入力文
+AgentPipeline -&gt; Generator: 生成指示+入力
+Generator -&gt; AgentPipeline: 生成結果
+AgentPipeline -&gt; Evaluator: 評価指示+生成結果
+Evaluator -&gt; AgentPipeline: 評価スコア
+alt スコア&gt;=閾値
+  AgentPipeline -&gt; User: 結果返却
+else スコア&lt;閾値
+  AgentPipeline -&gt; User: 失敗通知
+end
+@enduml
+</code></pre></div></li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="p">@</span><span class="n">startuml</span>
-<span class="n">actor</span><span class="w"> </span><span class="n">User</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">AgentPipeline</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">Agent</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">Generator</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">Agent</span><span class="w"> </span><span class="n">as</span><span class="w"> </span><span class="n">Evaluator</span>
-<span class="n">User</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">入力文</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Generator</span><span class="o">:</span><span class="w"> </span><span class="n">生成指示</span><span class="o">+</span><span class="n">入力</span>
-<span class="n">Generator</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">生成結果</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Evaluator</span><span class="o">:</span><span class="w"> </span><span class="n">評価指示</span><span class="o">+</span><span class="n">生成結果</span>
-<span class="n">Evaluator</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">評価スコア</span>
-<span class="n">alt</span><span class="w"> </span><span class="n">スコア</span><span class="o">&gt;=</span><span class="n">閾値</span>
-<span class="w">  </span><span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="o">:</span><span class="w"> </span><span class="n">結果返却</span>
-<span class="k">else</span><span class="w"> </span><span class="n">スコア</span><span class="o">&lt;</span><span class="n">閾値</span>
-<span class="w">  </span><span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="o">:</span><span class="w"> </span><span class="n">失敗通知</span>
-<span class="n">end</span>
-<span class="p">@</span><span class="n">enduml</span>
-</code></pre></div>
-
 <h2 id="3">3. ツール連携<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
 <ul>
 <li>ユースケース手順</li>
@@ -490,47 +488,45 @@
 <li>AgentPipelineがツール付きで生成</li>
 <li>必要に応じてツール関数が呼ばれる</li>
 <li>結果を返す</li>
-<li>ユースケースフロー図</li>
+<li>ユースケースフロー図
+<div class="highlight"><pre><span></span><code>@startuml
+actor User
+participant AgentPipeline
+participant Agent
+participant Tool
+User -&gt; AgentPipeline: 入力文
+AgentPipeline -&gt; Agent: 生成指示+入力+ツール
+Agent -&gt; Tool: ツール呼び出し
+Tool -&gt; Agent: ツール結果
+Agent -&gt; AgentPipeline: 生成結果
+AgentPipeline -&gt; User: 結果返却
+@enduml
+</code></pre></div></li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="p">@</span><span class="n">startuml</span>
-<span class="n">actor</span><span class="w"> </span><span class="n">User</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">AgentPipeline</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">Agent</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">Tool</span>
-<span class="n">User</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">入力文</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Agent</span><span class="o">:</span><span class="w"> </span><span class="n">生成指示</span><span class="o">+</span><span class="n">入力</span><span class="o">+</span><span class="n">ツール</span>
-<span class="n">Agent</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Tool</span><span class="o">:</span><span class="w"> </span><span class="n">ツール呼び出し</span>
-<span class="n">Tool</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Agent</span><span class="o">:</span><span class="w"> </span><span class="n">ツール結果</span>
-<span class="n">Agent</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">生成結果</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="o">:</span><span class="w"> </span><span class="n">結果返却</span>
-<span class="p">@</span><span class="n">enduml</span>
-</code></pre></div>
-
 <h2 id="4">4. ガードレール（入力ガードレール）<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
 <ul>
 <li>ユースケース手順</li>
 <li>ユーザーが入力文を与える</li>
 <li>AgentPipelineがガードレール関数で入力検査</li>
 <li>問題なければ生成、問題あればブロック</li>
-<li>ユースケースフロー図</li>
+<li>ユースケースフロー図
+<div class="highlight"><pre><span></span><code>@startuml
+actor User
+participant AgentPipeline
+participant Guardrail
+participant Agent
+User -&gt; AgentPipeline: 入力文
+AgentPipeline -&gt; Guardrail: 入力検査
+alt 問題なし
+  AgentPipeline -&gt; Agent: 生成
+  Agent -&gt; AgentPipeline: 生成結果
+  AgentPipeline -&gt; User: 結果返却
+else 問題あり
+  AgentPipeline -&gt; User: ブロック通知
+end
+@enduml
+</code></pre></div></li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="p">@</span><span class="n">startuml</span>
-<span class="n">actor</span><span class="w"> </span><span class="n">User</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">AgentPipeline</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">Guardrail</span>
-<span class="n">participant</span><span class="w"> </span><span class="n">Agent</span>
-<span class="n">User</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">入力文</span>
-<span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Guardrail</span><span class="o">:</span><span class="w"> </span><span class="n">入力検査</span>
-<span class="n">alt</span><span class="w"> </span><span class="n">問題なし</span>
-<span class="w">  </span><span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Agent</span><span class="o">:</span><span class="w"> </span><span class="n">生成</span>
-<span class="w">  </span><span class="n">Agent</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">AgentPipeline</span><span class="o">:</span><span class="w"> </span><span class="n">生成結果</span>
-<span class="w">  </span><span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="o">:</span><span class="w"> </span><span class="n">結果返却</span>
-<span class="k">else</span><span class="w"> </span><span class="n">問題あり</span>
-<span class="w">  </span><span class="n">AgentPipeline</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">User</span><span class="o">:</span><span class="w"> </span><span class="n">ブロック通知</span>
-<span class="n">end</span>
-<span class="p">@</span><span class="n">enduml</span>
-</code></pre></div>
-
 <hr />
 <h2 id="_2">参考<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>

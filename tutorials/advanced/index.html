@@ -530,7 +530,7 @@
 <h1 id="_1">応用例<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>このチュートリアルでは、Agents SDK Models の応用的な使い方を紹介します。</p>
 <h2 id="1">1. ツール連携<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">function_tool</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">function_tool</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
 
 <span class="nd">@function_tool</span>
@@ -548,9 +548,8 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;東京の天気は？&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
-
 <h2 id="2">2. ガードレール（入力制御）<a class="headerlink" href="#2" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_guardrail</span><span class="p">,</span> <span class="n">GuardrailFunctionOutput</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">RunContextWrapper</span><span class="p">,</span> <span class="n">Agent</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">input_guardrail</span><span class="p">,</span> <span class="n">GuardrailFunctionOutput</span><span class="p">,</span> <span class="n">Runner</span><span class="p">,</span> <span class="n">RunContextWrapper</span><span class="p">,</span> <span class="n">Agent</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
 
@@ -584,9 +583,8 @@
 <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ガードレール発動: 数学の宿題依頼を検出&quot;</span><span class="p">)</span>
 </code></pre></div>
-
 <h2 id="3">3. ダイナミックプロンプト<a class="headerlink" href="#3" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dynamic_prompt</span><span class="p">(</span><span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">dynamic_prompt</span><span class="p">(</span><span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;[DYNAMIC] </span><span class="si">{</span><span class="n">user_input</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
 
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
@@ -598,9 +596,8 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;面白い話をして&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
-
 <h2 id="4">4. リトライ＆自己改善<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+<div class="highlight"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;retry_example&quot;</span><span class="p">,</span>
     <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;文章を生成してください。&quot;</span><span class="p">,</span>
     <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;分かりやすさで評価し、コメントも返してください。&quot;</span><span class="p">,</span>
@@ -612,7 +609,6 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;AIの歴史を教えて&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="_2">ポイント<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>

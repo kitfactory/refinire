@@ -514,12 +514,11 @@
 <h1 id="_1">クイックスタート<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>このチュートリアルでは、Agents SDK Models を使った最小限のLLM活用例を紹介します。</p>
 <h2 id="1">1. モデルインスタンスの取得<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm</span>
 <span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm</span><span class="p">(</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>
 </code></pre></div>
-
 <h2 id="2-agent">2. Agent でシンプルな対話<a class="headerlink" href="#2-agent" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">Runner</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">Runner</span>
 <span class="n">agent</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Assistant&quot;</span><span class="p">,</span>
     <span class="n">model</span><span class="o">=</span><span class="n">llm</span><span class="p">,</span>
@@ -528,9 +527,8 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">Runner</span><span class="o">.</span><span class="n">run_sync</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="s2">&quot;こんにちは！&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">final_output</span><span class="p">)</span>
 </code></pre></div>
-
 <h2 id="3-agentpipeline">3. AgentPipeline で生成＋評価<a class="headerlink" href="#3-agentpipeline" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eval_example&quot;</span><span class="p">,</span>
     <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
@@ -545,7 +543,6 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;AIの活用事例を教えて&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
-
 <hr />
 <h2 id="_2">ポイント<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>

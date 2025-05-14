@@ -547,7 +547,7 @@
 <tr>
 <td>AgentPipeline</td>
 <td>クラス</td>
-<td>生成・評価・ツール・ガードレール統合パイプライン</td>
+<td>生成・評価・ツール・ガードレールを統合したパイプライン</td>
 </tr>
 <tr>
 <td>OpenAIResponsesModel</td>
@@ -632,22 +632,21 @@
 </table>
 <hr />
 <h2 id="mermaid">クラス図（mermaid）<a class="headerlink" href="#mermaid" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">classDiagram</span>
-    <span class="k">class</span> <span class="n">AgentPipeline</span> {
-        +<span class="nb">run</span>(<span class="n">input</span>)
-        -<span class="n">_build_generation_prompt</span>()
-        -<span class="n">_build_evaluation_prompt</span>()
+<pre class="mermaid"><code>classDiagram
+    class AgentPipeline {
+        +run(input)
+        -_build_generation_prompt()
+        -_build_evaluation_prompt()
     }
-    <span class="k">class</span> <span class="n">OpenAIResponsesModel</span>
-    <span class="k">class</span> <span class="n">GeminiModel</span>
-    <span class="k">class</span> <span class="n">ClaudeModel</span>
-    <span class="k">class</span> <span class="n">OllamaModel</span>
+    class OpenAIResponsesModel
+    class GeminiModel
+    class ClaudeModel
+    class OllamaModel
 
-    <span class="n">AgentPipeline</span> --&gt; <span class="n">OpenAIResponsesModel</span>
-    <span class="n">AgentPipeline</span> --&gt; <span class="n">GeminiModel</span>
-    <span class="n">AgentPipeline</span> --&gt; <span class="n">ClaudeModel</span>
-    <span class="n">AgentPipeline</span> --&gt; <span class="n">OllamaModel</span>
-</code></pre></div>
+    AgentPipeline --&gt; OpenAIResponsesModel
+    AgentPipeline --&gt; GeminiModel
+    AgentPipeline --&gt; ClaudeModel
+    AgentPipeline --&gt; OllamaModel</code></pre>
 
 
 
