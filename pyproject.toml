@@ -12,6 +12,11 @@ dependencies = [
     "openai>=1.68.0",
     "openai-agents>=0.0.6",
 ]
+[project.urls]
+Homepage = "https://github.com/kitfactory/agents-sdk-models"
+Documentation = "https://kitfactory.github.io/agents-sdk-models/"
+Repository = "https://github.com/kitfactory/agents-sdk-models"
+Bug Tracker = "https://github.com/kitfactory/agents-sdk-models/issues"
 
 [project.optional-dependencies]
 examples = [
