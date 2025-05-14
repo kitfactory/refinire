@@ -8,6 +8,10 @@ theme:
   name: material
   language: ja
 
+plugins:
+  - search
+  - mermaid2
+
 nav:
   - はじめに: index.md
   - APIリファレンス: api_reference.md
@@ -16,7 +20,12 @@ nav:
       - 応用例: tutorials/advanced.md
 
 markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.tabbed
   - admonition
   - codehilite
   - toc:
-      permalink: true 
+      permalink: true
+
+# extra_javascript:
+#   - https://unpkg.com/mermaid@10.4.0/dist/mermaid.min.js 
