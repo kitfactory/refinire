@@ -9,7 +9,6 @@ theme:
   language: ja
 
 plugins:
-  - mermaid2
   - search
 
 nav:
@@ -20,13 +19,13 @@ nav:
       - 応用例: tutorials/advanced.md
 
 markdown_extensions:
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed
   - admonition
   - codehilite
   - toc:
-      permalink: true
-
-# mermaid.js for client-side rendering
-# extra_javascript:
-#   - https://unpkg.com/mermaid@10.4.0/dist/mermaid.min.js 
+      permalink: true 
