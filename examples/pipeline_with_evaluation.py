@@ -31,9 +31,11 @@ def main():
         Calculate the average score and provide specific comments for each aspect.
         平均スコアを計算し、各側面について具体的なコメントを提供してください。
         """,
-        model="gpt-4o-mini",  # Using GPT-3.5
-        threshold=70,  # Minimum acceptable score,
-        debug=True
+        # English: Use GPT-4o for generation. Japanese: 生成にGPT-4oを使用
+        model="gpt-4o",
+        # English: Use GPT-4o-mini for evaluation. Japanese: 評価にGPT-4o-miniを使用
+        evaluation_model="gpt-4o-mini",
+        threshold=70  # Minimum acceptable score
     )
 
     # Run the pipeline
