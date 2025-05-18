@@ -54,6 +54,7 @@ class AgentPipeline:
         output_guardrails: Optional[list] = None,
         output_model: Optional[Type[Any]] = None,
         model: str | None = None,
+        evaluation_model: str | None = None,
         generation_tools: Optional[list] = None,
         evaluation_tools: Optional[list] = None,
         routing_func: Optional[Callable[[Any], Any]] = None,
@@ -77,6 +78,7 @@ class AgentPipeline:
             output_guardrails: Guardrails for evaluation / 評価用ガードレール
             output_model: Model for output formatting / 出力フォーマット用モデル
             model: LLM model name / LLMモデル名
+            evaluation_model: Optional LLM model name for evaluation; if None, uses model. 日本語: 評価用のLLMモデル名（Noneの場合はmodelを使用）
             generation_tools: Tools for generation / 生成用ツール
             evaluation_tools: Tools for evaluation / 評価用ツール
             routing_func: Function for output routing / 出力ルーティング用関数
@@ -94,6 +96,7 @@ class AgentPipeline:
         self.output_model = output_model
 
         self.model = model
+        self.evaluation_model = evaluation_model
         self.generation_tools = generation_tools or []
         self.evaluation_tools = evaluation_tools or []
         self.input_guardrails = input_guardrails or []
@@ -107,10 +110,13 @@ class AgentPipeline:
         self.dynamic_prompt = dynamic_prompt
         self.retry_comment_importance = retry_comment_importance or []
 
-        # Get LLM instance (tracing disabled by default)
-        # English: Retrieve LLM instance; default tracing setting applied in get_llm
-        # 日本語: LLMインスタンスを取得します。tracing設定はget_llm側でデフォルト値を使用します。
+        # English: Get generation LLM instance; default tracing setting applied in get_llm
+        # 日本語: 生成用LLMインスタンスを取得します。tracing設定はget_llm側でデフォルト値を使用
         llm = get_llm(model) if model else None
+        # English: Determine evaluation LLM instance, fallback to generation model if evaluation_model is None
+        # 日本語: 評価用LLMインスタンスを決定。evaluation_modelがNoneの場合は生成モデルを使用
+        eval_source = evaluation_model if evaluation_model else model
+        llm_eval = get_llm(eval_source) if eval_source else None
 
         # Agents ---------------------------------------------------------
         self.gen_agent = Agent(
@@ -120,12 +126,22 @@ class AgentPipeline:
             instructions=self.generation_instructions,
             input_guardrails=self.input_guardrails,
         )
+
+        json_instr ="""
+        ----
+        出力フォーマット:
+        JSON で必ず次の形式にしてください:
+        {
+            "score": int(0～100),
+            "comment": [str]
+        }"
+        """
         self.eval_agent = (
             Agent(
                 name=f"{name}_evaluator",
-                model=llm,
+                model=llm_eval,
                 tools=self.evaluation_tools,
-                instructions=self.evaluation_instructions,
+                instructions=self.evaluation_instructions + json_instr,
                 output_guardrails=self.output_guardrails,
             )
             if self.evaluation_instructions
@@ -167,10 +183,7 @@ class AgentPipeline:
         Returns:
             str: Formatted prompt for evaluation / 評価用のフォーマット済みプロンプト
         """
-        json_instr = "上記を JSON で必ず次の形式にしてください:\n{\n  \"score\": int(0～100),\n  \"comment\": [str]\n}"
         parts = [
-            self.evaluation_instructions or "",
-            json_instr,
             "----",
             f"ユーザー入力:\n{user_input}",
             "----",
