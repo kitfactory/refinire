@@ -16,6 +16,7 @@ from enum import Enum  # English: Import Enum for defining comment importance le
 
 from agents import Agent, Runner
 from agents_sdk_models.llm import get_llm
+from agents_sdk_models.message import get_message  # Import for localized messages
 
 try:
     from pydantic import BaseModel  # type: ignore
@@ -90,6 +91,7 @@ class AgentPipeline:
         improvement_callback: Optional[Callable[[Any, EvaluationResult], None]] = None,
         dynamic_prompt: Optional[Callable[[str], str]] = None,
         retry_comment_importance: Optional[list[str]] = None,
+        locale: str = "en",
     ) -> None:
         """
         Initialize the Pipeline with configuration parameters
@@ -114,6 +116,7 @@ class AgentPipeline:
             improvement_callback: Callback for improvement suggestions / 改善提案用コールバック
             dynamic_prompt: Optional function to dynamically build prompt / 動的プロンプト生成関数（任意）
             retry_comment_importance: Importance levels of comments to include on retry / リトライ時にプロンプトに含めるコメントの重大度レベル（任意）
+            locale: Language code for localized messages ("en" or "ja")
         """
         self.name = name
         self.generation_instructions = generation_instructions.strip()
@@ -134,6 +137,8 @@ class AgentPipeline:
         self.improvement_callback = improvement_callback
         self.dynamic_prompt = dynamic_prompt
         self.retry_comment_importance = retry_comment_importance or []
+        # Language code for localized messages ("en" or "ja")
+        self.locale = locale
 
         # English: Get generation LLM instance; default tracing setting applied in get_llm
         # 日本語: 生成用LLMインスタンスを取得します。tracing設定はget_llm側でデフォルト値を使用
@@ -152,20 +157,22 @@ class AgentPipeline:
             input_guardrails=self.input_guardrails,
         )
 
-        json_instr = textwrap.dedent("""\
-+----
-出力フォーマット:
-JSONで以下の形式にしてください:
-{
-    "score": int(0～100),
-    "comment": [
+        # Localized evaluation format instructions
+        format_header = get_message("eval_output_format_header", self.locale)
+        schema_instruction = get_message("eval_json_schema_instruction", self.locale)
+        # JSON schema remains unlocalized
+        json_schema = textwrap.dedent("""\
         {
-            "importance": "serious" | "normal" | "minor",  # Importance field / 重要度フィールド
-            "content": str  # Comment content / コメント内容
+            "score": int(0～100),
+            "comment": [
+                {
+                    "importance": "serious" | "normal" | "minor",  # Importance field / 重要度フィールド
+                    "content": str  # Comment content / コメント内容
+                }
+            ]
         }
-    ]
-}
-""")
+        """)
+        json_instr = "\n".join(["+----", format_header, schema_instruction, json_schema])
         self.eval_agent = (
             Agent(
                 name=f"{name}_evaluator",
@@ -199,7 +206,9 @@ JSONで以下の形式にしてください:
         recent = "\n".join(f"User: {h['input']}\nAI: {h['output']}"
                           for h in self._pipeline_history[-self.history_size:])
         session = "\n".join(self.session_history)
-        return "\n".join(filter(None, [session, recent, f"UserInput: {user_input}"]))
+        # Use localized prefix for user input
+        prefix = get_message("user_input_prefix", self.locale)
+        return "\n".join(filter(None, [session, recent, f"{prefix} {user_input}"]))
 
     def _build_evaluation_prompt(self, user_input: str, generated_output: str) -> str:
         """
@@ -319,14 +328,31 @@ JSONで以下の形式にしてください:
                     comments = [c for c in last_eval_result.comment if c.get("importance") in self.retry_comment_importance]
                 except Exception:
                     comments = []
-                # Format comments
-                comment_lines = "\n".join(f"- ({c.get('importance')}) {c.get('content')}" for c in comments)
+                # Format serious comments with header
+                # Localized header for evaluation feedback
+                feedback_header = get_message("evaluation_feedback_header", self.locale)
+                # English: Format each comment line. 日本語: 各コメント行をフォーマット
+                formatted_comments = [f"- ({c.get('importance')}) {c.get('content')}" for c in comments]
+                # English: Combine header and comment lines. 日本語: ヘッダーとコメント行を結合
+                comment_block = "\n".join([feedback_header] + formatted_comments)
             else:
-                comment_lines = ""
+                comment_block = ""
             # Build base prompt
-            if attempt > 0 and comment_lines:
-                base = self.dynamic_prompt(user_input) if self.dynamic_prompt else self._build_generation_prompt(user_input)
-                gen_prompt = "\n".join([comment_lines, base])
+            if attempt > 0 and comment_block:
+                if self.dynamic_prompt:
+                    # English: Use dynamic prompt if provided. 日本語: dynamic_promptがあればそれを使用
+                    gen_prompt = self.dynamic_prompt(user_input)
+                else:
+                    # Localized header for AI history
+                    ai_history_header = get_message("ai_history_header", self.locale)
+                    # English: Extract AI outputs from pipeline history, omit user inputs. 日本語: パイプライン履歴からAIの出力のみ取得
+                    ai_outputs = "\n".join(h["output"] for h in self._pipeline_history[-self.history_size:])
+                    # Localized prefix for user input line
+                    prefix = get_message("user_input_prefix", self.locale)
+                    # English: Current user input line. 日本語: 現在のユーザー入力行
+                    user_input_line = f"{prefix} {user_input}"
+                    # English: Combine AI outputs, feedback, and current user input. 日本語: AI出力、フィードバック、現在のユーザー入力を結合
+                    gen_prompt = "\n\n".join([ai_history_header, ai_outputs, comment_block, user_input_line])
             else:
                 if self.dynamic_prompt:
                     gen_prompt = self.dynamic_prompt(user_input)

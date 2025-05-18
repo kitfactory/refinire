@@ -7,6 +7,7 @@ English: Provides ConsoleTracingProcessor for color-coded output of span data an
 from agents.tracing import TracingProcessor, add_trace_processor
 from agents.tracing.span_data import GenerationSpanData, ResponseSpanData
 from agents import set_tracing_disabled
+from agents_sdk_models.message import get_message, DEFAULT_LANGUAGE  # Import for localized trace labels
 import sys
 
 
@@ -84,13 +85,16 @@ class ConsoleTracingProcessor(TracingProcessor):
         else:
             # Irrelevant span type
             return
-        # Color-coded output: yellow=Instruction, blue=Prompt, green=Output
+        # Color-coded output with localized labels
         if instr:
-            self.output_stream.write(f"\033[93mInstruction: {instr}\033[0m\n")
+            instr_label = get_message("trace_instruction", DEFAULT_LANGUAGE)
+            self.output_stream.write(f"\033[93m{instr_label} {instr}\033[0m\n")
         if prompt:
-            self.output_stream.write(f"\033[94mPrompt: {prompt}\033[0m\n")
+            prompt_label = get_message("trace_prompt", DEFAULT_LANGUAGE)
+            self.output_stream.write(f"\033[94m{prompt_label} {prompt}\033[0m\n")
         if output:
-            self.output_stream.write(f"\033[92mOutput: {output}\033[0m\n")
+            output_label = get_message("trace_output", DEFAULT_LANGUAGE)
+            self.output_stream.write(f"\033[92m{output_label} {output}\033[0m\n")
         self.output_stream.flush()
         # # Log span end marker with error info
         # info = span.export() or {}
