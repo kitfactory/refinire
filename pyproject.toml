@@ -12,6 +12,7 @@ dependencies = [
     "openai>=1.68.0",
     "openai-agents>=0.0.6",
     "colorama>=0.4.6",
+    "pydantic>=2.10,<3",
 ]
 [project.urls]
 Homepage = "https://github.com/kitfactory/agents-sdk-models"
@@ -20,9 +21,7 @@ Repository = "https://github.com/kitfactory/agents-sdk-models"
 Bug-Tracker = "https://github.com/kitfactory/agents-sdk-models/issues"
 
 [project.optional-dependencies]
-examples = [
-    "pydantic>=2.10, <3",
-]
+examples = []
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agents_sdk_models"]
