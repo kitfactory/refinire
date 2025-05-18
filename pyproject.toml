@@ -20,15 +20,13 @@ Documentation = "https://kitfactory.github.io/agents-sdk-models/"
 Repository = "https://github.com/kitfactory/agents-sdk-models"
 Bug-Tracker = "https://github.com/kitfactory/agents-sdk-models/issues"
 
-[project.optional-dependencies]
-examples = []
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/agents_sdk_models"]
 
 [dependency-groups]
 dev = [
     "mkdocs-material>=9.6.14",
+    "mkdocstrings>=0.19.0",
     "pytest>=8.3.5",
     "pytest-asyncio>=0.26.0",
     "pytest-cov>=6.1.1",
