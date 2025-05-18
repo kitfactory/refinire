@@ -18,16 +18,19 @@ OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡�
 - 🛡️ **ガードレール**: 入力・出力ガードレールで安全・コンプライアンス対応
 - 🛠️ **シンプルなインターフェース**: 最小限の記述で最大限の柔軟性
 - ✨ **ノーコード評価＆自己改善**: モデル名とプロンプトだけで生成・評価を実行し、自動的なフィードバックループで改善可能
+- 🔍 **コンソールトレーシング**: 本ライブラリではデフォルトでコンソールトレーシング（`ConsoleTracingProcessor`）が有効化されています。OpenAI Agents SDK はデフォルトで OpenAI のトレーシングサービスを使用します（`OPENAI_API_KEY` が必要）が、本ライブラリでは軽量なコンソールベースのトレーサーを提供しています。不要な場合は `disable_tracing()` で無効化できます。
 
 ---
+
+## v0.18 リリースノート
+- OpenAI Agents SDK の Trace 機能をサポートし、標準でコンソールトレーシングを有効化しました。
+- `evaluation_model` パラメータを追加し、生成モデルと評価モデルを切り替え可能にしました。
 
 ## 🛠️ インストール
 
 ### PyPI から（推奨）
 ```bash
 pip install agents-sdk-models
-# 構造化出力例などを使う場合（pydantic含む）
-pip install agents-sdk-models[examples]
 ```
 
 ### ソースから
@@ -87,11 +90,54 @@ result = Runner.run_sync(agent, "東京の天気は？")
 print(result.final_output)
 ```
 
+### コンソールトレーシング & インストルメンテーション
+開発やデバッグ時にコンソールで軽量トレースを取得できます:
+```python
+from agents_sdk_models import enable_console_tracing, disable_tracing
+from agents_sdk_models.pipeline import AgentPipeline
+from agents.tracing import trace
+
+# コンソールトレーシングを有効化 (ConsoleTracingProcessor)
+enable_console_tracing()
+
+pipeline = AgentPipeline(
+    name="trace_example",
+    generation_instructions="あなたは親切なアシスタントです。",
+    evaluation_instructions=None,
+    model="gpt-4o-mini"
+)
+
+# trace コンテキスト内で実行
+with trace("MyTrace"):
+    result = pipeline.run("こんにちは！")
+
+print(result)
+```
+コンソール出力例 (色は省略):
+```
+Instruction: あなたは親切なアシスタントです。
+Prompt: こんにちは！
+Output: [生成された応答]
+```
+
 ---
 
 ## 🏗️ AgentPipelineクラス: LLMワークフローを簡単構築
 
 `AgentPipeline` クラスは、生成指示・評価指示・ツール・ガードレールを柔軟に組み合わせてLLMエージェントワークフローを簡単に構築できます。
+
+#### 主な初期化パラメータ
+- `generation_instructions` (str): 生成用システムプロンプト
+- `evaluation_instructions` (str, optional): 評価用システムプロンプト
+- `model` (str, optional): 生成に使用するLLMモデル名（例: "gpt-4o"）
+- `evaluation_model` (str, optional): 評価に使用するLLMモデル名（省略時は`model`と同じモデルを使用）
+- 補足: `evaluation_model` を切り替えることで、生成にOpenAIモデルを、評価にローカルOllamaモデルを使用し、コスト削減やパフォーマンス向上が可能です。
+- `generation_tools` (list, optional): 生成時ツールのリスト
+- `input_guardrails` (list, optional): 入力ガードレールのリスト
+- `output_guardrails` (list, optional): 出力ガードレールのリスト
+- `threshold` (int): 評価スコアの閾値
+- `retries` (int): リトライ回数
+- `retry_comment_importance` (list[str], optional): リトライ時に含めるコメント重大度
 
 ### 基本構成
 ```python
@@ -125,6 +171,7 @@ pipeline = AgentPipeline(
     平均スコアを計算し、各側面について具体的なコメントを提供してください。
     """,
     model="gpt-4o",
+    evaluation_model="gpt-4o-mini",  # 評価に使用するモデルを指定
     threshold=70
 )
 result = pipeline.run("ロボットが絵を学ぶ物語")

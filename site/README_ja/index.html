@@ -43,6 +43,8 @@
       
     
     
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
     <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
@@ -500,7 +502,7 @@
 <h2 id="agentpipeline">🏗️ AgentPipelineクラスの使い方<a class="headerlink" href="#agentpipeline" title="Permanent link">&para;</a></h2>
 <p><code>AgentPipeline</code> クラスは、生成指示・評価指示・ツール・ガードレールなどを柔軟に組み合わせて、LLMエージェントのワークフローを簡単に構築できます。</p>
 <h3 id="_4">基本構成<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
 
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_pipeline&quot;</span><span class="p">,</span>
@@ -556,7 +558,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;[Guardrail Triggered] Math homework detected. Request blocked.&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="_8">リトライ時のコメントフィードバック<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h3>
-<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
 
 <span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;comment_retry&quot;</span><span class="p">,</span>

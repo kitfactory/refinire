@@ -11,6 +11,8 @@ from dataclasses import dataclass, is_dataclass
 from typing import Callable, List, Dict, Any, Optional, Type
 import json
 import re
+import textwrap  # English: Import textwrap for dedenting multi-line JSON instruction strings. 日本語: JSON指示文字列の字下げを削除するためにtextwrapをインポートします。
+from enum import Enum  # English: Import Enum for defining comment importance levels. 日本語: コメント重要度レベル定義用Enumをインポートします。
 
 from agents import Agent, Runner
 from agents_sdk_models.llm import get_llm
@@ -20,15 +22,38 @@ try:
 except ImportError:
     BaseModel = object  # type: ignore
 
+# English: Enum for comment importance levels.
+# 日本語: コメントの重要度レベルを表す列挙型
+class CommentImportance(Enum):
+    SERIOUS = "serious"  # English: Serious importance. 日本語: シリアス
+    NORMAL = "normal"    # English: Normal importance. 日本語: ノーマル
+    MINOR = "minor"      # English: Minor importance. 日本語: マイナー
+
+@dataclass
+class Comment:
+    """
+    Evaluation comment with importance and content
+    評価コメントの重要度と内容を保持するクラス
+
+    Attributes:
+        importance: Importance level of the comment (serious/normal/minor) / コメントの重要度レベル（シリアス/ノーマル/マイナー）
+        content: Text content of the comment / コメント内容
+    """
+    importance: CommentImportance  # Importance level (serious/normal/minor) / 重要度レベル（シリアス/ノーマル/マイナー）
+    content: str  # Comment text / コメント内容
 
 @dataclass
 class EvaluationResult:
     """
     Result of evaluation for generated content
     生成されたコンテンツの評価結果を保持するクラス
+
+    Attributes:
+        score: Evaluation score (0-100) / 評価スコア（0-100）
+        comment: List of Comment instances containing importance and content / 重要度と内容を持つCommentクラスのリスト
     """
     score: int  # Evaluation score (0-100) / 評価スコア（0-100）
-    comment: List[str]  # List of evaluation comments / 評価コメントのリスト
+    comment: List[Comment]  # List of evaluation comments / 評価コメントのリスト
 
 
 class AgentPipeline:
@@ -127,15 +152,20 @@ class AgentPipeline:
             input_guardrails=self.input_guardrails,
         )
 
-        json_instr ="""
-        ----
-        出力フォーマット:
-        JSON で必ず次の形式にしてください:
+        json_instr = textwrap.dedent("""\
++----
+出力フォーマット:
+JSONで以下の形式にしてください:
+{
+    "score": int(0～100),
+    "comment": [
         {
-            "score": int(0～100),
-            "comment": [str]
-        }"
-        """
+            "importance": "serious" | "normal" | "minor",  # Importance field / 重要度フィールド
+            "content": str  # Comment content / コメント内容
+        }
+    ]
+}
+""")
         self.eval_agent = (
             Agent(
                 name=f"{name}_evaluator",
@@ -323,7 +353,7 @@ class AgentPipeline:
                 eval_dict = self._extract_json(eval_text)
                 eval_result = EvaluationResult(**eval_dict)
             except Exception:
-                eval_result = EvaluationResult(score=0, comment=["評価 JSON の解析に失敗"])
+                eval_result = EvaluationResult(score=0, comment=[Comment(importance=CommentImportance.SERIOUS, content="評価 JSON の解析に失敗")])
 
             if eval_result.score >= self.threshold:
                 self._append_to_session(user_input, raw_output_text)

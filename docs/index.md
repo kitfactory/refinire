@@ -36,3 +36,6 @@ uv pip install -e .[dev]
 - Python 3.9+
 - OpenAI Agents SDK 0.0.9+
 - Windows, Linux, MacOS 
+
+## トレーシング
+本ライブラリでは OpenAI Agents SDK のトレーシング機能をサポートしています。詳細は [トレーシング](tracing.md) を参照してください。 

@@ -20,7 +20,7 @@
     
     
       
-        <title>要件定義書 - Agents SDK Models</title>
+        <title>トレーシング - Agents SDK Models</title>
       
     
     
@@ -100,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              要件定義書
+              トレーシング
             
           </span>
         </div>
@@ -375,45 +375,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#openai-agents-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI Agents SDK のトレーシング機能
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      プロジェクトの目的・背景
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      利用者と困りごと
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      採用する技術スタック
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      機能（ユースケース）一覧
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_6" class="md-nav__link">
-    <span class="md-ellipsis">
-      参考
+      本ライブラリでのアプローチ
     </span>
   </a>
   
@@ -438,84 +411,19 @@
   
 
 
-<h1 id="_1">要件定義書<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<h2 id="_2">プロジェクトの目的・背景<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>OpenAI Agents SDKを活用し、生成・評価・ツール連携・ガードレールなどのAIワークフローを簡単に構築・拡張できるPythonライブラリを提供する。</p>
-<h2 id="_3">利用者と困りごと<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>利用者の種類</th>
-<th>ゴール</th>
-<th>制約</th>
-<th>困りごと</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AI開発者</td>
-<td>LLMを活用した多様なワークフローを素早く構築</td>
-<td>Python, SDK依存</td>
-<td>サンプルや設計例が少ない、ガードレールやツール連携の実装が煩雑</td>
-</tr>
-<tr>
-<td>研究者</td>
-<td>評価や安全性を担保したAI実験</td>
-<td>柔軟なカスタマイズ</td>
-<td>評価・安全性の仕組みが不足</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">採用する技術スタック<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>技術</th>
-<th>バージョン/備考</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Python</td>
-<td>3.10以上</td>
-</tr>
-<tr>
-<td>OpenAI Agents SDK</td>
-<td>最新</td>
-</tr>
-<tr>
-<td>pydantic</td>
-<td>2.x</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_5">機能（ユースケース）一覧<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>困りごと</th>
-<th>機能（ユースケース）</th>
-<th>機能のイメージ</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>サンプルや設計例が少ない</td>
-<td>AgentPipelineによる生成・評価・ツール連携・ガードレールの統合</td>
-<td>コード例・examples/pipeline_*.py</td>
-</tr>
-<tr>
-<td>評価・安全性の仕組みが不足</td>
-<td>入力ガードレール・自動評価</td>
-<td>ガードレール/評価テンプレートの活用</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="_6">参考<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<h1 id="_1">トレーシング<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<h2 id="openai-agents-sdk">OpenAI Agents SDK のトレーシング機能<a class="headerlink" href="#openai-agents-sdk" title="Permanent link">&para;</a></h2>
+<p>OpenAI Agents SDK はデフォルトで OpenAI のトレーシングサービスを利用し、実行中のスパン情報を自動的に収集・記録します。
+- プロバイダーに関わらず、内部では OpenAI の Trace API を使用します。
+- <code>OPENAI_API_KEY</code> の設定が必要です。</p>
+<h2 id="_2">本ライブラリでのアプローチ<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>
-<li>詳細な事例は <a href="../pipeline_examples/">docs/pipeline_examples.md</a> を参照。 </li>
+<li>デフォルトでコンソール向けの <code>ConsoleTracingProcessor</code> を提供します。</li>
+<li>有効化: <code>enable_console_tracing()</code> を呼び出すと、コンソールにカラー付きでスパン情報を表示します。</li>
+<li>トレーシングをカスタマイズしたい場合は、サードパーティーが提供する独自の Processor を使用してください。</li>
+<li>トレーシングを停止したい場合は、<code>disable_tracing()</code> を呼び出して全てのトレーシング機能を無効化します。</li>
 </ul>
+<p>以上の仕組みにより、デバッグ時やローカル開発環境でも手軽にトレーシング情報を確認でき、必要に応じてサービス連携やログ出力先を切り替えられます。 </p>
 
 
 

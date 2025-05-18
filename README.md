@@ -18,16 +18,19 @@ A collection of model adapters and workflow utilities for the OpenAI Agents SDK,
 - 🛡️ **Guardrails**: Add input/output guardrails for safe and compliant agent behavior.
 - 🛠️ **Simple Interface**: Minimal code, maximum flexibility.
 - ✨ **Zero-Code Evaluation & Self-Improvement**: Just specify model names and system prompts to automatically run generation, evaluation, and feedback-driven retries.
+- 🔍 **Custom Console Tracing**: Console tracing is enabled by default using `ConsoleTracingProcessor`. While the OpenAI Agents SDK uses OpenAI's Tracing service by default (requiring `OPENAI_API_KEY`), this library provides a lightweight console-based tracer that works with any provider. You can disable tracing entirely with `disable_tracing()`.
 
 ---
+
+## v0.18 Release Notes
+- Support OpenAI Agents SDK Trace feature, with default console tracing enabled.
+- Add `evaluation_model` parameter to switch evaluation model separately from generation model.
 
 ## 🛠️ Installation
 
 ### From PyPI (Recommended)
 ```bash
 pip install agents-sdk-models
-# For examples with structured output (includes pydantic)
-pip install agents-sdk-models[examples]
 ```
 
 ### From Source
@@ -87,6 +90,29 @@ result = Runner.run_sync(agent, "What's the weather in Tokyo?")
 print(result.final_output)
 ```
 
+### Example: Tracing
+```python
+from agents_sdk_models import enable_console_tracing, disable_tracing
+from agents_sdk_models.pipeline import AgentPipeline
+from agents.tracing import trace
+
+# Enable console tracing (uses ConsoleTracingProcessor)
+enable_console_tracing()
+
+pipeline = AgentPipeline(
+    name="trace_example",
+    generation_instructions="You are a helpful assistant.",
+    evaluation_instructions=None,
+    model="gpt-4o-mini"
+)
+
+# Run pipeline under a trace context
+with trace("MyTrace"):
+    result = pipeline.run("Hello, world!")
+
+print(result)
+```
+
 ---
 
 ## 🏗️ AgentPipeline Class: Easy LLM Workflows
@@ -103,6 +129,8 @@ Key initialization parameters:
   - `generation_instructions` (str): System prompt for content generation
   - `evaluation_instructions` (str, optional): System prompt for content evaluation
   - `model` (str, optional): LLM model to use (e.g., "gpt-4o-mini")
+  - `evaluation_model` (str, optional): LLM model to use for evaluation (overrides `model`).
+  - Note: You can specify a different model provider for `evaluation_model`, such as using OpenAI for generation and a local Ollama model for evaluation, to reduce cost and improve performance.
   - `generation_tools` (list, optional): Tools for generation stage
   - `input_guardrails`, `output_guardrails` (list, optional): Guardrails for input/output
   - `threshold` (int): Minimum score to accept generated content
