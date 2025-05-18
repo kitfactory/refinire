@@ -3,6 +3,7 @@ site_description: OpenAI Agents SDKを拡張するモデルアダプター＆ワ
 site_author: kitfactory
 repo_url: https://github.com/kitfactory/agents-sdk-models
 repo_name: kitfactory/agents-sdk-models
+site_url: https://kitfactory.github.io/agents-sdk-models/
 
 theme:
   name: material
