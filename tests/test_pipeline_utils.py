@@ -1,5 +1,5 @@
 import pytest
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 from pydantic import BaseModel
 from dataclasses import dataclass
 

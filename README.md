@@ -47,6 +47,8 @@ Run tests and generate a coverage report:
 ```bash
 pytest --cov=agents_sdk_models --cov-report=term-missing
 ```
+- ✅ All tests currently pass successfully.
+- The coverage badge indicates the line coverage percentage for the `agents_sdk_models` package (measured by pytest-cov).
 
 ---
 

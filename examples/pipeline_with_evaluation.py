@@ -3,7 +3,7 @@ Pipeline example with generation and evaluation
 生成と評価を行うPipelineの例
 """
 
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 def main():
     # Initialize pipeline with both generation and evaluation templates

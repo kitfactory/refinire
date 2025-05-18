@@ -10,6 +10,7 @@ name = "agents-sdk-models"
 version = "0.0.18"
 source = { editable = "." }
 dependencies = [
+    { name = "colorama" },
     { name = "openai" },
     { name = "openai-agents" },
 ]
@@ -29,6 +30,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "colorama", specifier = ">=0.4.6" },
     { name = "openai", specifier = ">=1.68.0" },
     { name = "openai-agents", specifier = ">=0.0.6" },
     { name = "pydantic", marker = "extra == 'examples'", specifier = ">=2.10,<3" },

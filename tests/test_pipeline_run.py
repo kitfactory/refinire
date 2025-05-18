@@ -1,5 +1,5 @@
 import pytest
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 # Test routing_func is applied to parsed output
 def test_routing_func(monkeypatch):

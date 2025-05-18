@@ -3,7 +3,7 @@ Pipeline example with input guardrails
 ガードレール（入力ガードレール）を使ったPipelineの例
 """
 
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 from agents import Agent, input_guardrail, GuardrailFunctionOutput, InputGuardrailTripwireTriggered, Runner, RunContextWrapper
 from pydantic import BaseModel
 import asyncio

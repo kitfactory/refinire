@@ -47,6 +47,8 @@ pip install -e .[dev]
 ```bash
 pytest --cov=agents_sdk_models --cov-report=term-missing
 ```
+- ✅ すべてのテストは正常にパスしています。
+- Coverageバッジは`agents_sdk_models`パッケージの行カバレッジ率（pytest-covによる計測）を示しています。
 
 ---
 

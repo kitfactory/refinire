@@ -32,7 +32,7 @@ pip install agents-sdk-models
 
 ### 基本構成
 ```python
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 pipeline = AgentPipeline(
     name="my_pipeline",
@@ -96,7 +96,7 @@ except InputGuardrailTripwireTriggered:
 
 ### リトライ時のコメントフィードバック
 ```python
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 pipeline = AgentPipeline(
     name="comment_retry",

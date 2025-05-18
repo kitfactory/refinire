@@ -1,7 +1,7 @@
 ### With Dynamic Prompt
 ```python
 # You can provide a custom function to dynamically build the prompt.
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 def my_dynamic_prompt(user_input: str) -> str:
     # Example: Uppercase the user input and add a prefix
@@ -22,7 +22,7 @@ print(result)
 
 ### With Retry Comment Feedback
 ```python
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 pipeline = AgentPipeline(
     name="comment_retry",

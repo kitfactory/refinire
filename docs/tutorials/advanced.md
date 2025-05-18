@@ -5,7 +5,7 @@
 ## 1. ツール連携
 ```python
 from agents import function_tool
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 @function_tool
 def get_weather(location: str) -> str:
@@ -26,7 +26,7 @@ print(result)
 ## 2. ガードレール（入力制御）
 ```python
 from agents import input_guardrail, GuardrailFunctionOutput, Runner, RunContextWrapper, Agent
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 from pydantic import BaseModel
 
 class MathCheck(BaseModel):

@@ -1,5 +1,5 @@
 import pytest
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 
 # モック Agent と Runner を適用するフィクスチャ
 @pytest.fixture(autouse=True)

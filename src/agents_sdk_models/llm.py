@@ -23,7 +23,6 @@ def get_llm(
     api_key: Optional[str] = None,
     base_url: Optional[str] = None,
     thinking: bool = False,
-    tracing: bool = False,
     **kwargs: Any,
 ) -> Model:
     """
@@ -63,7 +62,7 @@ def get_llm(
     """
     # English: Configure OpenAI Agents SDK tracing
     # 日本語: OpenAI Agents SDK のトレーシングを設定する
-    set_tracing_disabled(not tracing)
+    # set_tracing_disabled(not tracing)
 
 
     if model is None:
@@ -118,10 +117,10 @@ def get_llm(
         # Example: max_tokens, etc. Filter out args meant for the client.
         # 例: max_tokens など。クライアント向けの引数を除外します。
         for key, value in kwargs.items():
-            # English: Exclude client args, thinking, and temperature
-            # 日本語: クライアント引数、thinking、temperature を除外
-            if key not in ['api_key', 'base_url', 'thinking', 'temperature']:
-                 model_args[key] = value
+            # English: Exclude client args, thinking, temperature, and tracing
+            # 日本語: クライアント引数、thinking、temperature、tracing を除外
+            if key not in ['api_key', 'base_url', 'thinking', 'temperature', 'tracing']:
+                model_args[key] = value
 
         # English: Remove 'thinking' as it's not used by OpenAI model
         # 日本語: OpenAI モデルでは使用されないため 'thinking' を削除

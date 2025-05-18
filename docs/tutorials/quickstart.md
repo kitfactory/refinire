@@ -22,7 +22,7 @@ print(result.final_output)
 
 ## 3. AgentPipeline で生成＋評価
 ```python
-from agents_sdk_models.pipeline import AgentPipeline
+from agents_sdk_models import AgentPipeline
 pipeline = AgentPipeline(
     name="eval_example",
     generation_instructions="""

@@ -61,7 +61,6 @@ class AgentPipeline:
         history_size: int = 10,
         threshold: int = 85,
         retries: int = 3,
-        debug: bool = False,
         improvement_callback: Optional[Callable[[Any, EvaluationResult], None]] = None,
         dynamic_prompt: Optional[Callable[[str], str]] = None,
         retry_comment_importance: Optional[list[str]] = None,
@@ -85,7 +84,6 @@ class AgentPipeline:
             history_size: Size of history to keep / 保持する履歴サイズ
             threshold: Evaluation score threshold / 評価スコアの閾値
             retries: Number of retry attempts / リトライ試行回数
-            debug: Debug mode flag / デバッグモードフラグ
             improvement_callback: Callback for improvement suggestions / 改善提案用コールバック
             dynamic_prompt: Optional function to dynamically build prompt / 動的プロンプト生成関数（任意）
             retry_comment_importance: Importance levels of comments to include on retry / リトライ時にプロンプトに含めるコメントの重大度レベル（任意）
@@ -105,12 +103,13 @@ class AgentPipeline:
         self.history_size = history_size
         self.threshold = threshold
         self.retries = retries
-        self.debug = debug
         self.improvement_callback = improvement_callback
         self.dynamic_prompt = dynamic_prompt
         self.retry_comment_importance = retry_comment_importance or []
 
-        # Get LLM instance
+        # Get LLM instance (tracing disabled by default)
+        # English: Retrieve LLM instance; default tracing setting applied in get_llm
+        # 日本語: LLMインスタンスを取得します。tracing設定はget_llm側でデフォルト値を使用します。
         llm = get_llm(model) if model else None
 
         # Agents ---------------------------------------------------------
@@ -290,8 +289,6 @@ class AgentPipeline:
                     gen_prompt = self.dynamic_prompt(user_input)
                 else:
                     gen_prompt = self._build_generation_prompt(user_input)
-            if self.debug:
-                print("[Generation prompt]\n", gen_prompt)
 
             gen_result = self._runner.run_sync(self.gen_agent, gen_prompt)
             raw_output_text = getattr(gen_result, "final_output", str(gen_result))
@@ -306,8 +303,6 @@ class AgentPipeline:
                 return self._route(parsed_output)
 
             eval_prompt = self._build_evaluation_prompt(user_input, raw_output_text)
-            if self.debug:
-                print("[Evaluation prompt]\n", eval_prompt)
 
             eval_raw = self._runner.run_sync(self.eval_agent, eval_prompt)
             eval_text = getattr(eval_raw, "final_output", str(eval_raw))
@@ -316,9 +311,6 @@ class AgentPipeline:
                 eval_result = EvaluationResult(**eval_dict)
             except Exception:
                 eval_result = EvaluationResult(score=0, comment=["評価 JSON の解析に失敗"])
-
-            if self.debug:
-                print("[Evaluation result]", eval_result)
 
             if eval_result.score >= self.threshold:
                 self._append_to_session(user_input, raw_output_text)

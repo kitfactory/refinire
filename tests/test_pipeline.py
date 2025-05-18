@@ -1,5 +1,5 @@
 import pytest
-from agents_sdk_models.pipeline import AgentPipeline, EvaluationResult
+from agents_sdk_models import AgentPipeline, EvaluationResult
 
 class DummyAgent:
     def __init__(self, name, model=None, tools=None, instructions=None, input_guardrails=None, output_guardrails=None):
