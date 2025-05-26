@@ -36,4 +36,48 @@ pipeline = AgentPipeline(
 result = pipeline.run("Your input text")
 print(result)
 ```
-On each retry, comments of specified importance from the previous evaluation will be automatically prepended to the generation prompt to guide improvements. 
+On each retry, comments of specified importance from the previous evaluation will be automatically prepended to the generation prompt to guide improvements.
+
+## Get Available Models
+
+You can retrieve available model names from different providers using the `get_available_models` functions:
+
+### Synchronous Version
+```python
+from agents_sdk_models import get_available_models
+
+# Get models from all providers
+models = get_available_models(["openai", "google", "anthropic", "ollama"])
+print("Available models:", models)
+
+# Get models from specific providers
+models = get_available_models(["openai", "google"])
+for provider, model_list in models.items():
+    print(f"{provider}: {model_list}")
+
+# Custom Ollama URL
+models = get_available_models(["ollama"], ollama_base_url="http://custom-host:11434")
+```
+
+### Asynchronous Version
+```python
+from agents_sdk_models import get_available_models_async
+import asyncio
+
+async def main():
+    # Get models from all providers
+    models = await get_available_models_async(["openai", "google", "anthropic", "ollama"])
+    print("Available models:", models)
+    
+    # Custom Ollama URL with environment variable support
+    models = await get_available_models_async(["ollama"], ollama_base_url="http://custom-host:11434")
+
+asyncio.run(main())
+```
+
+### Features
+- **Static Model Lists**: OpenAI, Google, and Anthropic return predefined lists of latest models
+- **Dynamic Discovery**: Ollama queries the `/api/ps` endpoint for real-time model availability
+- **Environment Variable Support**: Ollama base URL can be set via `OLLAMA_BASE_URL` environment variable
+- **Error Handling**: Graceful handling of connection failures with empty lists and warnings
+- **Latest Models**: Updated to include Claude-4, Gemini 2.5, and OpenAI's latest models 

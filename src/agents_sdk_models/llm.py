@@ -1,4 +1,4 @@
-from typing import Literal, Optional, Any
+from typing import Literal, Optional, Any, List
 from agents.models.interface import Model
 from agents import OpenAIChatCompletionsModel  # Import from agents library
 from agents import set_tracing_disabled  # Import set_tracing_disabled for tracing control
@@ -6,6 +6,10 @@ from agents import set_tracing_disabled  # Import set_tracing_disabled for traci
 # 日本語: OpenAI クライアントをインポート
 from openai import AsyncOpenAI
 from agents.models.openai_responses import OpenAIResponsesModel
+# English: Import HTTP client for API requests
+# 日本語: API リクエスト用の HTTP クライアントをインポート
+import httpx
+import asyncio
 
 from .anthropic import ClaudeModel
 from .gemini import GeminiModel
@@ -175,3 +179,123 @@ def get_llm(
         )
     else:
         raise ValueError(f"Unsupported provider: {provider}. Must be one of {ProviderType.__args__}") 
+
+async def get_available_models_async(
+    providers: List[ProviderType],
+    ollama_base_url: Optional[str] = None
+) -> dict[str, List[str]]:
+    """
+    Get available model names for specified providers.
+    
+    English:
+    Get available model names for specified providers.
+    
+    日本語:
+    指定されたプロバイダーの利用可能なモデル名を取得します。
+    
+    Args:
+        providers (List[ProviderType]): List of providers to get models for.
+            モデルを取得するプロバイダーのリスト。
+        ollama_base_url (Optional[str]): Base URL for Ollama API. If None, uses environment variable or default.
+            Ollama API のベース URL。None の場合、環境変数またはデフォルトを使用。
+    
+    Returns:
+        dict[str, List[str]]: Dictionary mapping provider names to lists of available models.
+                             プロバイダー名と利用可能なモデルのリストのマッピング辞書。
+    
+    Raises:
+        ValueError: If an unsupported provider is specified.
+                    サポートされていないプロバイダーが指定された場合。
+        httpx.RequestError: If there's an error connecting to the Ollama API.
+                           Ollama API への接続エラーが発生した場合。
+    """
+    result = {}
+    
+    for provider in providers:
+        if provider == "openai":
+            # English: OpenAI models - latest available models
+            # 日本語: OpenAI モデル - 最新の利用可能なモデル
+            result["openai"] = [
+                "gpt-4o",
+                "gpt-4o-mini",
+                "gpt-4.1",
+                "o3",
+                "o4-mini"
+            ]
+        elif provider == "google":
+            # English: Google Gemini models - latest 2.5 series models
+            # 日本語: Google Gemini モデル - 最新の 2.5 シリーズモデル
+            result["google"] = [
+                "gemini-2.5-pro",
+                "gemini-2.5-flash"
+            ]
+        elif provider == "anthropic":
+            # English: Anthropic Claude models - latest Claude-4 series models
+            # 日本語: Anthropic Claude モデル - 最新の Claude-4 シリーズモデル
+            result["anthropic"] = [
+                "claude-opus-4",
+                "claude-sonnet-4"
+            ]
+        elif provider == "ollama":
+            # English: Get Ollama base URL from parameter, environment variable, or default
+            # 日本語: パラメータ、環境変数、またはデフォルトから Ollama ベース URL を取得
+            if ollama_base_url is None:
+                ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+            
+            try:
+                # English: Fetch available models from Ollama API
+                # 日本語: Ollama API から利用可能なモデルを取得
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(f"{ollama_base_url}/api/ps")
+                    response.raise_for_status()
+                    
+                    # English: Parse the response to extract model names
+                    # 日本語: レスポンスを解析してモデル名を抽出
+                    data = response.json()
+                    models = []
+                    if "models" in data:
+                        for model_info in data["models"]:
+                            if "name" in model_info:
+                                models.append(model_info["name"])
+                    
+                    result["ollama"] = models
+                    
+            except httpx.RequestError as e:
+                # English: If connection fails, return empty list with error info
+                # 日本語: 接続に失敗した場合、エラー情報と共に空のリストを返す
+                result["ollama"] = []
+                print(f"Warning: Could not connect to Ollama at {ollama_base_url}: {e}")
+            except Exception as e:
+                # English: Handle other errors
+                # 日本語: その他のエラーを処理
+                result["ollama"] = []
+                print(f"Warning: Error fetching Ollama models: {e}")
+        else:
+            raise ValueError(f"Unsupported provider: {provider}. Must be one of {ProviderType.__args__}")
+    
+    return result
+
+def get_available_models(
+    providers: List[ProviderType],
+    ollama_base_url: Optional[str] = None
+) -> dict[str, List[str]]:
+    """
+    Get available model names for specified providers (synchronous version).
+    
+    English:
+    Get available model names for specified providers (synchronous version).
+    
+    日本語:
+    指定されたプロバイダーの利用可能なモデル名を取得します（同期版）。
+    
+    Args:
+        providers (List[ProviderType]): List of providers to get models for.
+            モデルを取得するプロバイダーのリスト。
+        ollama_base_url (Optional[str]): Base URL for Ollama API. If None, uses environment variable or default.
+            Ollama API のベース URL。None の場合、環境変数またはデフォルトを使用。
+    
+    Returns:
+        dict[str, List[str]]: Dictionary mapping provider names to lists of available models.
+                             プロバイダー名と利用可能なモデルのリストのマッピング辞書。
+    """
+    return asyncio.run(get_available_models_async(providers, ollama_base_url)) 

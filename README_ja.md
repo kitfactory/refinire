@@ -22,6 +22,11 @@ OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡�
 
 ---
 
+## v0.19 リリースノート
+- `get_available_models()` と `get_available_models_async()` 関数を追加し、各プロバイダーの利用可能なモデル名を取得可能にしました
+- モデルリストを最新版に更新：Claude-4（Opus/Sonnet）、Gemini 2.5（Pro/Flash）、OpenAI最新モデル（gpt-4.1、o3、o4-mini）
+- Ollama の `/api/ps` エンドポイント経由での動的モデル検出をサポート
+
 ## v0.18 リリースノート
 - OpenAI Agents SDK の Trace 機能をサポートし、標準でコンソールトレーシングを有効化しました。
 - `evaluation_model` パラメータを追加し、生成モデルと評価モデルを切り替え可能にしました。
@@ -118,6 +123,27 @@ print(result)
 Instruction: あなたは親切なアシスタントです。
 Prompt: こんにちは！
 Output: [生成された応答]
+```
+
+### 利用可能なモデルの取得例
+```python
+from agents_sdk_models import get_available_models, get_available_models_async
+
+# 全プロバイダーからモデルを取得（同期版）
+models = get_available_models(["openai", "google", "anthropic", "ollama"])
+print("利用可能なモデル:", models)
+
+# 特定のプロバイダーからモデルを取得（非同期版）
+import asyncio
+async def main():
+    models = await get_available_models_async(["openai", "google"])
+    for provider, model_list in models.items():
+        print(f"{provider}: {model_list}")
+
+asyncio.run(main())
+
+# カスタムOllama URL
+models = get_available_models(["ollama"], ollama_base_url="http://custom-host:11434")
 ```
 
 ---

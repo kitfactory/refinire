@@ -22,6 +22,11 @@ A collection of model adapters and workflow utilities for the OpenAI Agents SDK,
 
 ---
 
+## v0.19 Release Notes
+- Add `get_available_models()` and `get_available_models_async()` functions to retrieve available model names from different providers
+- Update model lists to latest versions: Claude-4 (Opus/Sonnet), Gemini 2.5 (Pro/Flash), OpenAI latest models (gpt-4.1, o3, o4-mini)
+- Support dynamic model discovery for Ollama via `/api/ps` endpoint
+
 ## v0.18 Release Notes
 - Support OpenAI Agents SDK Trace feature, with default console tracing enabled.
 - Add `evaluation_model` parameter to switch evaluation model separately from generation model.
@@ -111,6 +116,27 @@ with trace("MyTrace"):
     result = pipeline.run("Hello, world!")
 
 print(result)
+```
+
+### Example: Get Available Models
+```python
+from agents_sdk_models import get_available_models, get_available_models_async
+
+# Get models from all providers (synchronous)
+models = get_available_models(["openai", "google", "anthropic", "ollama"])
+print("Available models:", models)
+
+# Get models from specific providers (asynchronous)
+import asyncio
+async def main():
+    models = await get_available_models_async(["openai", "google"])
+    for provider, model_list in models.items():
+        print(f"{provider}: {model_list}")
+
+asyncio.run(main())
+
+# Custom Ollama URL
+models = get_available_models(["ollama"], ollama_base_url="http://custom-host:11434")
 ```
 
 ---
