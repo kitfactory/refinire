@@ -167,8 +167,6 @@ def get_llm(
         ollama_kwargs = kwargs.copy()
         if model:
             ollama_kwargs['model'] = model
-        if not base_url:
-            base_url = "http://localhost:11434"
         # thinking is not used by OllamaModel
         ollama_kwargs.pop('thinking', None)
         return OllamaModel(

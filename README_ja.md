@@ -22,6 +22,10 @@ OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡�
 
 ---
 
+## v0.20 リリースノート
+- Ollama設定用の `OLLAMA_BASE_URL` 環境変数をサポート
+- OpenAI Agents SDK標準のTraceを除去し、コンソール専用トレーシングに変更して互換性を向上
+
 ## v0.19 リリースノート
 - `get_available_models()` と `get_available_models_async()` 関数を追加し、各プロバイダーの利用可能なモデル名を取得可能にしました
 - モデルリストを最新版に更新：Claude-4（Opus/Sonnet）、Gemini 2.5（Pro/Flash）、OpenAI最新モデル（gpt-4.1、o3、o4-mini）

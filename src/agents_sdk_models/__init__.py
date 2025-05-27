@@ -3,7 +3,7 @@ Agents SDK Models
 エージェントSDKモデル
 """
 
-__version__ = "0.0.19"
+__version__ = "0.0.20"
 
 # Import models
 # モデルをインポート
