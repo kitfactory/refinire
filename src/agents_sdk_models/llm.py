@@ -238,13 +238,13 @@ async def get_available_models_async(
             # English: Get Ollama base URL from parameter, environment variable, or default
             # 日本語: パラメータ、環境変数、またはデフォルトから Ollama ベース URL を取得
             if ollama_base_url is None:
-                ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+                ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
             
             try:
                 # English: Fetch available models from Ollama API
                 # 日本語: Ollama API から利用可能なモデルを取得
                 async with httpx.AsyncClient() as client:
-                    response = await client.get(f"{ollama_base_url}/api/ps")
+                    response = await client.get(f"{ollama_base_url}/api/tags")
                     response.raise_for_status()
                     
                     # English: Parse the response to extract model names
@@ -296,4 +296,17 @@ def get_available_models(
         dict[str, List[str]]: Dictionary mapping provider names to lists of available models.
                              プロバイダー名と利用可能なモデルのリストのマッピング辞書。
     """
-    return asyncio.run(get_available_models_async(providers, ollama_base_url)) 
+    try:
+        # English: Try to get the current event loop
+        # 日本語: 現在のイベントループを取得しようとする
+        loop = asyncio.get_running_loop()
+        # English: If we're in a running loop, we need to handle this differently
+        # 日本語: 実行中のループ内にいる場合、異なる方法で処理する必要がある
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, get_available_models_async(providers, ollama_base_url))
+            return future.result()
+    except RuntimeError:
+        # English: No running event loop, safe to use asyncio.run()
+        # 日本語: 実行中のイベントループがない場合、asyncio.run() を安全に使用
+        return asyncio.run(get_available_models_async(providers, ollama_base_url)) 

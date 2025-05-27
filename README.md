@@ -22,6 +22,10 @@ A collection of model adapters and workflow utilities for the OpenAI Agents SDK,
 
 ---
 
+## v0.21 Release Notes
+- Fix `get_available_models` synchronous function to work properly in environments with running event loops (e.g., Jupyter Notebook, IPython)
+- Support dynamic model discovery for Ollama via `/api/tag` endpoint
+
 ## v0.20 Release Notes
 - Support `OLLAMA_BASE_URL` environment variable for Ollama configuration
 - Remove OpenAI Agents SDK standard Trace and use console-only tracing for better compatibility
@@ -29,7 +33,6 @@ A collection of model adapters and workflow utilities for the OpenAI Agents SDK,
 ## v0.19 Release Notes
 - Add `get_available_models()` and `get_available_models_async()` functions to retrieve available model names from different providers
 - Update model lists to latest versions: Claude-4 (Opus/Sonnet), Gemini 2.5 (Pro/Flash), OpenAI latest models (gpt-4.1, o3, o4-mini)
-- Support dynamic model discovery for Ollama via `/api/ps` endpoint
 
 ## v0.18 Release Notes
 - Support OpenAI Agents SDK Trace feature, with default console tracing enabled.
