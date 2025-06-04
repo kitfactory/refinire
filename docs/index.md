@@ -5,6 +5,8 @@ OpenAI Agents SDK を拡張し、複数のLLMプロバイダーを統一イン�
 ## 主な特徴
 
 - OpenAI, Gemini, Claude, Ollama など主要LLMを簡単切替
+- **🚀 新機能：** `Flow(steps=gen_agent)` で超シンプルなワークフロー作成
+- **🚀 新機能：** `Flow(steps=[step1, step2])` で自動シーケンシャル実行
 - 生成・評価・ツール・ガードレールを1つのパイプラインで統合
 - モデル名とプロンプトだけで自己改善サイクルも実現
 - Pydanticによる構造化出力対応

@@ -111,3 +111,49 @@ result = pipeline.run("入力テキスト")
 print(result)
 ```
 リトライ時に前回の評価コメント（指定した重大度のみ）が生成プロンプトに自動で付与され、改善を促します。
+
+---
+
+## 🚀 新機能：超シンプルFlow（v0.0.8+）
+
+新しいFlowコンストラクタで**3つの方法**でワークフローを作成できます：
+
+### 単一ステップFlow（最もシンプル！）
+```python
+from agents_sdk_models import create_simple_gen_agent, Flow
+
+gen_agent = create_simple_gen_agent("assistant", "親切に回答します", "gpt-4o-mini")
+flow = Flow(steps=gen_agent)  # たった1行！
+result = await flow.run(input_data="こんにちは")
+```
+
+### シーケンシャルFlow（自動接続！）
+```python
+from agents_sdk_models import create_simple_gen_agent, Flow
+
+idea_gen = create_simple_gen_agent("idea", "アイデア生成", "gpt-4o-mini")
+writer = create_simple_gen_agent("writer", "記事執筆", "gpt-4o")
+reviewer = create_simple_gen_agent("reviewer", "レビュー", "claude-3-5-sonnet-latest")
+
+flow = Flow(steps=[idea_gen, writer, reviewer])  # 自動シーケンシャル実行！
+result = await flow.run(input_data="AI技術について")
+```
+
+### 従来方式（複雑なフロー用）
+```python
+flow = Flow(
+    start="step1",
+    steps={"step1": step1, "step2": step2}
+)
+```
+
+**📚 詳細ガイド：** [新しいFlow機能完全ガイド](new_flow_features.md)
+
+---
+
+## 📚 関連ドキュメント
+
+- **[新しいFlow機能完全ガイド](new_flow_features.md)** - v0.0.8で追加された超シンプルなFlow作成方法
+- **[クイックスタート](tutorials/quickstart.md)** - 3行でAIワークフローを構築
+- **[応用例](tutorials/advanced.md)** - マルチエージェント協調とツール連携
+- **[Flow/Step API リファレンス](flow_step.md)** - 詳細なAPI仕様

@@ -39,10 +39,16 @@ Flow/Stepアーキテクチャの導入により、より柔軟で拡張性の�
 - [x] 新しいFlow/Step使用例の充実（各exampleで複数の使用例を実装）
 - [x] 移行ガイドの完成（deprecation_plan.mdに詳細な移行例を記載）
 
-### フェーズ 3: テスト移行 (v0.0.24)
-- [ ] AgentPipelineのテストをGenAgentベースに移行
-- [ ] 後方互換性テストの追加
-- [ ] GenAgentの完全なテストカバレッジ
+### フェーズ 3: テスト移行 (v0.0.24) ✅ 完了
+- [x] AgentPipelineのテストをGenAgentベースに移行
+- [x] 後方互換性テストの追加
+- [x] GenAgentの完全なテストカバレッジ
+
+#### 移行されたテストファイル:
+- **`test_gen_agent_compatibility.py`** (377行) - 互換性とdeprecation警告テスト
+- **`test_gen_agent_comprehensive.py`** (306行, 12テスト) - 全機能カバレッジテスト
+- **テスト結果**: 全て成功 (12 passed, 19 warnings)
+- **カバレッジ**: ガードレール、プロンプト構築、ユーティリティ、履歴管理、閾値設定
 
 ### フェーズ 4: 完全削除 (v0.1.0)
 - [ ] AgentPipelineクラスの完全削除

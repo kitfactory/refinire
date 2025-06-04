@@ -42,25 +42,84 @@ class Flow:
     
     def __init__(
         self, 
-        start: str, 
-        steps: Dict[str, Step], 
+        start: Optional[str] = None, 
+        steps: Optional[Union[Dict[str, Step], List[Step], Step]] = None, 
         context: Optional[Context] = None,
         max_steps: int = 1000,
         trace_id: Optional[str] = None
     ):
         """
-        Initialize Flow with start step and step definitions
-        開始ステップとステップ定義でFlowを初期化
+        Initialize Flow with flexible step definitions
+        柔軟なステップ定義でFlowを初期化
+        
+        This constructor now supports three ways to define steps:
+        このコンストラクタは3つの方法でステップを定義できます：
+        1. Traditional: start step name + Dict[str, Step]
+        2. Sequential: List[Step] (creates sequential workflow)
+        3. Single: Single Step (creates single-step workflow)
         
         Args:
-            start: Start step label / 開始ステップラベル
-            steps: Dictionary of step definitions / ステップ定義の辞書
+            start: Start step label (optional for List/Single mode) / 開始ステップラベル（List/Singleモードでは省略可）
+            steps: Step definitions - Dict[str, Step], List[Step], or Step / ステップ定義 - Dict[str, Step]、List[Step]、またはStep
             context: Initial context (optional) / 初期コンテキスト（オプション）
             max_steps: Maximum number of steps to prevent infinite loops / 無限ループ防止のための最大ステップ数
             trace_id: Trace ID for observability / オブザーバビリティ用トレースID
         """
-        self.start = start
-        self.steps = steps
+        # Handle flexible step definitions
+        # 柔軟なステップ定義を処理
+        if isinstance(steps, dict):
+            # Traditional mode: Dict[str, Step]
+            # 従来モード: Dict[str, Step]
+            if start is None:
+                raise ValueError("start parameter is required when steps is a dictionary")
+            self.start = start
+            self.steps = steps
+        elif isinstance(steps, list):
+            # Sequential mode: List[Step] 
+            # シーケンシャルモード: List[Step]
+            if not steps:
+                raise ValueError("Steps list cannot be empty")
+            self.steps = {}
+            prev_step_name = None
+            
+            for i, step in enumerate(steps):
+                if not hasattr(step, 'name'):
+                    raise ValueError(f"Step at index {i} must have a 'name' attribute")
+                
+                step_name = step.name
+                self.steps[step_name] = step
+                
+                # Set sequential flow: each step goes to next step
+                # シーケンシャルフロー設定: 各ステップが次のステップに進む
+                if prev_step_name is not None and hasattr(self.steps[prev_step_name], 'next_step'):
+                    if self.steps[prev_step_name].next_step is None:
+                        self.steps[prev_step_name].next_step = step_name
+                
+                prev_step_name = step_name
+            
+            # Start with first step
+            # 最初のステップから開始
+            self.start = steps[0].name
+            
+        elif steps is not None:
+            # Check if it's a Step instance
+            # Stepインスタンスかどうかをチェック
+            if isinstance(steps, Step):
+                # Single step mode: Step
+                # 単一ステップモード: Step
+                if not hasattr(steps, 'name'):
+                    raise ValueError("Step must have a 'name' attribute")
+                
+                step_name = steps.name
+                self.start = step_name
+                self.steps = {step_name: steps}
+            else:
+                # Not a valid type
+                # 有効なタイプではない
+                raise ValueError("steps must be Dict[str, Step], List[Step], or Step")
+        else:
+            raise ValueError("steps parameter cannot be None")
+        
         self.context = context or Context()
         self.max_steps = max_steps
         self.trace_id = trace_id or f"flow_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -68,7 +127,7 @@ class Flow:
         # Initialize context
         # コンテキストを初期化
         self.context.trace_id = self.trace_id
-        self.context.next_label = start
+        self.context.next_label = self.start
         
         # Execution state
         # 実行状態
@@ -115,7 +174,7 @@ class Flow:
         """
         return self.context.next_label
     
-    async def run(self, initial_input: Optional[str] = None) -> Context:
+    async def run(self, input_data: Optional[str] = None, initial_input: Optional[str] = None) -> Context:
         """
         Run flow to completion without user input coordination
         ユーザー入力調整なしでフローを完了まで実行
@@ -124,7 +183,8 @@ class Flow:
         これはユーザー入力が不要な非対話的ワークフロー用です。
         
         Args:
-            initial_input: Initial input to the flow / フローへの初期入力
+            input_data: Input data to the flow (preferred parameter name) / フローへの入力データ（推奨パラメータ名）
+            initial_input: Initial input to the flow (deprecated, use input_data) / フローへの初期入力（非推奨、input_dataを使用）
             
         Returns:
             Context: Final context / 最終コンテキスト
@@ -142,12 +202,16 @@ class Flow:
                     self.context = Context(trace_id=self.trace_id)
                     self.context.next_label = self.start
                 
-                # Add initial input if provided
-                # 初期入力が提供されている場合は追加
-                if initial_input:
-                    self.context.add_user_message(initial_input)
+                # Determine input to use (input_data takes precedence)
+                # 使用する入力を決定（input_dataが優先）
+                effective_input = input_data or initial_input
                 
-                current_input = initial_input
+                # Add input if provided
+                # 入力が提供されている場合は追加
+                if effective_input:
+                    self.context.add_user_message(effective_input)
+                
+                current_input = effective_input
                 step_count = 0
                 
                 while not self.finished and step_count < self.max_steps:

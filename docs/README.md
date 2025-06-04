@@ -80,4 +80,39 @@ asyncio.run(main())
 - **Dynamic Discovery**: Ollama queries the `/api/ps` endpoint for real-time model availability
 - **Environment Variable Support**: Ollama base URL can be set via `OLLAMA_BASE_URL` environment variable
 - **Error Handling**: Graceful handling of connection failures with empty lists and warnings
-- **Latest Models**: Updated to include Claude-4, Gemini 2.5, and OpenAI's latest models 
+- **Latest Models**: Updated to include Claude-4, Gemini 2.5, and OpenAI's latest models
+
+## 🚀 New Flow Features (v0.0.8+)
+
+The new Flow constructor provides **ultra-simple** workflow creation with three modes:
+
+### Single Step Flow (Simplest!)
+```python
+from agents_sdk_models import create_simple_gen_agent, Flow
+
+gen_agent = create_simple_gen_agent("assistant", "You are helpful", "gpt-4o-mini")
+flow = Flow(steps=gen_agent)  # Just 1 line!
+result = await flow.run(input_data="Hello")
+```
+
+### Sequential Flow (Auto-connect!)
+```python
+from agents_sdk_models import create_simple_gen_agent, Flow, DebugStep
+
+idea_gen = create_simple_gen_agent("idea", "Generate ideas", "gpt-4o-mini")
+writer = create_simple_gen_agent("writer", "Write articles", "gpt-4o")
+reviewer = create_simple_gen_agent("reviewer", "Review content", "claude-3-5-sonnet-latest")
+
+flow = Flow(steps=[idea_gen, writer, reviewer])  # Auto-connected sequence!
+result = await flow.run(input_data="AI technology")
+```
+
+### Traditional Mode (Complex workflows)
+```python
+flow = Flow(
+    start="step1",
+    steps={"step1": step1, "step2": step2}
+)
+```
+
+**📚 See detailed guide:** [New Flow Features Complete Guide](new_flow_features.md)

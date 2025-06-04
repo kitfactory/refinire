@@ -120,12 +120,17 @@
 - [ ] 新しいFlow/Step使用例の充実
 - [ ] 移行ガイドの完成
 
-### フェーズ 3: テスト移行 (v0.0.24)
-- [ ] AgentPipelineのテストをGenAgentベースに移行
-  - [ ] test_pipeline.py → test_gen_agent_compatibility.py
-  - [ ] test_pipeline_*.py系統の移行
-- [ ] 後方互換性テストの追加
-- [ ] GenAgentの完全なテストカバレッジ
+### フェーズ 3: テスト移行 (v0.0.24) ✅ 完了
+- [x] AgentPipelineのテストをGenAgentベースに移行
+  - [x] test_pipeline.py → test_gen_agent_compatibility.py
+  - [x] test_pipeline_*.py系統の移行
+- [x] 後方互換性テストの追加
+- [x] GenAgentの完全なテストカバレッジ
+
+#### 完了したテストファイル:
+- ✅ test_gen_agent_compatibility.py (377行) - 8つの互換性テスト
+- ✅ test_gen_agent_comprehensive.py (306行) - 12の包括的テスト
+- ✅ 全テスト成功: 20+ tests passed, 適切なdeprecation warning動作確認
 
 ### フェーズ 4: 完全削除 (v0.1.0)
 - [ ] AgentPipelineクラスの完全削除

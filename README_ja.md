@@ -3,9 +3,172 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/agents-sdk-models)](https://pepy.tech/projects/agents-sdk-models)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.9](https://img.shields.io/badge/OpenAI-Agents_0.0.9-green.svg)](https://github.com/openai/openai-agents-python)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen.svg)]
+[![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen.svg)]
 
 OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡張集です。様々なLLMプロバイダーを統一インターフェースで利用し、実践的なエージェントパイプラインを簡単に構築できます！
+
+## ⚡ 推奨: Flow/Step アーキテクチャ - **超簡単！** 
+
+**🎉 v0.0.22の新機能:** **Flow/Step アーキテクチャ**と**GenAgent**の使用を推奨します。信じられないほど簡単で強力です！
+
+### 🚀 **たった3行で開始！**
+
+```python
+from agents_sdk_models import create_simple_gen_agent, create_simple_flow
+
+# ステップ1: GenAgentを作成（AgentPipelineみたいだけど、もっと良い！）
+gen_agent = create_simple_gen_agent(
+    name="story_generator",
+    generation_instructions="創造的な物語を生成してください",
+    model="gpt-4o-mini"
+)
+
+# ステップ2: Flowを作成（さらに簡単に！）
+flow = Flow(steps=gen_agent)  # 単一ステップ - これだけ！
+
+# ステップ3: 実行！（前と同じシンプルなインターフェース）
+result = await flow.run(input_data="絵を学ぶロボットの物語")
+print(result.shared_state["story_generator_result"])  # あなたの創造的な物語が完成！
+```
+
+### 🚀 **新機能: 超シンプルなFlow作成！**
+
+今や**3つの方法**でフローを作成できます：
+
+```python
+# 1. 単一ステップ（新機能！）
+flow = Flow(steps=gen_agent)
+
+# 2. シーケンシャルステップ（新機能！）
+flow = Flow(steps=[step1, step2, step3])  # 自動接続！
+
+# 3. 従来方式（複雑なフロー用）
+flow = Flow(start="step1", steps={"step1": step1, "step2": step2})
+```
+
+### 🎯 **なぜこんなに簡単なの？**
+
+| **LangChain/LangGraph (~50-100+行)** | **GenAgent + Flow (3-5行)** |
+|---------------------------|----------------------------|
+| 🔧 **複雑なインポート**（10+モジュール） | ✨ **1つのインポート** - すべて含まれる |
+| 📝 **手動プロンプトテンプレート** | 🎯 **シンプルな指示文字列** |
+| 🧩 **グラフ/チェーン構築**（20+行） | 🔄 **自動生成ワークフロー** |
+| ⚙️ **カスタムエラーハンドリング** | 🛡️ **内蔵エラー回復機能** |
+| 🔁 **手動リトライロジック** | 🔄 **評価付き自動リトライ** |
+| 🛠️ **状態管理コード** | 📦 **自動処理** |
+
+### 🌟 **実用例: 評価付きコンテンツ生成器**
+
+```python
+from agents_sdk_models import create_simple_gen_agent
+from agents_sdk_models.flow import Flow
+from agents_sdk_models.step import UserInputStep, DebugStep
+
+# 評価付きGenAgentを作成（複雑なAgentPipeline設定を置き換え）
+gen_agent = create_simple_gen_agent(
+    name="content_creator",
+    generation_instructions="魅力的なブログ記事を作成してください",
+    evaluation_instructions="創造性と読みやすさを評価してください（0-100）",  # 自動評価！
+    model="gpt-4o-mini",
+    threshold=70  # スコア70未満なら自動リトライ！
+)
+
+# 数秒でFlowを構築（数分ではなく！）
+flow = Flow(steps=[gen_agent, DebugStep("debug", "何が起こったかを確認")])  # シーケンシャルステップ！
+
+# 完全なワークフローを実行
+result = await flow.run(input_data="AI についてのブログを作成")
+print(result.shared_state["content_creator_result"])
+# 自動処理: 生成 → 評価 → リトライ → 出力
+```
+
+### 🎨 **LangChain/LangGraphとの比較 - 圧倒的な差！**
+
+```python
+# LangChain/LangGraph方式 (~80+行、複雑な設定)
+"""
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
+from langchain.schema import BaseOutputParser
+from langchain.callbacks import BaseCallbackHandler
+from langchain.schema.runnable import RunnablePassthrough
+from langgraph.graph import StateGraph, END
+from typing import TypedDict, Annotated
+import operator
+# ... (約15行のimport文) ...
+
+class AgentState(TypedDict):
+    input: str
+    generation: str
+    evaluation: dict
+    retry_count: int
+    # ... (約10行の状態定義) ...
+
+def generation_node(state):
+    # ... (約15行の生成ロジック) ...
+    
+def evaluation_node(state):
+    # ... (約20行の評価ロジック) ...
+    
+def should_retry(state):
+    # ... (約10行のリトライ判定) ...
+
+workflow = StateGraph(AgentState)
+workflow.add_node("generate", generation_node)
+workflow.add_node("evaluate", evaluation_node)
+workflow.add_conditional_edges(
+    "evaluate", 
+    should_retry,
+    {"retry": "generate", "end": END}
+)
+# ... (約10行のグラフ構築) ...
+"""
+
+# GenAgent + Flow方式（3行！）
+gen_agent = create_simple_gen_agent(
+    name="simple_setup",
+    generation_instructions="...",
+    evaluation_instructions="...",  # 自動評価＆リトライ！
+    model="gpt-4o-mini",
+    threshold=70
+)
+flow = Flow(steps=gen_agent)  # たった1行！
+result = await flow.run(input_data="あなたの入力")  # 完了！
+```
+
+### 🏗️ **高度な機能もシンプルに**
+
+```python
+# 複雑なワークフロー？それでも数行だけ！
+from agents_sdk_models.step import ConditionStep, FunctionStep
+
+def check_content_type(user_input, ctx):
+    return "blog" if "ブログ" in user_input else "story"
+
+# シンプルなステップで複雑なロジックを構築
+blog_gen = create_simple_gen_agent("blog", "ブログを書く", "gpt-4o")
+story_gen = create_simple_gen_agent("story", "物語を書く", "claude-3-5-sonnet-latest")
+
+# 複雑なフロー用の従来モード
+advanced_flow = Flow(
+    start="check_type",
+    steps={
+        "check_type": ConditionStep("check_type", check_content_type, "blog_gen", "story_gen"),
+        "blog_gen": blog_gen,
+        "story_gen": story_gen,
+        "done": DebugStep("done", "完了！")  # 完了！
+    }
+)
+```
+
+### ✨ **あなたが気に入る利点:**
+- 🔄 **より柔軟**: モジュラーステップで複雑なワークフローを構成
+- 🧩 **再利用性向上**: ステップを異なるフロー間で再利用
+- 🎯 **クリーンなアーキテクチャ**: 関心の明確な分離
+- 🚀 **将来対応**: スケーラビリティと拡張性を考慮した設計
+- 💡 **直感的**: AgentPipelineを理解していれば、これも理解できます！
+
+**注意:** LangChain/LangGraphの50-100+行の複雑な設定と比較して、GenAgent + Flowはわずか3-5行で同じ機能を実現！`AgentPipeline`はv0.1.0で削除予定です。
 
 ---
 
@@ -21,6 +184,16 @@ OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡�
 - 🔍 **コンソールトレーシング**: 本ライブラリではデフォルトでコンソールトレーシング（`ConsoleTracingProcessor`）が有効化されています。OpenAI Agents SDK はデフォルトで OpenAI のトレーシングサービスを使用します（`OPENAI_API_KEY` が必要）が、本ライブラリでは軽量なコンソールベースのトレーサーを提供しています。不要な場合は `disable_tracing()` で無効化できます。
 
 ---
+
+## v0.22 リリースノート
+- **🚀 重要: 新しいFlowコンストラクタ** - 3つのモードで超シンプルなFlow作成を追加:
+  - 単一ステップ: `Flow(steps=gen_agent)` 
+  - シーケンシャルステップ: `Flow(steps=[step1, step2, step3])` (自動接続)
+  - 従来方式: `Flow(start="step1", steps={"step1": step1, "step2": step2})`
+- **🚀 Flow.run()の機能強化** - `input_data`パラメータを追加（`initial_input`より推奨）
+- **✨ GenAgent + Flowアーキテクチャ** - 新規プロジェクトではAgentPipelineより推奨
+- **⚠️ AgentPipelineの非推奨化** - AgentPipelineは非推奨となり、v0.1.0で削除予定
+- **📚 完全なドキュメント更新** - 全チュートリアルと例を新しいFlow機能に対応して更新
 
 ## v0.21 リリースノート
 - `get_available_models` 同期関数を修正し、実行中のイベントループがある環境（Jupyter Notebook、IPythonなど）でも正常に動作するよう改善
