@@ -7,6 +7,30 @@
 
 A collection of model adapters and workflow utilities for the OpenAI Agents SDK, enabling you to use various LLM providers and build practical agent pipelines with a unified interface!
 
+## ⚡ Recommended: Flow/Step Architecture 
+
+**🎉 New in v0.0.22:** We now recommend using the **Flow/Step architecture** with **GenAgent** for building workflows! This provides:
+- 🔄 **More Flexibility**: Compose complex workflows using modular steps
+- 🧩 **Better Reusability**: Steps can be reused across different flows  
+- 🎯 **Cleaner Architecture**: Clear separation of concerns
+- 🚀 **Future-Proof**: Designed for scalability and extensibility
+
+```python
+# Recommended: Using GenAgent with Flow/Step
+from agents_sdk_models import create_simple_gen_agent, create_simple_flow
+
+gen_agent = create_simple_gen_agent(
+    name="story_generator",
+    generation_instructions="Generate creative stories",
+    model="gpt-4o-mini"
+)
+
+flow = create_simple_flow(gen_agent)
+result = await flow.run(input_data="A robot learning to paint")
+```
+
+**Note:** `AgentPipeline` is now deprecated and will be removed in v0.1.0. See our [migration guide](docs/deprecation_plan.md) for easy transition to GenAgent.
+
 ---
 
 ## 🌟 Features
@@ -148,7 +172,9 @@ models = get_available_models(["ollama"], ollama_base_url="http://custom-host:11
 
 ---
 
-## 🏗️ AgentPipeline Class: Easy LLM Workflows
+## 🏗️ AgentPipeline Class: Easy LLM Workflows (⚠️ Deprecated)
+
+**⚠️ Deprecated:** `AgentPipeline` is deprecated as of v0.0.22 and will be removed in v0.1.0. Please use [GenAgent with Flow/Step architecture](#-recommended-flowstep-architecture) instead.
 
 The `AgentPipeline` class provides an all-in-one solution for AI agent workflows. It:
   - Generates content based on user-defined instructions

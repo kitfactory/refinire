@@ -99,4 +99,75 @@
   - [ ] README.md（英語、絵文字・サポート環境・メリット訴求）
   - [ ] README_ja.md（日本語のみ）
 - [ ] pyproject.tomlの依存確認と調整
-- [ ] 仮想環境(.venv)下でpytest実行による全体動作確認 
+- [ ] 仮想環境(.venv)下でpytest実行による全体動作確認
+
+## AgentPipeline Deprecation Plan（v0.0.22〜v0.1.0）
+
+### フェーズ 1: Deprecation Warning追加 (v0.0.22) ✅ 完了
+- [x] AgentPipelineクラスにdeprecation warningを追加
+- [x] Deprecation計画文書の作成 (docs/deprecation_plan.md)
+- [x] README.mdでFlow/Stepアーキテクチャを推奨として記載
+- [x] AgentPipelineクラスの文書にdeprecated注記を追加
+
+### フェーズ 2: Examples移行 (v0.0.23)
+- [x] genagent_simple_generation.py - 基本的な生成例の移行版
+- [x] genagent_with_evaluation.py - 評価機能付きの移行版
+- [ ] genagent_with_tools.py - ツール使用例の移行版
+- [ ] genagent_with_guardrails.py - ガードレール使用例の移行版
+- [ ] genagent_with_history.py - 履歴管理例の移行版
+- [ ] genagent_with_retry.py - リトライ機能例の移行版
+- [ ] genagent_with_dynamic_prompt.py - 動的プロンプト例の移行版
+- [ ] 新しいFlow/Step使用例の充実
+- [ ] 移行ガイドの完成
+
+### フェーズ 3: テスト移行 (v0.0.24)
+- [ ] AgentPipelineのテストをGenAgentベースに移行
+  - [ ] test_pipeline.py → test_gen_agent_compatibility.py
+  - [ ] test_pipeline_*.py系統の移行
+- [ ] 後方互換性テストの追加
+- [ ] GenAgentの完全なテストカバレッジ
+
+### フェーズ 4: 完全削除 (v0.1.0)
+- [ ] AgentPipelineクラスの完全削除
+- [ ] 関連するimportとexportの削除
+- [ ] ドキュメントのクリーンアップ
+- [ ] pipeline_*系のexamplesファイルの削除
+
+## 実装済み機能
+
+### Core クラス ✅ 完了
+- [x] GenAgent: AgentPipelineのStepインターフェース実装
+- [x] GenAgentの包括的テストスイート（99%カバレッジ）
+- [x] create_simple_gen_agent, create_evaluated_gen_agent ユーティリティ関数
+
+### Flow/Step システム ✅ 完了
+- [x] Flow: ワークフロー管理クラス
+- [x] Step: 基底ステップクラス
+- [x] Context: ステップ間の状態共有
+- [x] 包括的なFlow/Stepテストスイート
+
+### 移行サポート ✅ 完了
+- [x] Migration文書 (docs/deprecation_plan.md)
+- [x] README.mdでの新アーキテクチャ推奨
+- [x] Deprecation warningの実装
+
+## 技術的詳細
+
+### GenAgent の主な機能
+- AgentPipelineをStepとして使用可能
+- Flow内での非同期実行サポート
+- コンテキスト共有による状態管理
+- 完全なエラーハンドリング
+- 評価機能の統合サポート
+
+### 後方互換性
+- AgentPipelineは引き続き動作（v0.1.0まで）
+- Deprecation warningの表示
+- 既存コードの段階的移行サポート
+
+## 次のステップ
+
+1. 残りのexample移行（フェーズ2完了）
+2. テスト移行計画の策定
+3. v0.0.23リリース準備
+4. v0.1.0での完全削除準備 

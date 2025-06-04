@@ -62,12 +62,23 @@ class AgentPipeline:
     AgentPipeline class for managing the generation and evaluation of content using OpenAI Agents SDK
     OpenAI Agents SDKを使用してコンテンツの生成と評価を管理するパイプラインクラス
 
+    .. deprecated:: 0.0.22
+       AgentPipeline is deprecated and will be removed in v0.1.0. 
+       Use GenAgent with Flow/Step architecture instead.
+       See migration guide: docs/deprecation_plan.md
+
     This class handles:
     このクラスは以下を処理します：
     - Content generation using instructions / instructionsを使用したコンテンツ生成
     - Content evaluation with scoring / スコアリングによるコンテンツ評価
     - Session history management / セッション履歴の管理
     - Output formatting and routing / 出力のフォーマットとルーティング
+
+    Preferred alternative:
+    推奨代替手段：
+    - Use GenAgent for single-step pipeline functionality
+    - Use Flow/Step architecture for complex workflows
+    - See examples/gen_agent_example.py for migration examples
     """
 
     def __init__(
@@ -97,6 +108,11 @@ class AgentPipeline:
         Initialize the Pipeline with configuration parameters
         設定パラメータでパイプラインを初期化する
 
+        .. deprecated:: 0.0.22
+           AgentPipeline is deprecated and will be removed in v0.1.0. 
+           Use GenAgent with Flow/Step architecture instead.
+           See migration guide: docs/deprecation_plan.md
+
         Args:
             name: Pipeline name / パイプライン名
             generation_instructions: System prompt for generation / 生成用システムプロンプト
@@ -118,6 +134,14 @@ class AgentPipeline:
             retry_comment_importance: Importance levels of comments to include on retry / リトライ時にプロンプトに含めるコメントの重大度レベル（任意）
             locale: Language code for localized messages ("en" or "ja")
         """
+        import warnings
+        warnings.warn(
+            "AgentPipeline is deprecated and will be removed in v0.1.0. "
+            "Use GenAgent with Flow/Step architecture instead. "
+            "See migration guide: docs/deprecation_plan.md",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.name = name
         self.generation_instructions = generation_instructions.strip()
         self.evaluation_instructions = evaluation_instructions.strip() if evaluation_instructions else None
