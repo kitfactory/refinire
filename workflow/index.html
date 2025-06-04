@@ -12,7 +12,7 @@
         <meta name="author" content="kitfactory">
       
       
-        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/architecture/">
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/workflow/">
       
       
       
@@ -22,7 +22,7 @@
     
     
       
-        <title>アーキテクチャ設計書 - Agents SDK Models</title>
+        <title>Workflow について - Agents SDK Models</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#workflow" class="md-skip">
           コンテンツにスキップ
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              アーキテクチャ設計書
+              Workflow について
             
           </span>
         </div>
@@ -370,65 +370,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目次
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      システム構成・アーキテクチャの概要
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要インターフェース
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要データ（データの種類、構造）
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="主要データ（データの種類、構造）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#erplantuml" class="md-nav__link">
-    <span class="md-ellipsis">
-      ER図（PlantUML）
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      参考
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -446,109 +387,16 @@
   
 
 
-<h1 id="_1">アーキテクチャ設計書<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<h2 id="_2">システム構成・アーキテクチャの概要<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>本システムはレイヤーアーキテクチャを採用し、以下のような構成となっています。</p>
+<h1 id="workflow">Workflow について<a class="headerlink" href="#workflow" title="Permanent link">&para;</a></h1>
 <ul>
-<li>UI/利用例層（examples/）</li>
-<li>ユースケース層（AgentPipelineクラス）</li>
-<li>機能クラス層（ツール関数、ガードレール関数、評価関数など）</li>
-<li>データクラス層（pydanticモデル、dataclass等）</li>
-<li>ゲートウェイ層（get_llm等のモデル取得）</li>
-<li>ユーティリティ層（設定、ログ等）</li>
-</ul>
-<h2 id="_3">主要インターフェース<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>役割</th>
-<th>レイヤー</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AgentPipeline</td>
-<td>ワークフロー統合・実行</td>
-<td>ユースケース</td>
-</tr>
-<tr>
-<td>Agent</td>
-<td>LLMエージェント</td>
-<td>機能/ユースケース</td>
-</tr>
-<tr>
-<td>function_toolで定義した関数</td>
-<td>ツールとして利用</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>input_guardrailで定義した関数</td>
-<td>入力ガードレール</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>get_llm</td>
-<td>モデル取得</td>
-<td>ゲートウェイ</td>
-</tr>
-<tr>
-<td>pydantic.BaseModel</td>
-<td>構造化出力</td>
-<td>データ</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">主要データ（データの種類、構造）<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>保持データ</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>EvaluationResult</td>
-<td>score, comment</td>
-</tr>
-<tr>
-<td>MathHomeworkOutput</td>
-<td>is_math_homework, reasoning</td>
-</tr>
-</tbody>
-</table>
-<h3 id="erplantuml">ER図（PlantUML）<a class="headerlink" href="#erplantuml" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>@startuml
-class AgentPipeline {
-  - name
-  - generation_instructions
-  - evaluation_instructions
-  - ...
-}
-class Agent {
-  - name
-  - model
-  - instructions
-  - ...
-}
-class EvaluationResult {
-  score: int
-  comment: List~str~
-}
-class MathHomeworkOutput {
-  is_math_homework: bool
-  reasoning: str
-}
-AgentPipeline --&gt; Agent
-Agent --&gt; EvaluationResult
-Agent --&gt; MathHomeworkOutput
-@enduml
-</code></pre></div>
-<hr />
-<h2 id="_5">参考<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<ul>
-<li>詳細な事例・使い方は <a href="../pipeline_examples/">docs/pipeline_examples.md</a> を参照。 </li>
+<li>WorkflowとはAgent/Interaction/Toolの連鎖を行う機能です。</li>
+<li>ルーティング情報にもとづき、次の要素を定めます。</li>
+<li></li>
+<li>
+<p>次のようなケースがあります。
+　・対話型ワークフロー
+　・自律型ワークフロー</p>
+</li>
 </ul>
 
 

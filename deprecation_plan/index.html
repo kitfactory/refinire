@@ -12,7 +12,7 @@
         <meta name="author" content="kitfactory">
       
       
-        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/architecture/">
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/deprecation_plan/">
       
       
       
@@ -22,7 +22,7 @@
     
     
       
-        <title>アーキテクチャ設計書 - Agents SDK Models</title>
+        <title>AgentPipeline Deprecation Plan - Agents SDK Models</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#agentpipeline-deprecation-plan" class="md-skip">
           コンテンツにスキップ
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              アーキテクチャ設計書
+              AgentPipeline Deprecation Plan
             
           </span>
         </div>
@@ -370,65 +370,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目次
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      システム構成・アーキテクチャの概要
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要インターフェース
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要データ（データの種類、構造）
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="主要データ（データの種類、構造）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#erplantuml" class="md-nav__link">
-    <span class="md-ellipsis">
-      ER図（PlantUML）
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      参考
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -446,110 +387,154 @@
   
 
 
-<h1 id="_1">アーキテクチャ設計書<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<h2 id="_2">システム構成・アーキテクチャの概要<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>本システムはレイヤーアーキテクチャを採用し、以下のような構成となっています。</p>
+<h1 id="agentpipeline-deprecation-plan">AgentPipeline Deprecation Plan<a class="headerlink" href="#agentpipeline-deprecation-plan" title="Permanent link">&para;</a></h1>
+<h1 id="agentpipeline">AgentPipelineの廃止予定計画<a class="headerlink" href="#agentpipeline" title="Permanent link">&para;</a></h1>
+<h2 id="background">背景 (Background)<a class="headerlink" href="#background" title="Permanent link">&para;</a></h2>
+<p>Flow/Stepアーキテクチャの導入により、より柔軟で拡張性の高いワークフロー管理が可能になりました。GenAgentクラスにより、AgentPipelineの機能はFlowワークフロー内でStepとして使用できるようになったため、AgentPipelineクラスを段階的に廃止していきます。</p>
+<h2 id="migration-benefits">移行の利点 (Migration Benefits)<a class="headerlink" href="#migration-benefits" title="Permanent link">&para;</a></h2>
+<h3 id="english">English:<a class="headerlink" href="#english" title="Permanent link">&para;</a></h3>
 <ul>
-<li>UI/利用例層（examples/）</li>
-<li>ユースケース層（AgentPipelineクラス）</li>
-<li>機能クラス層（ツール関数、ガードレール関数、評価関数など）</li>
-<li>データクラス層（pydanticモデル、dataclass等）</li>
-<li>ゲートウェイ層（get_llm等のモデル取得）</li>
-<li>ユーティリティ層（設定、ログ等）</li>
+<li>More flexible workflow composition using Flow/Step architecture</li>
+<li>Better reusability through modular Step design</li>
+<li>Enhanced error handling and context management</li>
+<li>Cleaner separation of concerns</li>
+<li>Future-proof architecture for complex workflows</li>
 </ul>
-<h2 id="_3">主要インターフェース<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>役割</th>
-<th>レイヤー</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AgentPipeline</td>
-<td>ワークフロー統合・実行</td>
-<td>ユースケース</td>
-</tr>
-<tr>
-<td>Agent</td>
-<td>LLMエージェント</td>
-<td>機能/ユースケース</td>
-</tr>
-<tr>
-<td>function_toolで定義した関数</td>
-<td>ツールとして利用</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>input_guardrailで定義した関数</td>
-<td>入力ガードレール</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>get_llm</td>
-<td>モデル取得</td>
-<td>ゲートウェイ</td>
-</tr>
-<tr>
-<td>pydantic.BaseModel</td>
-<td>構造化出力</td>
-<td>データ</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">主要データ（データの種類、構造）<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>保持データ</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>EvaluationResult</td>
-<td>score, comment</td>
-</tr>
-<tr>
-<td>MathHomeworkOutput</td>
-<td>is_math_homework, reasoning</td>
-</tr>
-</tbody>
-</table>
-<h3 id="erplantuml">ER図（PlantUML）<a class="headerlink" href="#erplantuml" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>@startuml
-class AgentPipeline {
-  - name
-  - generation_instructions
-  - evaluation_instructions
-  - ...
-}
-class Agent {
-  - name
-  - model
-  - instructions
-  - ...
-}
-class EvaluationResult {
-  score: int
-  comment: List~str~
-}
-class MathHomeworkOutput {
-  is_math_homework: bool
-  reasoning: str
-}
-AgentPipeline --&gt; Agent
-Agent --&gt; EvaluationResult
-Agent --&gt; MathHomeworkOutput
-@enduml
+<h3 id="_1">日本語:<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Flow/Stepアーキテクチャによるより柔軟なワークフロー構成</li>
+<li>モジュラーなStep設計による再利用性の向上</li>
+<li>エラーハンドリングとコンテキスト管理の強化</li>
+<li>関心の分離のよりクリーンな実現</li>
+<li>複雑なワークフローに対応する将来性のあるアーキテクチャ</li>
+</ul>
+<h2 id="deprecation-timeline">廃止計画 (Deprecation Timeline)<a class="headerlink" href="#deprecation-timeline" title="Permanent link">&para;</a></h2>
+<h3 id="1-deprecation-warning-v0022">フェーズ 1: Deprecation Warning追加 (v0.0.22) ✅ 完了<a class="headerlink" href="#1-deprecation-warning-v0022" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] AgentPipelineクラスにdeprecation warningを追加</li>
+<li>[x] 新しいGenAgentへの移行ガイドを作成</li>
+<li>[x] README.mdでFlow/Stepアーキテクチャを推奨として記載</li>
+</ul>
+<h3 id="2-examples-v0023">フェーズ 2: Examples移行 (v0.0.23) ✅ 完了<a class="headerlink" href="#2-examples-v0023" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] genagent_simple_generation.py - 基本的な生成例の移行版</li>
+<li>[x] genagent_with_evaluation.py - 評価機能付きの移行版</li>
+<li>[x] genagent_with_tools.py - ツール使用例の移行版</li>
+<li>[x] genagent_with_guardrails.py - ガードレール使用例の移行版</li>
+<li>[x] genagent_with_history.py - 履歴管理例の移行版</li>
+<li>[x] genagent_with_retry.py - リトライ機能例の移行版</li>
+<li>[x] genagent_with_dynamic_prompt.py - 動的プロンプト例の移行版</li>
+<li>[x] 新しいFlow/Step使用例の充実（各exampleで複数の使用例を実装）</li>
+<li>[x] 移行ガイドの完成（deprecation_plan.mdに詳細な移行例を記載）</li>
+</ul>
+<h3 id="3-v0024">フェーズ 3: テスト移行 (v0.0.24) ✅ 完了<a class="headerlink" href="#3-v0024" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[x] AgentPipelineのテストをGenAgentベースに移行</li>
+<li>[x] 後方互換性テストの追加</li>
+<li>[x] GenAgentの完全なテストカバレッジ</li>
+</ul>
+<h4 id="_2">移行されたテストファイル:<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong><code>test_gen_agent_compatibility.py</code></strong> (377行) - 互換性とdeprecation警告テスト</li>
+<li><strong><code>test_gen_agent_comprehensive.py</code></strong> (306行, 12テスト) - 全機能カバレッジテスト</li>
+<li><strong>テスト結果</strong>: 全て成功 (12 passed, 19 warnings)</li>
+<li><strong>カバレッジ</strong>: ガードレール、プロンプト構築、ユーティリティ、履歴管理、閾値設定</li>
+</ul>
+<h3 id="4-v010">フェーズ 4: 完全削除 (v0.1.0)<a class="headerlink" href="#4-v010" title="Permanent link">&para;</a></h3>
+<ul>
+<li>[ ] AgentPipelineクラスの完全削除</li>
+<li>[ ]関連するimportとexportの削除</li>
+<li>[ ] ドキュメントのクリーンアップ</li>
+</ul>
+<h2 id="migration-guide">移行方法 (Migration Guide)<a class="headerlink" href="#migration-guide" title="Permanent link">&para;</a></h2>
+<h3 id="_3">基本的な移行パターン<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<h4 id="agentpipeline_1">旧: AgentPipeline<a class="headerlink" href="#agentpipeline_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate a response&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;User input&quot;</span><span class="p">)</span>
 </code></pre></div>
-<hr />
-<h2 id="_5">参考<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<h4 id="genagent-flowstep">新: GenAgent (Flow/Step内)<a class="headerlink" href="#genagent-flowstep" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenAgent</span><span class="p">,</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">create_simple_flow</span>
+
+<span class="c1"># Method 1: Direct GenAgent usage</span>
+<span class="n">gen_agent</span> <span class="o">=</span> <span class="n">GenAgent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="p">,</span> 
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate a response&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
+    <span class="n">context_key</span><span class="o">=</span><span class="s2">&quot;result&quot;</span>
+<span class="p">)</span>
+
+<span class="n">flow</span> <span class="o">=</span> <span class="n">create_simple_flow</span><span class="p">(</span><span class="n">gen_agent</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;User input&quot;</span><span class="p">)</span>
+
+<span class="c1"># Method 2: Utility function</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span>
+
+<span class="n">gen_agent</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate a response&quot;</span><span class="p">,</span> 
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<h3 id="_4">評価機能付きの移行<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h3>
+<h4 id="agentpipeline-with-evaluation">旧: AgentPipeline with evaluation<a class="headerlink" href="#agentpipeline-with-evaluation" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;evaluated_pipeline&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate creative content&quot;</span><span class="p">,</span>
+    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;Evaluate creativity and quality&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
+    <span class="n">evaluation_threshold</span><span class="o">=</span><span class="mf">0.8</span>
+<span class="p">)</span>
+</code></pre></div>
+<h4 id="genagent-with-evaluation">新: GenAgent with evaluation<a class="headerlink" href="#genagent-with-evaluation" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_evaluated_gen_agent</span>
+
+<span class="n">gen_agent</span> <span class="o">=</span> <span class="n">create_evaluated_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;evaluated_agent&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate creative content&quot;</span><span class="p">,</span>
+    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;Evaluate creativity and quality&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
+    <span class="n">evaluation_threshold</span><span class="o">=</span><span class="mf">0.8</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2 id="target-files">対象ファイル (Target Files)<a class="headerlink" href="#target-files" title="Permanent link">&para;</a></h2>
+<h3 id="_5">コアファイル<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h3>
 <ul>
-<li>詳細な事例・使い方は <a href="../pipeline_examples/">docs/pipeline_examples.md</a> を参照。 </li>
+<li><code>src/agents_sdk_models/pipeline.py</code> - AgentPipelineクラス</li>
+<li><code>src/agents_sdk_models/__init__.py</code> - export削除</li>
 </ul>
+<h3 id="examples">Examplesファイル<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>examples/pipeline_simple_generation.py</code></li>
+<li><code>examples/pipeline_with_dynamic_prompt.py</code></li>
+<li><code>examples/pipeline_with_evaluation.py</code></li>
+<li><code>examples/pipeline_with_guardrails.py</code></li>
+<li><code>examples/pipeline_with_history.py</code></li>
+<li><code>examples/pipeline_with_retry.py</code></li>
+<li><code>examples/pipeline_with_tools.py</code></li>
+<li><code>examples/simple_llm_query.py</code></li>
+</ul>
+<h3 id="_6">テストファイル<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>tests/test_pipeline.py</code></li>
+<li><code>tests/test_pipeline_*.py</code> 系統</li>
+</ul>
+<h2 id="backward-compatibility">後方互換性の保証 (Backward Compatibility)<a class="headerlink" href="#backward-compatibility" title="Permanent link">&para;</a></h2>
+<p>v0.1.0まで完全な後方互換性を保証します：
+- 既存のAgentPipelineコードは引き続き動作
+- Deprecation warningのみ表示
+- ドキュメントで新しい方法を推奨</p>
+<h2 id="support">サポート (Support)<a class="headerlink" href="#support" title="Permanent link">&para;</a></h2>
+<p>移行に関する質問やサポートは：
+- GitHub Issues
+- ドキュメントの移行ガイド
+- Example コードの参照 </p>
 
 
 

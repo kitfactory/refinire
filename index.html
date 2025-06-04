@@ -12,6 +12,8 @@
         <meta name="author" content="kitfactory">
       
       
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/">
+      
       
       
         <link rel="next" href="api_reference/">
@@ -44,6 +46,8 @@
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
+    
+      <link rel="stylesheet" href="assets/_mkdocstrings.css">
     
     <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
@@ -329,6 +333,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      トレーシング
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -536,6 +549,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      トレーシング
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -560,6 +582,8 @@
 <h2 id="_1">主な特徴<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <ul>
 <li>OpenAI, Gemini, Claude, Ollama など主要LLMを簡単切替</li>
+<li><strong>🚀 新機能：</strong> <code>Flow(steps=gen_agent)</code> で超シンプルなワークフロー作成</li>
+<li><strong>🚀 新機能：</strong> <code>Flow(steps=[step1, step2])</code> で自動シーケンシャル実行</li>
 <li>生成・評価・ツール・ガードレールを1つのパイプラインで統合</li>
 <li>モデル名とプロンプトだけで自己改善サイクルも実現</li>
 <li>Pydanticによる構造化出力対応</li>
@@ -586,6 +610,8 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
 <li>OpenAI Agents SDK 0.0.9+</li>
 <li>Windows, Linux, MacOS </li>
 </ul>
+<h2 id="_5">トレーシング<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p>本ライブラリでは OpenAI Agents SDK のトレーシング機能をサポートしています。詳細は <a href="tracing/">トレーシング</a> を参照してください。 </p>
 
 
 

@@ -12,7 +12,7 @@
         <meta name="author" content="kitfactory">
       
       
-        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/architecture/">
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/pipleine_clerify/">
       
       
       
@@ -22,7 +22,7 @@
     
     
       
-        <title>アーキテクチャ設計書 - Agents SDK Models</title>
+        <title>ClearifyPipelineについて - Agents SDK Models</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#clearifypipeline" class="md-skip">
           コンテンツにスキップ
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              アーキテクチャ設計書
+              ClearifyPipelineについて
             
           </span>
         </div>
@@ -370,65 +370,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目次
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      システム構成・アーキテクチャの概要
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要インターフェース
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要データ（データの種類、構造）
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="主要データ（データの種類、構造）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#erplantuml" class="md-nav__link">
-    <span class="md-ellipsis">
-      ER図（PlantUML）
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      参考
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -446,110 +387,41 @@
   
 
 
-<h1 id="_1">アーキテクチャ設計書<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<h2 id="_2">システム構成・アーキテクチャの概要<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>本システムはレイヤーアーキテクチャを採用し、以下のような構成となっています。</p>
-<ul>
-<li>UI/利用例層（examples/）</li>
-<li>ユースケース層（AgentPipelineクラス）</li>
-<li>機能クラス層（ツール関数、ガードレール関数、評価関数など）</li>
-<li>データクラス層（pydanticモデル、dataclass等）</li>
-<li>ゲートウェイ層（get_llm等のモデル取得）</li>
-<li>ユーティリティ層（設定、ログ等）</li>
-</ul>
-<h2 id="_3">主要インターフェース<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>役割</th>
-<th>レイヤー</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AgentPipeline</td>
-<td>ワークフロー統合・実行</td>
-<td>ユースケース</td>
-</tr>
-<tr>
-<td>Agent</td>
-<td>LLMエージェント</td>
-<td>機能/ユースケース</td>
-</tr>
-<tr>
-<td>function_toolで定義した関数</td>
-<td>ツールとして利用</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>input_guardrailで定義した関数</td>
-<td>入力ガードレール</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>get_llm</td>
-<td>モデル取得</td>
-<td>ゲートウェイ</td>
-</tr>
-<tr>
-<td>pydantic.BaseModel</td>
-<td>構造化出力</td>
-<td>データ</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">主要データ（データの種類、構造）<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>保持データ</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>EvaluationResult</td>
-<td>score, comment</td>
-</tr>
-<tr>
-<td>MathHomeworkOutput</td>
-<td>is_math_homework, reasoning</td>
-</tr>
-</tbody>
-</table>
-<h3 id="erplantuml">ER図（PlantUML）<a class="headerlink" href="#erplantuml" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>@startuml
-class AgentPipeline {
-  - name
-  - generation_instructions
-  - evaluation_instructions
-  - ...
-}
-class Agent {
-  - name
-  - model
-  - instructions
-  - ...
-}
-class EvaluationResult {
-  score: int
-  comment: List~str~
-}
-class MathHomeworkOutput {
-  is_math_homework: bool
-  reasoning: str
-}
-AgentPipeline --&gt; Agent
-Agent --&gt; EvaluationResult
-Agent --&gt; MathHomeworkOutput
-@enduml
+<h1 id="clearifypipeline">ClearifyPipelineについて<a class="headerlink" href="#clearifypipeline" title="Permanent link">&para;</a></h1>
+<p>ClearifyPipelineは要件を明確化するのに必要なAgentPipelineのサブクラスです。次のステップへ要件が満たされているかを確認されるまで、繰り返し質問を行い、ユーザーに確認を行います。</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">ReportRequirements</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">event</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># イベント名</span>
+    <span class="n">date</span><span class="p">:</span> <span class="nb">str</span>   <span class="c1">#　日付</span>
+    <span class="n">place</span><span class="p">:</span> <span class="nb">str</span>  <span class="c1"># 場所</span>
+    <span class="n">topics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="c1"># トピック</span>
+    <span class="n">interested</span><span class="p">:</span> <span class="nb">str</span> <span class="c1"># 印象に残ること</span>
+    <span class="n">expression</span><span class="p">:</span> <span class="nb">str</span> <span class="c1"># 感想</span>
+
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">ClearifyPipeline</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;clearify_report_requrements&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    あなたはレポートを作成する準備を行います。</span>
+<span class="s2">    レポートに記載する要件を整理し、魅力的なレポートとなるよう聞き手として、ユーザーと対話し要件を引き出してください。</span>
+<span class="s2">    要件が明確でなかったり、魅力的出ない場合は、さらに質問をくりかえしてください。</span>
+<span class="s2">    必要な項目と、それを魅力的にするポイントを伝えたり、サンプルを提示して、ユーザーの体験からレポートを作成するための、出来るだけ詳細な材料を集めてください。</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">output_data</span> <span class="o">=</span> <span class="n">ReportRequirements</span><span class="p">,</span>
+    <span class="n">clerify_max_turns</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
+    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span>
+<span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;I would like to make a xxxx&quot;</span><span class="p">)</span>
 </code></pre></div>
-<hr />
-<h2 id="_5">参考<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<ul>
-<li>詳細な事例・使い方は <a href="../pipeline_examples/">docs/pipeline_examples.md</a> を参照。 </li>
-</ul>
+<p>ClearifyPipelineはユーザーからの要望された要件に加えて、pydantic basemodelで出力型が定義されている場合は、ユーザーの出力型をラップし、次のようなクラスとしてLLMに出力させるようにしてください。</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Clearify</span><span class="p">[</span><span class="n">T</span><span class="p">](</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">clearity</span><span class="p">:</span> <span class="nb">bool</span>  <span class="c1"># Trueなら要件が確定</span>
+    <span class="n">user_requirement</span><span class="p">:</span> <span class="n">T</span> <span class="c1"># Option True時に発生</span>
+</code></pre></div>
+<p>ユーザーから型が指定されていないは文字列として要件を取得し、要件を返却するようにしてください。</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">Clearify</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">clearity</span><span class="p">:</span> <span class="nb">bool</span>  <span class="c1"># Trueなら要件が確定</span>
+    <span class="n">user_requirement</span><span class="p">:</span> <span class="nb">str</span> <span class="c1"># Option True時に発生</span>
+</code></pre></div>
 
 
 

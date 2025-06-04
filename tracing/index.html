@@ -12,7 +12,7 @@
         <meta name="author" content="kitfactory">
       
       
-        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/architecture/">
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/tracing/">
       
       
       
@@ -22,7 +22,7 @@
     
     
       
-        <title>アーキテクチャ設計書 - Agents SDK Models</title>
+        <title>トレーシング - Agents SDK Models</title>
       
     
     
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              アーキテクチャ設計書
+              トレーシング
             
           </span>
         </div>
@@ -377,51 +377,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#openai-agents-sdk" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI Agents SDK のトレーシング機能
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      システム構成・アーキテクチャの概要
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要インターフェース
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
-    <span class="md-ellipsis">
-      主要データ（データの種類、構造）
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="主要データ（データの種類、構造）">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#erplantuml" class="md-nav__link">
-    <span class="md-ellipsis">
-      ER図（PlantUML）
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
-    <span class="md-ellipsis">
-      参考
+      本ライブラリでのアプローチ
     </span>
   </a>
   
@@ -446,110 +413,19 @@
   
 
 
-<h1 id="_1">アーキテクチャ設計書<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<h2 id="_2">システム構成・アーキテクチャの概要<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<p>本システムはレイヤーアーキテクチャを採用し、以下のような構成となっています。</p>
+<h1 id="_1">トレーシング<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<h2 id="openai-agents-sdk">OpenAI Agents SDK のトレーシング機能<a class="headerlink" href="#openai-agents-sdk" title="Permanent link">&para;</a></h2>
+<p>OpenAI Agents SDK はデフォルトで OpenAI のトレーシングサービスを利用し、実行中のスパン情報を自動的に収集・記録します。
+- プロバイダーに関わらず、内部では OpenAI の Trace API を使用します。
+- <code>OPENAI_API_KEY</code> の設定が必要です。</p>
+<h2 id="_2">本ライブラリでのアプローチ<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
 <ul>
-<li>UI/利用例層（examples/）</li>
-<li>ユースケース層（AgentPipelineクラス）</li>
-<li>機能クラス層（ツール関数、ガードレール関数、評価関数など）</li>
-<li>データクラス層（pydanticモデル、dataclass等）</li>
-<li>ゲートウェイ層（get_llm等のモデル取得）</li>
-<li>ユーティリティ層（設定、ログ等）</li>
+<li>デフォルトでコンソール向けの <code>ConsoleTracingProcessor</code> を提供します。</li>
+<li>有効化: <code>enable_console_tracing()</code> を呼び出すと、コンソールにカラー付きでスパン情報を表示します。</li>
+<li>トレーシングをカスタマイズしたい場合は、サードパーティーが提供する独自の Processor を使用してください。</li>
+<li>トレーシングを停止したい場合は、<code>disable_tracing()</code> を呼び出して全てのトレーシング機能を無効化します。</li>
 </ul>
-<h2 id="_3">主要インターフェース<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>役割</th>
-<th>レイヤー</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AgentPipeline</td>
-<td>ワークフロー統合・実行</td>
-<td>ユースケース</td>
-</tr>
-<tr>
-<td>Agent</td>
-<td>LLMエージェント</td>
-<td>機能/ユースケース</td>
-</tr>
-<tr>
-<td>function_toolで定義した関数</td>
-<td>ツールとして利用</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>input_guardrailで定義した関数</td>
-<td>入力ガードレール</td>
-<td>機能</td>
-</tr>
-<tr>
-<td>get_llm</td>
-<td>モデル取得</td>
-<td>ゲートウェイ</td>
-</tr>
-<tr>
-<td>pydantic.BaseModel</td>
-<td>構造化出力</td>
-<td>データ</td>
-</tr>
-</tbody>
-</table>
-<h2 id="_4">主要データ（データの種類、構造）<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>クラス名</th>
-<th>保持データ</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>EvaluationResult</td>
-<td>score, comment</td>
-</tr>
-<tr>
-<td>MathHomeworkOutput</td>
-<td>is_math_homework, reasoning</td>
-</tr>
-</tbody>
-</table>
-<h3 id="erplantuml">ER図（PlantUML）<a class="headerlink" href="#erplantuml" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>@startuml
-class AgentPipeline {
-  - name
-  - generation_instructions
-  - evaluation_instructions
-  - ...
-}
-class Agent {
-  - name
-  - model
-  - instructions
-  - ...
-}
-class EvaluationResult {
-  score: int
-  comment: List~str~
-}
-class MathHomeworkOutput {
-  is_math_homework: bool
-  reasoning: str
-}
-AgentPipeline --&gt; Agent
-Agent --&gt; EvaluationResult
-Agent --&gt; MathHomeworkOutput
-@enduml
-</code></pre></div>
-<hr />
-<h2 id="_5">参考<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<ul>
-<li>詳細な事例・使い方は <a href="../pipeline_examples/">docs/pipeline_examples.md</a> を参照。 </li>
-</ul>
+<p>以上の仕組みにより、デバッグ時やローカル開発環境でも手軽にトレーシング情報を確認でき、必要に応じてサービス連携やログ出力先を切り替えられます。 </p>
 
 
 
