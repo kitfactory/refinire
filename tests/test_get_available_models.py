@@ -190,7 +190,7 @@ class TestGetAvailableModels:
             result = await get_available_models_async(["ollama"], ollama_base_url=custom_url)
             
             # Verify the correct URL was called
-            mock_client_instance.get.assert_called_with(f"{custom_url}/api/ps")
+            mock_client_instance.get.assert_called_with(f"{custom_url}/api/tags")
             assert "ollama" in result
             assert "custom-model:7b" in result["ollama"]
 
@@ -259,6 +259,6 @@ class TestGetAvailableModels:
             result = await get_available_models_async(["ollama"])
             
             # Verify the environment variable URL was used
-            mock_client_instance.get.assert_called_with(f"{env_url}/api/ps")
+            mock_client_instance.get.assert_called_with(f"{env_url}/api/tags")
             assert "ollama" in result
             assert "env-model:7b" in result["ollama"] 

@@ -222,12 +222,20 @@ class AgentPipeline:
         Returns:
             str: Formatted prompt for evaluation / 評価用のフォーマット済みプロンプト
         """
-        parts = [
+        parts = []
+        
+        # Add evaluation instructions if provided
+        # 評価指示が提供されている場合は追加
+        if self.evaluation_instructions:
+            parts.append(self.evaluation_instructions)
+        
+        parts.extend([
             "----",
             f"ユーザー入力:\n{user_input}",
             "----",
             f"生成結果:\n{generated_output}",
-        ]
+            "上記を JSON で必ず次の形式にしてください"
+        ])
         return "\n".join(filter(None, parts)).strip()
 
     @staticmethod

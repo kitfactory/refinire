@@ -238,7 +238,7 @@ async def get_available_models_async(
             # English: Get Ollama base URL from parameter, environment variable, or default
             # 日本語: パラメータ、環境変数、またはデフォルトから Ollama ベース URL を取得
             if ollama_base_url is None:
-                ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+                ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
             
             try:
                 # English: Fetch available models from Ollama API

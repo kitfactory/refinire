@@ -36,7 +36,7 @@ class OllamaModel(OpenAIChatCompletionsModel):
         """
         # get_llm経由で base_url が None の場合はデフォルトの URL を設定
         if base_url == None:
-            base_url = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+            base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
         
         base_url = base_url.rstrip("/")
         if not base_url.endswith("v1"):
