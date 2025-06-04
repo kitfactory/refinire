@@ -23,15 +23,21 @@ Flow/Stepアーキテクチャの導入により、より柔軟で拡張性の�
 
 ## 廃止計画 (Deprecation Timeline)
 
-### フェーズ 1: Deprecation Warning追加 (v0.0.22)
-- [ ] AgentPipelineクラスにdeprecation warningを追加
-- [ ] 新しいGenAgentへの移行ガイドを作成
-- [ ] README.mdでFlow/Stepアーキテクチャを推奨として記載
+### フェーズ 1: Deprecation Warning追加 (v0.0.22) ✅ 完了
+- [x] AgentPipelineクラスにdeprecation warningを追加
+- [x] 新しいGenAgentへの移行ガイドを作成
+- [x] README.mdでFlow/Stepアーキテクチャを推奨として記載
 
-### フェーズ 2: Examples移行 (v0.0.23)
-- [ ] pipeline_*系のexamplesをgenagent_*系に変更
-- [ ] 新しいFlow/Step使用例の充実
-- [ ] 移行ガイドの完成
+### フェーズ 2: Examples移行 (v0.0.23) ✅ 完了
+- [x] genagent_simple_generation.py - 基本的な生成例の移行版
+- [x] genagent_with_evaluation.py - 評価機能付きの移行版
+- [x] genagent_with_tools.py - ツール使用例の移行版
+- [x] genagent_with_guardrails.py - ガードレール使用例の移行版
+- [x] genagent_with_history.py - 履歴管理例の移行版
+- [x] genagent_with_retry.py - リトライ機能例の移行版
+- [x] genagent_with_dynamic_prompt.py - 動的プロンプト例の移行版
+- [x] 新しいFlow/Step使用例の充実（各exampleで複数の使用例を実装）
+- [x] 移行ガイドの完成（deprecation_plan.mdに詳細な移行例を記載）
 
 ### フェーズ 3: テスト移行 (v0.0.24)
 - [ ] AgentPipelineのテストをGenAgentベースに移行

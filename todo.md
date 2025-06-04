@@ -112,11 +112,11 @@
 ### フェーズ 2: Examples移行 (v0.0.23)
 - [x] genagent_simple_generation.py - 基本的な生成例の移行版
 - [x] genagent_with_evaluation.py - 評価機能付きの移行版
-- [ ] genagent_with_tools.py - ツール使用例の移行版
-- [ ] genagent_with_guardrails.py - ガードレール使用例の移行版
-- [ ] genagent_with_history.py - 履歴管理例の移行版
-- [ ] genagent_with_retry.py - リトライ機能例の移行版
-- [ ] genagent_with_dynamic_prompt.py - 動的プロンプト例の移行版
+- [x] genagent_with_tools.py - ツール使用例の移行版
+- [x] genagent_with_guardrails.py - ガードレール使用例の移行版
+- [x] genagent_with_history.py - 履歴管理例の移行版
+- [x] genagent_with_retry.py - リトライ機能例の移行版
+- [x] genagent_with_dynamic_prompt.py - 動的プロンプト例の移行版
 - [ ] 新しいFlow/Step使用例の充実
 - [ ] 移行ガイドの完成
 
