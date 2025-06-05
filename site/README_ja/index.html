@@ -12,6 +12,8 @@
         <meta name="author" content="kitfactory">
       
       
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/README_ja/">
+      
       
       
       
@@ -461,6 +463,57 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#flowv008" class="md-nav__link">
+    <span class="md-ellipsis">
+      🚀 新機能：超シンプルFlow（v0.0.8+）
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🚀 新機能：超シンプルFlow（v0.0.8+）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      単一ステップFlow（最もシンプル！）
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flow_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      シーケンシャルFlow（自動接続！）
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      従来方式（複雑なフロー用）
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      📚 関連ドキュメント
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -573,6 +626,41 @@
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
 リトライ時に前回の評価コメント（指定した重大度のみ）が生成プロンプトに自動で付与され、改善を促します。</p>
+<hr />
+<h2 id="flowv008">🚀 新機能：超シンプルFlow（v0.0.8+）<a class="headerlink" href="#flowv008" title="Permanent link">&para;</a></h2>
+<p>新しいFlowコンストラクタで<strong>3つの方法</strong>でワークフローを作成できます：</p>
+<h3 id="flow">単一ステップFlow（最もシンプル！）<a class="headerlink" href="#flow" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="n">gen_agent</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;親切に回答します&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">gen_agent</span><span class="p">)</span>  <span class="c1"># たった1行！</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;こんにちは&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="flow_1">シーケンシャルFlow（自動接続！）<a class="headerlink" href="#flow_1" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="n">idea_gen</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;idea&quot;</span><span class="p">,</span> <span class="s2">&quot;アイデア生成&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>
+<span class="n">writer</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;writer&quot;</span><span class="p">,</span> <span class="s2">&quot;記事執筆&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+<span class="n">reviewer</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span> <span class="s2">&quot;レビュー&quot;</span><span class="p">,</span> <span class="s2">&quot;claude-3-5-sonnet-latest&quot;</span><span class="p">)</span>
+
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="n">idea_gen</span><span class="p">,</span> <span class="n">writer</span><span class="p">,</span> <span class="n">reviewer</span><span class="p">])</span>  <span class="c1"># 自動シーケンシャル実行！</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;AI技術について&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="_9">従来方式（複雑なフロー用）<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;step1&quot;</span><span class="p">,</span>
+    <span class="n">steps</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;step1&quot;</span><span class="p">:</span> <span class="n">step1</span><span class="p">,</span> <span class="s2">&quot;step2&quot;</span><span class="p">:</span> <span class="n">step2</span><span class="p">}</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>📚 詳細ガイド：</strong> <a href="../new_flow_features/">新しいFlow機能完全ガイド</a></p>
+<hr />
+<h2 id="_10">📚 関連ドキュメント<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong><a href="../new_flow_features/">新しいFlow機能完全ガイド</a></strong> - v0.0.8で追加された超シンプルなFlow作成方法</li>
+<li><strong><a href="../tutorials/quickstart/">クイックスタート</a></strong> - 3行でAIワークフローを構築</li>
+<li><strong><a href="../tutorials/advanced/">応用例</a></strong> - マルチエージェント協調とツール連携</li>
+<li><strong><a href="../flow_step/">Flow/Step API リファレンス</a></strong> - 詳細なAPI仕様</li>
+</ul>
 
 
 

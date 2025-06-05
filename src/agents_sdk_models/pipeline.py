@@ -338,6 +338,94 @@ class AgentPipeline:
     # public
     # ------------------------------------------------------------------
 
+    async def run_async(self, user_input: str):
+        """
+        Run the pipeline asynchronously with user input
+        ユーザー入力でパイプラインを非同期実行する
+
+        Args:
+            user_input: User input text / ユーザー入力テキスト
+
+        Returns:
+            Any: Processed output or None if evaluation fails / 処理済み出力、または評価失敗時はNone
+        """
+        attempt = 0
+        last_eval_result: Optional[EvaluationResult] = None  # Store last evaluation result for retry
+        while attempt <= self.retries:
+            # ---------------- Generation ----------------
+            # On retry, include prior evaluation comments if configured
+            if attempt > 0 and last_eval_result and self.retry_comment_importance:
+                # Filter comments by importance
+                try:
+                    comments = [c for c in last_eval_result.comment if c.get("importance") in self.retry_comment_importance]
+                except Exception:
+                    comments = []
+                # Format serious comments with header
+                # Localized header for evaluation feedback
+                feedback_header = get_message("evaluation_feedback_header", self.locale)
+                # English: Format each comment line. 日本語: 各コメント行をフォーマット
+                formatted_comments = [f"- ({c.get('importance')}) {c.get('content')}" for c in comments]
+                # English: Combine header and comment lines. 日本語: ヘッダーとコメント行を結合
+                comment_block = "\n".join([feedback_header] + formatted_comments)
+            else:
+                comment_block = ""
+            # Build base prompt
+            if attempt > 0 and comment_block:
+                if self.dynamic_prompt:
+                    # English: Use dynamic prompt if provided. 日本語: dynamic_promptがあればそれを使用
+                    gen_prompt = self.dynamic_prompt(user_input)
+                else:
+                    # Localized header for AI history
+                    ai_history_header = get_message("ai_history_header", self.locale)
+                    # English: Extract AI outputs from pipeline history, omit user inputs. 日本語: パイプライン履歴からAIの出力のみ取得
+                    ai_outputs = "\n".join(h["output"] for h in self._pipeline_history[-self.history_size:])
+                    # Localized prefix for user input line
+                    prefix = get_message("user_input_prefix", self.locale)
+                    # English: Current user input line. 日本語: 現在のユーザー入力行
+                    user_input_line = f"{prefix} {user_input}"
+                    # English: Combine AI outputs, feedback, and current user input. 日本語: AI出力、フィードバック、現在のユーザー入力を結合
+                    gen_prompt = "\n\n".join([ai_history_header, ai_outputs, comment_block, user_input_line])
+            else:
+                if self.dynamic_prompt:
+                    gen_prompt = self.dynamic_prompt(user_input)
+                else:
+                    gen_prompt = self._build_generation_prompt(user_input)
+
+            from agents import Runner
+            gen_result = await Runner.run(self.gen_agent, gen_prompt)
+            raw_output_text = getattr(gen_result, "final_output", str(gen_result))
+            if hasattr(gen_result, "tool_calls") and gen_result.tool_calls:
+                raw_output_text = str(gen_result.tool_calls[0].call())
+
+            parsed_output = self._coerce_output(raw_output_text)
+            self._pipeline_history.append({"input": user_input, "output": raw_output_text})
+
+            # ---------------- Evaluation ----------------
+            if not self.eval_agent:
+                return self._route(parsed_output)
+
+            eval_prompt = self._build_evaluation_prompt(user_input, raw_output_text)
+
+            eval_raw = await Runner.run(self.eval_agent, eval_prompt)
+            eval_text = getattr(eval_raw, "final_output", str(eval_raw))
+            try:
+                eval_dict = self._extract_json(eval_text)
+                eval_result = EvaluationResult(**eval_dict)
+            except Exception:
+                eval_result = EvaluationResult(score=0, comment=[Comment(importance=CommentImportance.SERIOUS, content="評価 JSON の解析に失敗")])
+
+            if eval_result.score >= self.threshold:
+                self._append_to_session(user_input, raw_output_text)
+                return self._route(parsed_output)
+
+            # Store for next retry
+            last_eval_result = eval_result
+            attempt += 1
+
+        if self.improvement_callback:
+            self.improvement_callback(parsed_output, eval_result)
+        return None
+
     def run(self, user_input: str):
         """
         Run the pipeline with user input

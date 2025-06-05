@@ -12,6 +12,8 @@
         <meta name="author" content="kitfactory">
       
       
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/tutorials/quickstart/">
+      
       
         <link rel="prev" href="../../api_reference/">
       
@@ -376,9 +378,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-agentpipeline" class="md-nav__link">
+  <a href="#3-genagent-flow" class="md-nav__link">
     <span class="md-ellipsis">
-      3. AgentPipeline で生成＋評価
+      3. GenAgent + Flow で生成＋評価（推奨）
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-agentpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 旧AgentPipeline（非推奨）
     </span>
   </a>
   
@@ -477,9 +488,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-agentpipeline" class="md-nav__link">
+  <a href="#3-genagent-flow" class="md-nav__link">
     <span class="md-ellipsis">
-      3. AgentPipeline で生成＋評価
+      3. GenAgent + Flow で生成＋評価（推奨）
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-agentpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 旧AgentPipeline（非推奨）
     </span>
   </a>
   
@@ -529,16 +549,34 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">Runner</span><span class="o">.</span><span class="n">run_sync</span><span class="p">(</span><span class="n">agent</span><span class="p">,</span> <span class="s2">&quot;こんにちは！&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">final_output</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="3-agentpipeline">3. AgentPipeline で生成＋評価<a class="headerlink" href="#3-agentpipeline" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
-<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eval_example&quot;</span><span class="p">,</span>
-    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<h2 id="3-genagent-flow">3. GenAgent + Flow で生成＋評価（推奨）<a class="headerlink" href="#3-genagent-flow" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="c1"># GenAgentを作成</span>
+<span class="n">gen_agent</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ai_expert&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    あなたは役立つアシスタントです。ユーザーの要望に応じて文章を生成してください。</span>
 <span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
     <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    生成された文章を分かりやすさで100点満点評価し、コメントも付けてください。</span>
 <span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mi">70</span>
+<span class="p">)</span>
+
+<span class="c1"># Flowを作成（超シンプル！）</span>
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">gen_agent</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;AIの活用事例を教えて&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;ai_expert_result&quot;</span><span class="p">])</span>
+</code></pre></div>
+<h2 id="4-agentpipeline">4. 旧AgentPipeline（非推奨）<a class="headerlink" href="#4-agentpipeline" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<span class="c1"># 注意：AgentPipelineはv0.1.0で削除予定です</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;eval_example&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;あなたは役立つアシスタントです。&quot;</span><span class="p">,</span>
+    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;生成された文章を分かりやすさで100点満点評価してください。&quot;</span><span class="p">,</span>
     <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
     <span class="n">threshold</span><span class="o">=</span><span class="mi">70</span>
 <span class="p">)</span>
@@ -550,8 +588,9 @@
 <ul>
 <li><code>get_llm</code> で主要なLLMを簡単取得</li>
 <li><code>Agent</code> でシンプルな対話</li>
-<li><code>AgentPipeline</code> で生成・評価・自己改善まで一気通貫</li>
-<li>どちらも最小限の記述で高度なワークフローが実現できます </li>
+<li><strong>新推奨：</strong> <code>GenAgent + Flow</code> で生成・評価・自己改善まで一気通貫</li>
+<li><code>Flow(steps=gen_agent)</code> だけで複雑なワークフローも<strong>超シンプル</strong>に実現</li>
+<li>旧 <code>AgentPipeline</code> は v0.1.0 で削除予定（移行は簡単です）</li>
 </ul>
 
 

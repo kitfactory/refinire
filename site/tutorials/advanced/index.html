@@ -12,6 +12,8 @@
         <meta name="author" content="kitfactory">
       
       
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/tutorials/advanced/">
+      
       
         <link rel="prev" href="../quickstart/">
       
@@ -379,11 +381,35 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1" class="md-nav__link">
+  <a href="#0-flow" class="md-nav__link">
     <span class="md-ellipsis">
-      1. ツール連携
+      0. 新しいFlow作成方法（超重要！）
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. ツール連携（新推奨方法）
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. ツール連携（新推奨方法）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      旧方式（非推奨）
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -408,14 +434,47 @@
         <li class="md-nav__item">
   <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
-      4. リトライ＆自己改善
+      4. リトライ＆自己改善（新推奨方法）
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. リトライ＆自己改善（新推奨方法）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      旧方式（非推奨）
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. 複雑なワークフロー（マルチステップ）
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. 条件分岐付きワークフロー
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       ポイント
     </span>
@@ -466,11 +525,35 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#1" class="md-nav__link">
+  <a href="#0-flow" class="md-nav__link">
     <span class="md-ellipsis">
-      1. ツール連携
+      0. 新しいFlow作成方法（超重要！）
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. ツール連携（新推奨方法）
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. ツール連携（新推奨方法）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      旧方式（非推奨）
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -495,14 +578,47 @@
         <li class="md-nav__item">
   <a href="#4" class="md-nav__link">
     <span class="md-ellipsis">
-      4. リトライ＆自己改善
+      4. リトライ＆自己改善（新推奨方法）
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. リトライ＆自己改善（新推奨方法）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      旧方式（非推奨）
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. 複雑なワークフロー（マルチステップ）
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. 条件分岐付きワークフロー
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
       ポイント
     </span>
@@ -531,19 +647,59 @@
 
 <h1 id="_1">応用例<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <p>このチュートリアルでは、Agents SDK Models の応用的な使い方を紹介します。</p>
-<h2 id="1">1. ツール連携<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
+<h2 id="0-flow">0. 新しいFlow作成方法（超重要！）<a class="headerlink" href="#0-flow" title="Permanent link">&para;</a></h2>
+<p>新しい <strong>Flow</strong> は3つの方法で作成できます：</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span><span class="p">,</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">DebugStep</span>
+
+<span class="c1"># 1. 単一ステップ（最もシンプル！）</span>
+<span class="n">gen_agent</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;writer&quot;</span><span class="p">,</span> <span class="s2">&quot;文章を書いてください&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">gen_agent</span><span class="p">)</span>
+
+<span class="c1"># 2. シーケンシャルステップ（自動接続！）</span>
+<span class="n">debug_step</span> <span class="o">=</span> <span class="n">DebugStep</span><span class="p">(</span><span class="s2">&quot;debug&quot;</span><span class="p">,</span> <span class="s2">&quot;処理完了&quot;</span><span class="p">)</span>
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span><span class="n">gen_agent</span><span class="p">,</span> <span class="n">debug_step</span><span class="p">])</span>  <span class="c1"># gen_agent → debug_step</span>
+
+<span class="c1"># 3. 従来方式（複雑なフロー用）</span>
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;writer&quot;</span><span class="p">,</span>
+    <span class="n">steps</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;writer&quot;</span><span class="p">:</span> <span class="n">gen_agent</span><span class="p">,</span>
+        <span class="s2">&quot;debug&quot;</span><span class="p">:</span> <span class="n">debug_step</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># 実行は全て同じ</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;AIについて書いて&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;writer_result&quot;</span><span class="p">])</span>
+</code></pre></div>
+<h2 id="1">1. ツール連携（新推奨方法）<a class="headerlink" href="#1" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">function_tool</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span><span class="p">,</span> <span class="n">Flow</span>
 
 <span class="nd">@function_tool</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_weather</span><span class="p">(</span><span class="n">location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Weather in </span><span class="si">{</span><span class="n">location</span><span class="si">}</span><span class="s2">: Sunny, 25°C&quot;</span>
 
-<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;tool_example&quot;</span><span class="p">,</span>
-    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="c1"># GenAgent + Flow方式（推奨）</span>
+<span class="n">weather_agent</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;weather_bot&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">    あなたは天気情報を提供するアシスタントです。必要に応じてget_weatherツールを使ってください。</span>
 <span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
+    <span class="n">generation_tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">weather_agent</span><span class="p">)</span>  <span class="c1"># 超シンプル！</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;東京の天気は？&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;weather_bot_result&quot;</span><span class="p">])</span>
+</code></pre></div>
+<h3 id="_2">旧方式（非推奨）<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># AgentPipeline（v0.1.0で削除予定）</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;tool_example&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;天気情報を提供してください。&quot;</span><span class="p">,</span>
     <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
     <span class="n">generation_tools</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">]</span>
 <span class="p">)</span>
@@ -598,24 +754,111 @@
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;面白い話をして&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="4">4. リトライ＆自己改善<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
+<h2 id="4">4. リトライ＆自己改善（新推奨方法）<a class="headerlink" href="#4" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_evaluated_gen_agent</span><span class="p">,</span> <span class="n">Flow</span>
+
+<span class="c1"># 評価付きGenAgent + Flow方式（推奨）</span>
+<span class="n">smart_agent</span> <span class="o">=</span> <span class="n">create_evaluated_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;smart_writer&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;文章を生成してください。&quot;</span><span class="p">,</span>
+    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;分かりやすさで評価し、コメントも返してください。&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
+    <span class="n">retries</span><span class="o">=</span><span class="mi">2</span>
+<span class="p">)</span>
+
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">smart_agent</span><span class="p">)</span>  <span class="c1"># 自動でリトライ＆自己改善！</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;AIの歴史を教えて&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;smart_writer_result&quot;</span><span class="p">])</span>
+</code></pre></div>
+<h3 id="_3">旧方式（非推奨）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># AgentPipeline（v0.1.0で削除予定）</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;retry_example&quot;</span><span class="p">,</span>
     <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;文章を生成してください。&quot;</span><span class="p">,</span>
     <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;分かりやすさで評価し、コメントも返してください。&quot;</span><span class="p">,</span>
     <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
     <span class="n">threshold</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
-    <span class="n">retries</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-    <span class="n">retry_comment_importance</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;serious&quot;</span><span class="p">,</span> <span class="s2">&quot;normal&quot;</span><span class="p">]</span>
+    <span class="n">retries</span><span class="o">=</span><span class="mi">2</span>
 <span class="p">)</span>
 <span class="n">result</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;AIの歴史を教えて&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </code></pre></div>
 <hr />
-<h2 id="_2">ポイント<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h2 id="5">5. 複雑なワークフロー（マルチステップ）<a class="headerlink" href="#5" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">agents_sdk_models</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">create_simple_gen_agent</span><span class="p">,</span> <span class="n">create_evaluated_gen_agent</span><span class="p">,</span> 
+    <span class="n">Flow</span><span class="p">,</span> <span class="n">DebugStep</span><span class="p">,</span> <span class="n">UserInputStep</span><span class="p">,</span> <span class="n">ConditionStep</span>
+<span class="p">)</span>
+
+<span class="c1"># 複数のGenAgentを組み合わせ</span>
+<span class="n">idea_generator</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;idea_gen&quot;</span><span class="p">,</span> 
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;創造的なアイデアを生成してください&quot;</span><span class="p">,</span> 
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
+<span class="p">)</span>
+
+<span class="n">content_writer</span> <span class="o">=</span> <span class="n">create_evaluated_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;writer&quot;</span><span class="p">,</span>
+    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;提供されたアイデアを基に詳細な記事を書いてください&quot;</span><span class="p">,</span>
+    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;記事の質を評価してください&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span>
+    <span class="n">threshold</span><span class="o">=</span><span class="mi">75</span>
+<span class="p">)</span>
+
+<span class="n">reviewer</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span>
+    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;記事をレビューして改善提案をしてください&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-latest&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># シーケンシャルワークフロー（自動接続！）</span>
+<span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span>
+    <span class="n">idea_generator</span><span class="p">,</span>      <span class="c1"># アイデア生成</span>
+    <span class="n">content_writer</span><span class="p">,</span>      <span class="c1"># 記事執筆（評価付き）</span>
+    <span class="n">reviewer</span><span class="p">,</span>           <span class="c1"># レビュー</span>
+    <span class="n">DebugStep</span><span class="p">(</span><span class="s2">&quot;done&quot;</span><span class="p">,</span> <span class="s2">&quot;ワークフロー完了&quot;</span><span class="p">)</span>
+<span class="p">])</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;AI技術について&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;アイデア:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;idea_gen_result&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;記事:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;writer_result&quot;</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;レビュー:&quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;reviewer_result&quot;</span><span class="p">])</span>
+</code></pre></div>
+<h2 id="6">6. 条件分岐付きワークフロー<a class="headerlink" href="#6" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># 条件に応じて異なる処理パスを実行</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_content_type</span><span class="p">(</span><span class="n">ctx</span><span class="p">):</span>
+    <span class="n">user_input</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">last_user_input</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;技術&quot;</span> <span class="ow">in</span> <span class="n">user_input</span>
+
+<span class="n">tech_writer</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;tech&quot;</span><span class="p">,</span> <span class="s2">&quot;技術記事を書く&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+<span class="n">general_writer</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;general&quot;</span><span class="p">,</span> <span class="s2">&quot;一般記事を書く&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">)</span>
+
+<span class="c1"># 従来方式（複雑なフロー用）</span>
+<span class="n">complex_flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="s2">&quot;check_type&quot;</span><span class="p">,</span>
+    <span class="n">steps</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;check_type&quot;</span><span class="p">:</span> <span class="n">ConditionStep</span><span class="p">(</span>
+            <span class="s2">&quot;check_type&quot;</span><span class="p">,</span> 
+            <span class="n">check_content_type</span><span class="p">,</span> 
+            <span class="s2">&quot;tech_writer&quot;</span><span class="p">,</span> 
+            <span class="s2">&quot;general_writer&quot;</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;tech_writer&quot;</span><span class="p">:</span> <span class="n">tech_writer</span><span class="p">,</span>
+        <span class="s2">&quot;general_writer&quot;</span><span class="p">:</span> <span class="n">general_writer</span><span class="p">,</span>
+        <span class="s2">&quot;review&quot;</span><span class="p">:</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span><span class="s2">&quot;reviewer&quot;</span><span class="p">,</span> <span class="s2">&quot;記事をレビュー&quot;</span><span class="p">,</span> <span class="s2">&quot;claude-3-5-sonnet-latest&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">complex_flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;技術的な内容について書いて&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="_4">ポイント<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
 <ul>
+<li><strong>新機能：</strong> <code>Flow(steps=[step1, step2])</code> で自動シーケンシャル接続</li>
+<li><strong>新機能：</strong> <code>Flow(steps=single_step)</code> で単一ステップも超シンプル</li>
 <li>ツールやガードレール、動的プロンプト、自己改善を柔軟に組み合わせ可能</li>
-<li>実運用に近い高度なワークフローもシンプルに記述できます </li>
+<li>旧 <code>AgentPipeline</code> から <code>GenAgent + Flow</code> への移行は簡単</li>
+<li>複雑なワークフローも数行で構築可能</li>
 </ul>
 
 

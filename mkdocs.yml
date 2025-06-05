@@ -8,6 +8,15 @@ site_url: https://kitfactory.github.io/agents-sdk-models/
 theme:
   name: material
   language: ja
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
 
 plugins:
   - search
@@ -16,13 +25,34 @@ plugins:
         python:
           setup_commands:
             - "import sys; sys.path.insert(0, 'src')"
+          options:
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: true
+            merge_init_into_class: true
+            show_submodules: true
+            show_source: false
+            show_root_heading: false
+            show_root_toc_entry: false
 
 nav:
   - はじめに: index.md
-  - APIリファレンス: api_reference.md
+  - 最小使用例: minimal_example.md
+  - APIリファレンス: 
+      - 概要: api_reference.md
+      - Pipeline: api/pipeline.md
+      - LLM: api/llm.md
+      - Context: api/context.md
+      - Flow: api/flow.md
+      - Step: api/step.md
+      - Agents: api/agents.md
   - チュートリアル:
       - クイックスタート: tutorials/quickstart.md
       - 応用例: tutorials/advanced.md
+      - Doctest例: tutorials/doctest_examples.md
+  - 開発者向け:
+      - AI補完設定: developer/ai_completion.md
+      - 型チェック: developer/type_checking.md
 
 markdown_extensions:
   - pymdownx.superfences:
@@ -30,8 +60,19 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: [docs, examples]
   - admonition
+  - pymdownx.details
   - codehilite
   - toc:
-      permalink: true 
+      permalink: true
+  - attr_list
+  - md_in_html 

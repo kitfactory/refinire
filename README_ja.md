@@ -14,21 +14,23 @@ OpenAI Agents SDK のためのモデルアダプター＆ワークフロー拡�
 ### 🚀 **たった3行で開始！**
 
 ```python
-from agents_sdk_models import create_simple_gen_agent, create_simple_flow
+from agents_sdk_models import create_simple_gen_agent, Context
+import asyncio
 
 # ステップ1: GenAgentを作成（AgentPipelineみたいだけど、もっと良い！）
 gen_agent = create_simple_gen_agent(
-    name="story_generator",
-    generation_instructions="創造的な物語を生成してください",
+    name="simple_gen",
+    instructions="あなたは親切なアシスタントです。ユーザーの質問に簡潔で分かりやすく答えてください。",
     model="gpt-4o-mini"
 )
 
-# ステップ2: Flowを作成（さらに簡単に！）
-flow = Flow(steps=gen_agent)  # 単一ステップ - これだけ！
+# ステップ2: コンテキストを作成して実行
+context = Context()
+context.add_user_message("こんにちは！日本の文化について簡潔に教えてください。")
 
 # ステップ3: 実行！（前と同じシンプルなインターフェース）
-result = await flow.run(input_data="絵を学ぶロボットの物語")
-print(result.shared_state["story_generator_result"])  # あなたの創造的な物語が完成！
+result = asyncio.run(gen_agent.run("こんにちは！日本の文化について簡潔に教えてください。", context))
+print(result.shared_state["simple_gen_result"])  # あなたの回答が完成！
 ```
 
 ### 🚀 **新機能: 超シンプルなFlow作成！**
@@ -60,26 +62,25 @@ flow = Flow(start="step1", steps={"step1": step1, "step2": step2})
 ### 🌟 **実用例: 評価付きコンテンツ生成器**
 
 ```python
-from agents_sdk_models import create_simple_gen_agent
-from agents_sdk_models.flow import Flow
-from agents_sdk_models.step import UserInputStep, DebugStep
+from agents_sdk_models import create_evaluated_gen_agent, Context
+import asyncio
 
 # 評価付きGenAgentを作成（複雑なAgentPipeline設定を置き換え）
-gen_agent = create_simple_gen_agent(
-    name="content_creator",
-    generation_instructions="魅力的なブログ記事を作成してください",
-    evaluation_instructions="創造性と読みやすさを評価してください（0-100）",  # 自動評価！
-    model="gpt-4o-mini",
-    threshold=70  # スコア70未満なら自動リトライ！
+gen_agent = create_evaluated_gen_agent(
+    name="eval_gen",
+    generation_instructions="人工知能の未来について200文字程度で分かりやすく説明してください。",
+    evaluation_instructions="回答が200文字程度で、分かりやすく、正確な内容かを評価してください。",
+    model="gpt-4o-mini"
 )
 
-# 数秒でFlowを構築（数分ではなく！）
-flow = Flow(steps=[gen_agent, DebugStep("debug", "何が起こったかを確認")])  # シーケンシャルステップ！
+# 評価付きで実行
+context = Context()
+context.add_user_message("人工知能の未来について200文字程度で説明してください。")
 
-# 完全なワークフローを実行
-result = await flow.run(input_data="AI についてのブログを作成")
-print(result.shared_state["content_creator_result"])
-# 自動処理: 生成 → 評価 → リトライ → 出力
+result = asyncio.run(gen_agent.run("人工知能の未来について200文字程度で説明してください。", context))
+print(result.shared_state["eval_gen_result"])
+print("評価:", result.shared_state.get("eval_gen_evaluation"))
+# 自動処理: 生成 → 評価 → フィードバック
 ```
 
 ### 🎨 **LangChain/LangGraphとの比較 - 圧倒的な差！**
@@ -127,38 +128,82 @@ workflow.add_conditional_edges(
 # GenAgent + Flow方式（3行！）
 gen_agent = create_simple_gen_agent(
     name="simple_setup",
-    generation_instructions="...",
-    evaluation_instructions="...",  # 自動評価＆リトライ！
-    model="gpt-4o-mini",
-    threshold=70
+    instructions="...",
+    model="gpt-4o-mini"
 )
-flow = Flow(steps=gen_agent)  # たった1行！
-result = await flow.run(input_data="あなたの入力")  # 完了！
+# GenAgentを直接使用 - 複雑なFlowは不要！
+result = asyncio.run(gen_agent.run("あなたの入力", Context()))  # 完了！
 ```
 
 ### 🏗️ **高度な機能もシンプルに**
 
 ```python
-# 複雑なワークフロー？それでも数行だけ！
-from agents_sdk_models.step import ConditionStep, FunctionStep
+# シンプルなFlow例
+from agents_sdk_models import Context, FunctionStep, create_simple_flow
+import asyncio
 
-def check_content_type(user_input, ctx):
-    return "blog" if "ブログ" in user_input else "story"
+def process_greeting(user_input, ctx):
+    """ユーザーデータで挨拶を処理"""
+    name = ctx.shared_state.get("user_name", "名無し")
+    task = ctx.shared_state.get("task", "何か")
+    greeting = f"こんにちは、{name}さん！{task}について支援いたします。"
+    ctx.shared_state["greeting"] = greeting
+    ctx.finish()
+    return ctx
 
-# シンプルなステップで複雑なロジックを構築
-blog_gen = create_simple_gen_agent("blog", "ブログを書く", "gpt-4o")
-story_gen = create_simple_gen_agent("story", "物語を書く", "claude-3-5-sonnet-latest")
+# シンプルなFlowを作成
+context = Context()
+context.shared_state["user_name"] = "太郎"
+context.shared_state["task"] = "プログラミング学習"
 
-# 複雑なフロー用の従来モード
-advanced_flow = Flow(
-    start="check_type",
+greeting_step = FunctionStep("greeting", process_greeting)
+flow = create_simple_flow([("greeting", greeting_step)], context)
+
+result = asyncio.run(flow.run())
+print(result.shared_state.get("greeting"))  # "こんにちは、太郎さん！プログラミング学習について支援いたします。"
+```
+
+### 条件付きFlow例
+```python
+from agents_sdk_models import Context, ConditionStep, FunctionStep, Flow
+import asyncio
+
+# ユーザーレベル付きコンテキストを作成
+context = Context()
+context.shared_state["user_level"] = "beginner"
+
+# 条件関数を作成
+def is_beginner(ctx):
+    return ctx.shared_state.get("user_level") == "beginner"
+
+# アクション関数を作成
+def beginner_action(user_input, ctx):
+    ctx.shared_state["message"] = "初心者向けのチュートリアルを開始します。"
+    ctx.finish()
+    return ctx
+
+def advanced_action(user_input, ctx):
+    ctx.shared_state["message"] = "上級者向けのコンテンツを表示します。"
+    ctx.finish()
+    return ctx
+
+# 条件付きFlowを作成
+condition_step = ConditionStep("condition", is_beginner, "beginner", "advanced")
+beginner_step = FunctionStep("beginner", beginner_action)
+advanced_step = FunctionStep("advanced", advanced_action)
+
+flow = Flow(
+    start="condition",
     steps={
-        "check_type": ConditionStep("check_type", check_content_type, "blog_gen", "story_gen"),
-        "blog_gen": blog_gen,
-        "story_gen": story_gen,
-        "done": DebugStep("done", "完了！")  # 完了！
-    }
+        "condition": condition_step,
+        "beginner": beginner_step,
+        "advanced": advanced_step
+    },
+    context=context
 )
+
+result = asyncio.run(flow.run())
+print(result.shared_state.get("message"))  # "初心者向けのチュートリアルを開始します。"
 ```
 
 ### ✨ **あなたが気に入る利点:**
@@ -303,6 +348,48 @@ print(result)
 Instruction: あなたは親切なアシスタントです。
 Prompt: こんにちは！
 Output: [生成された応答]
+```
+
+### ClearifyAgent：曖昧な要求の明確化例
+```python
+from agents_sdk_models import create_simple_clearify_agent, Context
+import asyncio
+
+# 曖昧な要求を処理するClearifyAgentを作成
+agent = create_simple_clearify_agent(
+    name="clarify_agent",
+    instructions="ユーザーの曖昧な要求を明確にするために質問をしてください。要求が十分明確になったら、明確化された要求を出力してください。",
+    model="gpt-4o-mini"
+)
+
+# 曖昧な要求を処理
+ambiguous_request = "APIを作りたいです"
+context = Context()
+context.add_user_message(ambiguous_request)
+
+result = asyncio.run(agent.run(ambiguous_request, context))
+print("元の要求:", ambiguous_request)
+print("明確化後:", result.shared_state.get("clarify_agent_result", "明確化中"))
+```
+
+### マルチプロバイダーLLMアクセス例
+```python
+from agents_sdk_models import get_llm
+
+# 異なるプロバイダーを試す
+providers = [
+    ("openai", "gpt-4o-mini"),
+    ("anthropic", "claude-3-haiku-20240307"),
+    ("google", "gemini-1.5-flash"),
+    ("ollama", "llama3.1:8b")
+]
+
+for provider, model in providers:
+    try:
+        llm = get_llm(provider=provider, model=model)
+        print(f"✓ {provider}: {model} - 準備完了")
+    except Exception as e:
+        print(f"✗ {provider}: {model} - エラー: {str(e)}")
 ```
 
 ### 利用可能なモデルの取得例

@@ -468,10 +468,12 @@ class DebugStep(Step):
         # デバッグメッセージをシステムメッセージに追加
         ctx.add_system_message(f"DEBUG {self.name}: {self.message}")
         
-        # Set next step if specified
-        # 指定されている場合は次ステップを設定
+        # Set next step if specified, otherwise finish the flow
+        # 指定されている場合は次ステップを設定、そうでなければフローを終了
         if self.next_step:
             ctx.goto(self.next_step)
+        else:
+            ctx.finish()
         
         return ctx
 

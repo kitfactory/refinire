@@ -12,7 +12,7 @@
         <meta name="author" content="kitfactory">
       
       
-        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/tracing/">
+        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/workflow/">
       
       
       
@@ -22,7 +22,7 @@
     
     
       
-        <title>トレーシング - Agents SDK Models</title>
+        <title>Workflow について - Agents SDK Models</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#_1" class="md-skip">
+        <a href="#workflow" class="md-skip">
           コンテンツにスキップ
         </a>
       
@@ -102,7 +102,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              トレーシング
+              Workflow について
             
           </span>
         </div>
@@ -370,32 +370,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目次
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#openai-agents-sdk" class="md-nav__link">
-    <span class="md-ellipsis">
-      OpenAI Agents SDK のトレーシング機能
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      本ライブラリでのアプローチ
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -413,19 +387,17 @@
   
 
 
-<h1 id="_1">トレーシング<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
-<h2 id="openai-agents-sdk">OpenAI Agents SDK のトレーシング機能<a class="headerlink" href="#openai-agents-sdk" title="Permanent link">&para;</a></h2>
-<p>OpenAI Agents SDK はデフォルトで OpenAI のトレーシングサービスを利用し、実行中のスパン情報を自動的に収集・記録します。
-- プロバイダーに関わらず、内部では OpenAI の Trace API を使用します。
-- <code>OPENAI_API_KEY</code> の設定が必要です。</p>
-<h2 id="_2">本ライブラリでのアプローチ<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h1 id="workflow">Workflow について<a class="headerlink" href="#workflow" title="Permanent link">&para;</a></h1>
 <ul>
-<li>デフォルトでコンソール向けの <code>ConsoleTracingProcessor</code> を提供します。</li>
-<li>有効化: <code>enable_console_tracing()</code> を呼び出すと、コンソールにカラー付きでスパン情報を表示します。</li>
-<li>トレーシングをカスタマイズしたい場合は、サードパーティーが提供する独自の Processor を使用してください。</li>
-<li>トレーシングを停止したい場合は、<code>disable_tracing()</code> を呼び出して全てのトレーシング機能を無効化します。</li>
+<li>WorkflowとはAgent/Interaction/Toolの連鎖を行う機能です。</li>
+<li>ルーティング情報にもとづき、次の要素を定めます。</li>
+<li></li>
+<li>
+<p>次のようなケースがあります。
+　・対話型ワークフロー
+　・自律型ワークフロー</p>
+</li>
 </ul>
-<p>以上の仕組みにより、デバッグ時やローカル開発環境でも手軽にトレーシング情報を確認でき、必要に応じてサービス連携やログ出力先を切り替えられます。 </p>
 
 
 
