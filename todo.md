@@ -175,4 +175,171 @@
 1. 残りのexample移行（フェーズ2完了）
 2. テスト移行計画の策定
 3. v0.0.23リリース準備
-4. v0.1.0での完全削除準備 
+4. v0.1.0での完全削除準備
+
+## 基本機能の実装
+
+### 基本アーキテクチャ
+- [x] Stepクラスの設計と実装
+- [x] Flowクラスの設計と実装
+- [x] Contextクラスの設計と実装
+- [x] Pipelineクラスの設計と実装
+- [x] LLMクラスの設計と実装
+
+### LLMバックエンド
+- [x] OpenAI APIクライアントの実装
+- [x] Anthropic APIクライアントの実装
+- [x] Gemini APIクライアントの実装
+- [x] Ollama APIクライアントの実装
+
+### 基本エージェント
+- [x] GenAgentの実装
+- [x] ClarifyAgentの実装
+- [x] GenAgentLegacyの削除（不要な機能）
+
+### パイプライン拡張
+- [x] LLMPipelineの実装
+- [x] InteractivePipelineの実装
+- [x] パイプライン統合テスト
+
+## 新規エージェント実装
+
+### agentsフォルダの作成
+- [x] `src/agents_sdk_models/agents/` フォルダ作成
+- [x] `agents/__init__.py` 作成
+- [x] 各エージェントの基底クラス設計
+
+### 高優先度エージェント実装
+
+#### RouterAgent
+- [x] RouterAgentクラスの設計
+- [x] ルーティングロジックの実装
+- [x] 分類器インターフェースの定義
+- [x] RouterAgentのテスト作成
+- [x] RouterAgentの使用例作成
+
+#### ValidatorAgent
+- [x] ValidatorAgentクラスの設計
+- [x] 検証ルールシステムの実装
+- [x] 標準検証ルールの実装
+- [x] ValidatorAgentのテスト作成
+- [x] ValidatorAgentの使用例作成
+
+#### ExtractorAgent
+- [x] ExtractorAgentクラスの設計
+- [x] パターンベース抽出の実装
+- [x] LLMベース抽出の実装
+- [x] 抽出ルールシステムの実装
+- [x] ExtractorAgentのテスト作成
+- [x] ExtractorAgentの使用例作成
+
+#### NotificationAgent
+- [x] NotificationAgentクラスの設計
+- [x] 通知チャネルシステムの実装
+- [x] 標準通知チャネルの実装（メール、Slack、Webhook）
+- [x] NotificationAgentのテスト作成
+- [x] NotificationAgentの使用例作成
+
+### 中優先度エージェント実装
+
+#### ClassifierAgent
+- [ ] ClassifierAgentクラスの設計
+- [ ] 分類アルゴリズムの実装
+- [ ] ClassifierAgentのテスト作成
+- [ ] ClassifierAgentの使用例作成
+
+#### TransformerAgent
+- [ ] TransformerAgentクラスの設計
+- [ ] データ変換システムの実装
+- [ ] TransformerAgentのテスト作成
+- [ ] TransformerAgentの使用例作成
+
+#### AggregatorAgent
+- [ ] AggregatorAgentクラスの設計
+- [ ] データ集約システムの実装
+- [ ] AggregatorAgentのテスト作成
+- [ ] AggregatorAgentの使用例作成
+
+#### SearchAgent
+- [ ] SearchAgentクラスの設計
+- [ ] 検索システムの実装
+- [ ] SearchAgentのテスト作成
+- [ ] SearchAgentの使用例作成
+
+## 統合とテスト
+
+### パッケージ統合
+- [ ] `__init__.py` でのエクスポート設定
+- [ ] 依存関係の整理
+- [ ] 型ヒントの完成
+
+### テストカバレッジ
+- [ ] 全エージェントの単体テスト
+- [ ] エージェント間連携テスト
+- [ ] エンドツーエンドテスト
+
+### ドキュメント
+- [ ] 各エージェントのAPIドキュメント
+- [ ] 使用例とチュートリアル
+- [ ] agents.mdの更新
+
+## 品質保証
+
+### コード品質
+- [ ] Linting (flake8, black)
+- [ ] 型チェック (mypy)
+- [ ] セキュリティチェック
+
+### パフォーマンス
+- [ ] ベンチマークテスト
+- [ ] メモリ使用量の最適化
+- [ ] 並行処理の最適化
+
+## リリース準備
+
+### パッケージング
+- [ ] pyproject.tomlの更新
+- [ ] バージョン管理
+- [ ] パッケージ配布準備
+
+### ドキュメント
+- [ ] README.mdの更新
+- [ ] CHANGELOG.mdの作成
+- [ ] API仕様書の完成
+
+## 完了項目
+
+### ✅ 基本機能実装完了
+- Stepクラス実装
+- Flowクラス実装
+- Contextクラス実装
+- Pipelineクラス実装
+- LLMクラス実装
+
+### ✅ LLMバックエンド完了
+- OpenAI APIクライアント
+- Anthropic APIクライアント
+- Gemini APIクライアント
+- Ollama APIクライアント
+
+### ✅ 基本エージェント完了
+- GenAgent実装
+- ClarifyAgent実装
+- GenAgentLegacy削除
+
+### ✅ パイプライン拡張完了
+- LLMPipeline実装
+- InteractivePipeline実装
+- パイプライン統合テスト
+
+### ✅ ドキュメント整備
+- agents.mdの体系的整理
+- ExtractorAgentの責務明確化
+
+### ✅ Flow可視化機能完了
+- Flow.show()メソッドの実装（Mermaid/テキスト形式）
+- RouterAgentの複数ルート表示対応
+- get_possible_routes()メソッド
+- 実行履歴表示機能
+- Flow.show()のテストスイート（11テストケース）
+- Flow.show()の使用例とデモ 

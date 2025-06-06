@@ -71,8 +71,10 @@ class Context(BaseModel):
     
     # Execution metadata / 実行メタデータ
     trace_id: Optional[str] = None  # Trace ID for observability / オブザーバビリティ用トレースID
+    current_span_id: Optional[str] = None  # Current span ID for step tracking / ステップ追跡用現在のスパンID
     start_time: datetime = Field(default_factory=datetime.now)  # Flow start time / フロー開始時刻
     step_count: int = 0  # Number of steps executed / 実行されたステップ数
+    span_history: List[Dict[str, Any]] = Field(default_factory=list)  # Span execution history / スパン実行履歴
     
     # Internal async coordination (private attributes) / 内部非同期調整（プライベート属性）
     _user_input_event: Optional[asyncio.Event] = PrivateAttr(default=None)
@@ -314,8 +316,82 @@ class Context(BaseModel):
         Args:
             step_name: Current step name / 現在のステップ名
         """
+        # Finalize previous span if exists
+        # 前のスパンが存在する場合は終了
+        if self.current_span_id and self.current_step:
+            self._finalize_current_span()
+        
+        # Start new span
+        # 新しいスパンを開始
         self.current_step = step_name
         self.step_count += 1
+        self.current_span_id = self._generate_span_id(step_name)
+        
+        # Record span start
+        # スパン開始を記録
+        self._start_span(step_name)
+    
+    def _generate_span_id(self, step_name: str) -> str:
+        """
+        Generate a unique span ID for the step
+        ステップ用のユニークなスパンIDを生成
+        
+        Args:
+            step_name: Step name / ステップ名
+            
+        Returns:
+            str: Generated span ID / 生成されたスパンID
+        """
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        return f"{step_name}_{self.step_count:03d}_{timestamp}"
+    
+    def _start_span(self, step_name: str) -> None:
+        """
+        Start a new span for step tracking
+        ステップ追跡用の新しいスパンを開始
+        
+        Args:
+            step_name: Step name / ステップ名
+        """
+        span_info = {
+            "span_id": self.current_span_id,
+            "step_name": step_name,
+            "trace_id": self.trace_id,
+            "start_time": datetime.now(),
+            "end_time": None,
+            "status": "started",
+            "step_index": self.step_count,
+            "metadata": {}
+        }
+        self.span_history.append(span_info)
+    
+    def _finalize_current_span(self, status: str = "completed", error: Optional[str] = None) -> None:
+        """
+        Finalize the current span
+        現在のスパンを終了
+        
+        Args:
+            status: Span status (completed, error, etc.) / スパンステータス
+            error: Error message if failed / 失敗時のエラーメッセージ
+        """
+        if not self.span_history:
+            return
+            
+        current_span = self.span_history[-1]
+        if current_span["span_id"] == self.current_span_id:
+            current_span["end_time"] = datetime.now()
+            current_span["status"] = status
+            if error:
+                current_span["error"] = error
+    
+    def finalize_flow_span(self) -> None:
+        """
+        Finalize the current span when flow ends
+        フロー終了時に現在のスパンを終了
+        """
+        if self.current_span_id:
+            self._finalize_current_span()
+            self.current_span_id = None
     
     def set_artifact(self, key: str, value: Any) -> None:
         """
@@ -341,6 +417,56 @@ class Context(BaseModel):
             Any: Artifact value / 成果物値
         """
         return self.artifacts.get(key, default)
+    
+    def get_current_span_info(self) -> Optional[Dict[str, Any]]:
+        """
+        Get current span information
+        現在のスパン情報を取得
+        
+        Returns:
+            Dict[str, Any] | None: Current span info / 現在のスパン情報
+        """
+        if self.current_span_id and self.span_history:
+            return self.span_history[-1]
+        return None
+    
+    def get_span_history(self) -> List[Dict[str, Any]]:
+        """
+        Get complete span execution history
+        完全なスパン実行履歴を取得
+        
+        Returns:
+            List[Dict[str, Any]]: Span history / スパン履歴
+        """
+        return self.span_history.copy()
+    
+    def get_trace_summary(self) -> Dict[str, Any]:
+        """
+        Get comprehensive trace summary
+        包括的なトレースサマリーを取得
+        
+        Returns:
+            Dict[str, Any]: Trace summary / トレースサマリー
+        """
+        total_duration = None
+        if self.span_history:
+            start_time = min(span["start_time"] for span in self.span_history)
+            completed_spans = [span for span in self.span_history if span.get("end_time")]
+            if completed_spans:
+                end_time = max(span["end_time"] for span in completed_spans)
+                total_duration = (end_time - start_time).total_seconds()
+        
+        return {
+            "trace_id": self.trace_id,
+            "current_span_id": self.current_span_id,
+            "total_spans": len(self.span_history),
+            "completed_spans": len([s for s in self.span_history if s.get("status") == "completed"]),
+            "active_spans": len([s for s in self.span_history if s.get("status") == "started"]),
+            "error_spans": len([s for s in self.span_history if s.get("status") == "error"]),
+            "total_duration_seconds": total_duration,
+            "flow_start_time": self.start_time,
+            "is_finished": self.is_finished()
+        }
     
     class Config:
         # Allow arbitrary types for flexibility

@@ -10,7 +10,9 @@ from pydantic import BaseModel
 from agents_sdk_models import (
     LLMPipeline, GenAgentV2, Flow, Context,
     create_simple_llm_pipeline, create_evaluated_llm_pipeline,
-    create_simple_gen_agent_v2, create_evaluated_gen_agent_v2
+    create_simple_gen_agent_v2, create_evaluated_gen_agent_v2,
+    create_tool_enabled_llm_pipeline, create_calculator_pipeline,
+    create_web_search_pipeline
 )
 
 
@@ -334,6 +336,225 @@ def example_pipeline_features():
     print("\n" + "=" * 50)
 
 
+def example_tool_enabled_pipeline():
+    """
+    Tool-enabled LLMPipeline example
+    tool機能付きLLMPipelineの例
+    """
+    print("🛠️  Tool-Enabled LLMPipeline Example")
+    print("=" * 50)
+    
+    # Define custom tools
+    # カスタムtoolを定義
+    def get_weather(city: str) -> str:
+        """Get the current weather for a city"""
+        # Simulated weather data
+        weather_data = {
+            "Tokyo": "Sunny, 22°C",
+            "London": "Rainy, 15°C", 
+            "New York": "Cloudy, 18°C",
+            "Paris": "Partly cloudy, 20°C"
+        }
+        return weather_data.get(city, f"Weather data not available for {city}")
+    
+    def calculate_age(birth_year: int) -> int:
+        """Calculate age from birth year"""
+        from datetime import datetime
+        current_year = datetime.now().year
+        return current_year - birth_year
+    
+    def convert_currency(amount: float, from_currency: str, to_currency: str) -> str:
+        """Convert currency (simplified rates)"""
+        # Simplified exchange rates
+        rates = {
+            ("USD", "JPY"): 150.0,
+            ("USD", "EUR"): 0.85,
+            ("EUR", "JPY"): 160.0,
+            ("JPY", "USD"): 1/150.0,
+            ("EUR", "USD"): 1/0.85,
+            ("JPY", "EUR"): 1/160.0
+        }
+        
+        rate = rates.get((from_currency, to_currency), 1.0)
+        converted = amount * rate
+        return f"{amount} {from_currency} = {converted:.2f} {to_currency}"
+    
+    # Create pipeline with tools
+    # tool付きパイプラインを作成
+    pipeline = create_tool_enabled_llm_pipeline(
+        name="multi_tool_assistant",
+        instructions="""
+        You are a helpful assistant with access to multiple tools:
+        - get_weather: Get weather information for cities
+        - calculate_age: Calculate age from birth year
+        - convert_currency: Convert between currencies
+        
+        Use these tools when users ask relevant questions.
+        """,
+        tools=[get_weather, calculate_age, convert_currency],
+        model="gpt-4o-mini"
+    )
+    
+    # Test complex query requiring multiple tools
+    # 複数toolが必要な複雑なクエリをテスト
+    user_input = "I was born in 1990, what's my age? Also, what's the weather in Tokyo and how much is 100 USD in JPY?"
+    
+    print(f"📝 User Input: {user_input}")
+    print(f"🛠️  Available Tools: {pipeline.list_tools()}")
+    print("\n🤖 Processing with tools...")
+    
+    try:
+        result = pipeline.run(user_input)
+        
+        if result.success:
+            print(f"✅ Success! AI used tools automatically:")
+            print(f"📄 Response: {result.content}")
+            print(f"🔄 Attempts: {result.attempts}")
+            print(f"📊 Metadata: {result.metadata}")
+        else:
+            print(f"❌ Failed: {result.metadata.get('error', 'Unknown error')}")
+            
+    except Exception as e:
+        print(f"⚠️  Note: This example requires OpenAI API key. Error: {e}")
+    
+    print("\n" + "=" * 50)
+
+
+def example_calculator_pipeline():
+    """
+    Calculator pipeline example  
+    計算機パイプラインの例
+    """
+    print("🧮 Calculator LLMPipeline Example")
+    print("=" * 50)
+    
+    # Create calculator pipeline
+    # 計算機パイプラインを作成
+    pipeline = create_calculator_pipeline(
+        name="math_assistant",
+        model="gpt-4o-mini"
+    )
+    
+    user_input = "Calculate the area of a circle with radius 5, and then find the square root of that result"
+    
+    print(f"📝 User Input: {user_input}")
+    print(f"🛠️  Available Tools: {pipeline.list_tools()}")
+    print("\n🤖 Processing mathematical query...")
+    
+    try:
+        result = pipeline.run(user_input)
+        
+        if result.success:
+            print(f"✅ Success! Mathematical calculation completed:")
+            print(f"📄 Response: {result.content}")
+        else:
+            print(f"❌ Failed: {result.metadata.get('error', 'Unknown error')}")
+            
+    except Exception as e:
+        print(f"⚠️  Note: This example requires OpenAI API key. Error: {e}")
+    
+    print("\n" + "=" * 50)
+
+
+def example_web_search_pipeline():
+    """
+    Web search pipeline example
+    Web検索パイプラインの例
+    """
+    print("🔍 Web Search LLMPipeline Example")
+    print("=" * 50)
+    
+    # Create web search pipeline
+    # Web検索パイプラインを作成
+    pipeline = create_web_search_pipeline(
+        name="search_assistant",
+        model="gpt-4o-mini"
+    )
+    
+    user_input = "What are the latest developments in AI technology?"
+    
+    print(f"📝 User Input: {user_input}")
+    print(f"🛠️  Available Tools: {pipeline.list_tools()}")
+    print("\n🤖 Processing search query...")
+    
+    try:
+        result = pipeline.run(user_input)
+        
+        if result.success:
+            print(f"✅ Success! Search completed:")
+            print(f"📄 Response: {result.content}")
+            print("💡 Note: This uses a placeholder search implementation")
+        else:
+            print(f"❌ Failed: {result.metadata.get('error', 'Unknown error')}")
+            
+    except Exception as e:
+        print(f"⚠️  Note: This example requires OpenAI API key. Error: {e}")
+    
+    print("\n" + "=" * 50)
+
+
+def example_manual_tool_management():
+    """
+    Manual tool management example
+    手動tool管理の例
+    """
+    print("⚙️  Manual Tool Management Example")
+    print("=" * 50)
+    
+    # Create basic pipeline
+    # 基本パイプラインを作成
+    pipeline = LLMPipeline(
+        name="custom_assistant",
+        generation_instructions="You are a helpful assistant with access to tools.",
+        model="gpt-4o-mini",
+        tools=[]  # Start with no tools
+    )
+    
+    # Define and add tools manually
+    # toolを手動で定義・追加
+    def greet_user(name: str) -> str:
+        """Greet a user by name"""
+        return f"Hello, {name}! Nice to meet you!"
+    
+    def get_time() -> str:
+        """Get the current time"""
+        from datetime import datetime
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Add tools one by one
+    # toolを一つずつ追加
+    pipeline.add_function_tool(greet_user)
+    pipeline.add_function_tool(get_time)
+    
+    print(f"🛠️  Added Tools: {pipeline.list_tools()}")
+    
+    user_input = "Greet me as Alice and tell me the current time"
+    
+    print(f"📝 User Input: {user_input}")
+    print("\n🤖 Processing with manually added tools...")
+    
+    try:
+        result = pipeline.run(user_input)
+        
+        if result.success:
+            print(f"✅ Success! Tools executed:")
+            print(f"📄 Response: {result.content}")
+        else:
+            print(f"❌ Failed: {result.metadata.get('error', 'Unknown error')}")
+    
+        # Demonstrate tool removal
+        # tool削除をデモ
+        print(f"\n🗑️  Removing 'greet_user' tool...")
+        removed = pipeline.remove_tool("greet_user")
+        print(f"   Removed: {removed}")
+        print(f"🛠️  Remaining Tools: {pipeline.list_tools()}")
+            
+    except Exception as e:
+        print(f"⚠️  Note: This example requires OpenAI API key. Error: {e}")
+    
+    print("\n" + "=" * 50)
+
+
 def main():
     """
     Run all examples
@@ -357,6 +578,13 @@ def main():
     # Flow統合
     print("🔄 Running async Flow example...")
     asyncio.run(example_gen_agent_v2_in_flow())
+    
+    # New examples
+    # 新しい例
+    example_tool_enabled_pipeline()
+    example_calculator_pipeline()
+    example_web_search_pipeline()
+    example_manual_tool_management()
     
     print("\n🎉 All examples completed!")
     print("\n💡 Key Benefits of New Implementation:")

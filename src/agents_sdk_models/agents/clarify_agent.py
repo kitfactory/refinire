@@ -11,9 +11,11 @@ from typing import Any, Callable, List, Dict, Optional, Type, TypeVar, Generic
 from dataclasses import dataclass
 import json
 
-from .step import Step
-from .context import Context
-from .llm_pipeline import LLMPipeline, LLMResult
+from ..step import Step
+from ..context import Context
+from .llm_pipeline import (
+    LLMPipeline, LLMResult, InteractivePipeline, InteractionResult, InteractionQuestion
+)
 
 try:
     from pydantic import BaseModel  # type: ignore
@@ -88,11 +90,11 @@ class ClarificationQuestion:
 
 class ClarifyPipeline:
     """
-    ClarifyPipeline class for requirements clarification using modern LLM Pipeline
-    モダンなLLMパイプラインを使用した要件明確化パイプラインクラス
+    ClarifyPipeline class for requirements clarification using InteractivePipeline
+    InteractivePipelineを使用した要件明確化パイプラインクラス
     
-    This class wraps LLMPipeline to handle:
-    このクラスはLLMPipelineをラップして以下を処理します：
+    This class wraps InteractivePipeline to handle:
+    このクラスはInteractivePipelineをラップして以下を処理します：
     - Iterative requirement clarification / 反復的な要件明確化
     - Type-safe output wrapping / 型安全な出力ラッピング
     - Maximum turn control / 最大ターン数制御
@@ -110,6 +112,8 @@ class ClarifyPipeline:
         evaluation_model: Optional[str] = None,
         threshold: int = 85,
         retries: int = 3,
+        tools: Optional[List[Dict]] = None,
+        mcp_servers: Optional[List[str]] = None,
         **kwargs
     ) -> None:
         """
@@ -133,8 +137,6 @@ class ClarifyPipeline:
         # 日本語: ラッピング前の元の出力データ型を保存
         self.original_output_data = output_data
         self.clerify_max_turns = clerify_max_turns
-        self._turn_count = 0
-        self._conversation_history = []
         
         # English: Create wrapped output model based on provided type
         # 日本語: 提供された型に基づいてラップされた出力モデルを作成
@@ -154,9 +156,9 @@ class ClarifyPipeline:
             output_data
         )
         
-        # English: Filter kwargs for LLMPipeline compatibility
-        # 日本語: LLMPipeline互換性のためkwargsをフィルタリング
-        llm_pipeline_kwargs = {
+        # English: Filter kwargs for InteractivePipeline compatibility
+        # 日本語: InteractivePipeline互換性のためkwargsをフィルタリング
+        pipeline_kwargs = {
             k: v for k, v in kwargs.items() 
             if k in [
                 'temperature', 'max_tokens', 'timeout', 'input_guardrails', 
@@ -165,18 +167,28 @@ class ClarifyPipeline:
             ]
         }
         
-        # English: Create internal LLMPipeline instance
-        # 日本語: 内部LLMPipelineインスタンスを作成
-        self.llm_pipeline = LLMPipeline(
+        # English: Add tools and MCP servers if provided
+        # 日本語: 提供された場合はtoolsとMCPサーバーを追加
+        if tools is not None:
+            pipeline_kwargs['tools'] = tools
+        if mcp_servers is not None:
+            pipeline_kwargs['mcp_servers'] = mcp_servers
+        
+        # English: Create internal InteractivePipeline instance
+        # 日本語: 内部InteractivePipelineインスタンスを作成
+        self.interactive_pipeline = InteractivePipeline(
             name=f"{name}_pipeline",
             generation_instructions=enhanced_instructions,
             evaluation_instructions=evaluation_instructions,
             output_model=wrapped_output_model,
+            completion_check=self._is_clarification_complete,
+            max_turns=clerify_max_turns,
+            question_format=self._format_clarification_question,
             model=model,
             evaluation_model=evaluation_model,
             threshold=threshold,
             max_retries=retries,
-            **llm_pipeline_kwargs
+            **pipeline_kwargs
         )
     
     def _create_wrapped_model(self, output_data_type: Type[Any]) -> Type[BaseModel]:
@@ -198,6 +210,35 @@ class ClarifyPipeline:
             user_requirement: Optional[output_data_type] = None  # Confirmed user requirement / 確定したユーザー要求
         
         return WrappedClarify
+    
+    def _is_clarification_complete(self, result: Any) -> bool:
+        """
+        Check if clarification is complete based on result
+        結果に基づいて明確化が完了しているかをチェック
+        
+        Args:
+            result: LLM result content / LLM結果コンテンツ
+            
+        Returns:
+            bool: True if clarification is complete / 明確化が完了している場合True
+        """
+        return (hasattr(result, 'clearity') and result.clearity) or \
+               (hasattr(result, 'user_requirement') and result.user_requirement is not None)
+    
+    def _format_clarification_question(self, response: str, turn: int, remaining: int) -> str:
+        """
+        Format clarification response as a question
+        明確化応答を質問としてフォーマット
+        
+        Args:
+            response: AI response / AI応答
+            turn: Current turn / 現在のターン
+            remaining: Remaining turns / 残りターン
+            
+        Returns:
+            str: Formatted question / フォーマット済み質問
+        """
+        return f"[ターン {turn}/{turn + remaining}] {response}"
     
     def _build_clarification_instructions(
         self, 
@@ -259,16 +300,8 @@ class ClarifyPipeline:
         Returns:
             Any: Clarification result or question / 明確化結果または質問
         """
-        # English: Check if max turns reached
-        # 日本語: 最大ターン数に達したかを確認
-        if self._turn_count >= self.clerify_max_turns:
-            return ClarificationQuestion(
-                question="最大ターン数に達しました。要件明確化を終了します。",
-                turn=self._turn_count,
-                remaining_turns=0
-            )
-        
-        return self._process_input(user_input)
+        interaction_result = self.interactive_pipeline.run_interactive(user_input)
+        return self._convert_interaction_result(interaction_result)
     
     def continue_clarification(self, user_response: str) -> Any:
         """
@@ -281,117 +314,55 @@ class ClarifyPipeline:
         Returns:
             Any: Next clarification result or question / 次の明確化結果または質問
         """
-        return self._process_input(user_response)
+        interaction_result = self.interactive_pipeline.continue_interaction(user_response)
+        return self._convert_interaction_result(interaction_result)
     
-    def _process_input(self, user_input: str) -> Any:
+    def _convert_interaction_result(self, interaction_result: InteractionResult) -> Any:
         """
-        Process user input and generate clarification response
-        ユーザー入力を処理して明確化応答を生成する
+        Convert InteractionResult to ClarifyPipeline format
+        InteractionResultをClarifyPipeline形式に変換する
         
         Args:
-            user_input: User input text / ユーザー入力テキスト
+            interaction_result: Result from InteractivePipeline / InteractivePipelineからの結果
             
         Returns:
             Any: Clarification response / 明確化応答
         """
-        try:
-            # English: Increment turn count
-            # 日本語: ターン数を増加
-            self._turn_count += 1
-            
-            # English: Build context with conversation history
-            # 日本語: 会話履歴でコンテキストを構築
-            context_prompt = self._build_conversation_context()
-            full_prompt = f"{context_prompt}\n\n新しいユーザー入力: {user_input}"
-            
-            # English: Run the internal LLMPipeline directly (no async issues)
-            # 日本語: 内部LLMPipelineを直接実行（非同期問題なし）
-            llm_result = self.llm_pipeline.run(full_prompt)
-            result = llm_result.content if llm_result.success else None
-            
-            # English: Store interaction in history
-            # 日本語: 対話を履歴に保存
-            self._store_interaction(user_input, result)
-            
-            # English: Check if clarification is complete
-            # 日本語: 明確化が完了したかを確認
-            if hasattr(result, 'clearity') and result.clearity:
-                # English: Clarification complete, return final data
-                # 日本語: 明確化完了、最終データを返す
-                if hasattr(result, 'user_requirement') and result.user_requirement is not None:
-                    return result.user_requirement
-                else:
-                    return result
-            else:
-                # English: Continue clarification, create question
-                # 日本語: 明確化を継続、質問を作成
-                question_text = str(result) if result else "追加情報が必要です。詳細を教えてください。"
+        if interaction_result.is_complete:
+            # English: Interaction complete - return final result
+            # 日本語: 対話完了 - 最終結果を返す
+            return interaction_result.content
+        else:
+            # English: Convert InteractionQuestion to ClarificationQuestion
+            # 日本語: InteractionQuestionをClarificationQuestionに変換
+            if isinstance(interaction_result.content, InteractionQuestion):
                 return ClarificationQuestion(
-                    question=question_text,
-                    turn=self._turn_count,
-                    remaining_turns=max(0, self.clerify_max_turns - self._turn_count)
+                    question=interaction_result.content.question,
+                    turn=interaction_result.turn,
+                    remaining_turns=interaction_result.remaining_turns
                 )
-                
-        except Exception as e:
-            # English: Handle errors gracefully
-            # 日本語: エラーを適切に処理
-            return ClarificationQuestion(
-                question=f"処理中にエラーが発生しました: {str(e)}。再度お試しください。",
-                turn=self._turn_count,
-                remaining_turns=max(0, self.clerify_max_turns - self._turn_count)
-            )
-    
-    def _build_conversation_context(self) -> str:
-        """
-        Build conversation context from history
-        履歴から会話コンテキストを構築する
-        
-        Returns:
-            str: Conversation context / 会話コンテキスト
-        """
-        if not self._conversation_history:
-            return "これは最初の対話です。"
-        
-        context_parts = ["これまでの会話:"]
-        for i, interaction in enumerate(self._conversation_history, 1):
-            user_input = interaction.get('user_input', '')
-            ai_response = str(interaction.get('ai_response', ''))
-            context_parts.append(f"{i}. ユーザー: {user_input}")
-            context_parts.append(f"   AI: {ai_response}")
-        
-        return "\n".join(context_parts)
-    
-    def _store_interaction(self, user_input: str, ai_result: Any) -> None:
-        """
-        Store interaction in conversation history
-        対話を会話履歴に保存する
-        
-        Args:
-            user_input: User input / ユーザー入力
-            ai_result: AI response / AI応答
-        """
-        interaction = {
-            'user_input': user_input,
-            'ai_response': ai_result,
-            'turn': self._turn_count,
-            'timestamp': json.dumps({"turn": self._turn_count}, ensure_ascii=False)
-        }
-        self._conversation_history.append(interaction)
+            else:
+                # English: Create ClarificationQuestion from content
+                # 日本語: コンテンツからClarificationQuestionを作成
+                return ClarificationQuestion(
+                    question=str(interaction_result.content),
+                    turn=interaction_result.turn,
+                    remaining_turns=interaction_result.remaining_turns
+                )
     
     def reset_turns(self) -> None:
         """
         Reset turn counter
         ターンカウンターをリセットする
         """
-        self._turn_count = 0
+        self.interactive_pipeline.reset_interaction()
     
     def reset_session(self) -> None:
         """
         Reset the entire clarification session
         明確化セッション全体をリセットする
         """
-        self._turn_count = 0
-        self._conversation_history = []
+        self.interactive_pipeline.reset_interaction()
     
     @property
     def is_complete(self) -> bool:
@@ -402,14 +373,7 @@ class ClarifyPipeline:
         Returns:
             bool: True if complete / 完了している場合True
         """
-        # English: Complete if we have a successful result in history
-        # 日本語: 履歴に成功結果がある場合は完了
-        if not self._conversation_history:
-            return False
-        
-        last_result = self._conversation_history[-1].get('ai_response')
-        return (hasattr(last_result, 'clearity') and last_result.clearity) or \
-               (hasattr(last_result, 'user_requirement') and last_result.user_requirement is not None)
+        return self.interactive_pipeline.is_complete
     
     @property
     def conversation_history(self) -> List[Dict[str, Any]]:
@@ -420,7 +384,7 @@ class ClarifyPipeline:
         Returns:
             List[Dict[str, Any]]: Conversation history / 会話履歴
         """
-        return self._conversation_history.copy()
+        return self.interactive_pipeline.interaction_history
     
     @property
     def current_turn(self) -> int:
@@ -431,7 +395,7 @@ class ClarifyPipeline:
         Returns:
             int: Current turn / 現在のターン
         """
-        return self._turn_count
+        return self.interactive_pipeline.current_turn
     
     @property
     def remaining_turns(self) -> int:
@@ -442,29 +406,29 @@ class ClarifyPipeline:
         Returns:
             int: Remaining turns / 残りターン数
         """
-        return max(0, self.clerify_max_turns - self._turn_count)
+        return self.interactive_pipeline.remaining_turns
     
     @property 
     def threshold(self) -> float:
         """
-        Get evaluation threshold from internal LLMPipeline
-        内部LLMPipelineから評価閾値を取得する
+        Get evaluation threshold from internal InteractivePipeline
+        内部InteractivePipelineから評価閾値を取得する
         
         Returns:
             float: Evaluation threshold / 評価閾値
         """
-        return self.llm_pipeline.threshold
+        return self.interactive_pipeline.threshold
     
     @property
     def retries(self) -> int:
         """
-        Get retry count from internal LLMPipeline
-        内部LLMPipelineからリトライ回数を取得する
+        Get retry count from internal InteractivePipeline
+        内部InteractivePipelineからリトライ回数を取得する
         
         Returns:
             int: Retry count / リトライ回数
         """
-        return self.llm_pipeline.max_retries
+        return self.interactive_pipeline.max_retries
     
     def get_session_history(self) -> Optional[List[str]]:
         """
@@ -474,13 +438,7 @@ class ClarifyPipeline:
         Returns:
             Optional[List[str]]: Session history / セッション履歴
         """
-        if not self._conversation_history:
-            return None
-        
-        # English: Use LLMPipeline's session history
-        # 日本語: LLMPipelineのセッション履歴を使用
-        history = self.llm_pipeline.session_history
-        return history if history else None
+        return self.interactive_pipeline.get_session_history()
 
 
 @dataclass
@@ -806,7 +764,9 @@ def create_simple_clarify_agent(
     output_data: Optional[Type[Any]] = None,
     max_turns: int = 20,
     model: Optional[str] = None,
-    next_step: Optional[str] = None
+    next_step: Optional[str] = None,
+    tools: Optional[List[Dict]] = None,
+    mcp_servers: Optional[List[str]] = None
 ) -> ClarifyAgent:
     """
     Create a simple ClarifyAgent with basic configuration
@@ -843,7 +803,9 @@ def create_evaluated_clarify_agent(
     evaluation_model: Optional[str] = None,
     next_step: Optional[str] = None,
     threshold: int = 85,
-    retries: int = 3
+    retries: int = 3,
+    tools: Optional[List[Dict]] = None,
+    mcp_servers: Optional[List[str]] = None
 ) -> ClarifyAgent:
     """
     Create a ClarifyAgent with evaluation capabilities

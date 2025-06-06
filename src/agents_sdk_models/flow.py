@@ -14,6 +14,7 @@ import traceback
 
 from .context import Context
 from .step import Step
+from .trace_registry import get_global_registry, TraceRegistry
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,8 @@ class Flow:
         steps: Optional[Union[Dict[str, Step], List[Step], Step]] = None, 
         context: Optional[Context] = None,
         max_steps: int = 1000,
-        trace_id: Optional[str] = None
+        trace_id: Optional[str] = None,
+        name: Optional[str] = None
     ):
         """
         Initialize Flow with flexible step definitions
@@ -64,6 +66,7 @@ class Flow:
             context: Initial context (optional) / 初期コンテキスト（オプション）
             max_steps: Maximum number of steps to prevent infinite loops / 無限ループ防止のための最大ステップ数
             trace_id: Trace ID for observability / オブザーバビリティ用トレースID
+            name: Flow name for identification / 識別用フロー名
         """
         # Handle flexible step definitions
         # 柔軟なステップ定義を処理
@@ -122,7 +125,8 @@ class Flow:
         
         self.context = context or Context()
         self.max_steps = max_steps
-        self.trace_id = trace_id or f"flow_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.name = name
+        self.trace_id = trace_id or self._generate_trace_id()
         
         # Initialize context
         # コンテキストを初期化
@@ -140,6 +144,140 @@ class Flow:
         self.before_step_hooks: List[Callable[[str, Context], None]] = []
         self.after_step_hooks: List[Callable[[str, Context, Any], None]] = []
         self.error_hooks: List[Callable[[str, Context, Exception], None]] = []
+        
+        # Register trace in global registry
+        # グローバルレジストリにトレースを登録
+        self._register_trace()
+    
+    def _register_trace(self) -> None:
+        """
+        Register trace in global registry
+        グローバルレジストリにトレースを登録
+        """
+        try:
+            registry = get_global_registry()
+            registry.register_trace(
+                trace_id=self.trace_id,
+                flow_name=self.name,
+                flow_id=self.flow_id,
+                agent_names=self._extract_agent_names(),
+                tags={"flow_type": "default"}
+            )
+        except Exception as e:
+            logger.warning(f"Failed to register trace: {e}")
+    
+    def _extract_agent_names(self) -> List[str]:
+        """
+        Extract agent names from steps
+        ステップからエージェント名を抽出
+        
+        Returns:
+            List[str]: List of agent names / エージェント名のリスト
+        """
+        agent_names = []
+        for step in self.steps.values():
+            # Check for AgentPipelineStep
+            # AgentPipelineStepをチェック
+            if hasattr(step, 'pipeline'):
+                # Try to get agent name from pipeline
+                # パイプラインからエージェント名を取得しようとする
+                if hasattr(step.pipeline, 'name'):
+                    agent_names.append(step.pipeline.name)
+                elif hasattr(step.pipeline, 'agent') and hasattr(step.pipeline.agent, 'name'):
+                    agent_names.append(step.pipeline.agent.name)
+                else:
+                    # Use step name as agent name
+                    # ステップ名をエージェント名として使用
+                    agent_names.append(f"Pipeline_{step.name}")
+            
+            # Check for direct agent reference
+            # 直接のエージェント参照をチェック
+            elif hasattr(step, 'agent'):
+                if hasattr(step.agent, 'name'):
+                    agent_names.append(step.agent.name)
+                else:
+                    agent_names.append(f"Agent_{step.name}")
+            
+            # Check for agent-like step names
+            # エージェントライクなステップ名をチェック
+            elif hasattr(step, 'name') and any(keyword in step.name.lower() for keyword in ['agent', 'ai', 'llm', 'bot']):
+                agent_names.append(step.name)
+            
+            # Check for function steps that might be agent-related
+            # エージェント関連の可能性がある関数ステップをチェック
+            elif hasattr(step, 'function') and hasattr(step.function, '__name__'):
+                func_name = step.function.__name__
+                if any(keyword in func_name.lower() for keyword in ['agent', 'ai', 'llm', 'generate', 'analyze', 'process']):
+                    agent_names.append(f"Function_{func_name}")
+        
+        return list(set(agent_names))  # Remove duplicates
+    
+    def _update_trace_on_completion(self) -> None:
+        """
+        Update trace registry when flow completes
+        フロー完了時にトレースレジストリを更新
+        """
+        try:
+            registry = get_global_registry()
+            trace_summary = self.context.get_trace_summary()
+            
+            registry.update_trace(
+                trace_id=self.trace_id,
+                status="completed",
+                total_spans=trace_summary.get("total_spans", 0),
+                error_count=trace_summary.get("error_spans", 0),
+                artifacts=dict(self.context.artifacts),
+                add_agent_names=self._extract_agent_names()
+            )
+        except Exception as e:
+            logger.warning(f"Failed to update trace on completion: {e}")
+    
+    def _update_trace_on_error(self, step_name: str, error: Exception) -> None:
+        """
+        Update trace registry when flow encounters error
+        フローがエラーに遭遇した時にトレースレジストリを更新
+        
+        Args:
+            step_name: Name of the failed step / 失敗したステップ名
+            error: The error that occurred / 発生したエラー
+        """
+        try:
+            registry = get_global_registry()
+            trace_summary = self.context.get_trace_summary()
+            
+            registry.update_trace(
+                trace_id=self.trace_id,
+                status="error",
+                total_spans=trace_summary.get("total_spans", 0),
+                error_count=trace_summary.get("error_spans", 0),
+                artifacts=dict(self.context.artifacts),
+                add_tags={
+                    "error_step": step_name,
+                    "error_type": type(error).__name__,
+                    "error_message": str(error)
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to update trace on error: {e}")
+    
+    def _generate_trace_id(self) -> str:
+        """
+        Generate a unique trace ID based on flow name and timestamp
+        フロー名とタイムスタンプに基づいてユニークなトレースIDを生成
+        
+        Returns:
+            str: Generated trace ID / 生成されたトレースID
+        """
+        # Use full microsecond precision for uniqueness
+        # ユニーク性のために完全なマイクロ秒精度を使用
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        if self.name:
+            # Use flow name in trace ID for easier identification
+            # 識別しやすくするためにフロー名をトレースIDに含める
+            safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in self.name.lower())
+            return f"{safe_name}_{timestamp}"
+        else:
+            return f"flow_{timestamp}"
     
     @property
     def finished(self) -> bool:
@@ -173,6 +311,28 @@ class Flow:
             str | None: Next step name / 次のステップ名
         """
         return self.context.next_label
+    
+    @property
+    def flow_id(self) -> str:
+        """
+        Get flow identifier (trace_id)
+        フロー識別子（trace_id）を取得
+        
+        Returns:
+            str: Flow identifier / フロー識別子
+        """
+        return self.trace_id
+    
+    @property
+    def flow_name(self) -> Optional[str]:
+        """
+        Get flow name
+        フロー名を取得
+        
+        Returns:
+            str | None: Flow name / フロー名
+        """
+        return self.name
     
     async def run(self, input_data: Optional[str] = None, initial_input: Optional[str] = None) -> Context:
         """
@@ -243,6 +403,14 @@ class Flow:
                 if step_count >= self.max_steps:
                     raise FlowExecutionError(f"Flow exceeded maximum steps ({self.max_steps})")
                 
+                # Finalize any remaining span when flow completes
+                # フロー完了時に残りのスパンを終了
+                self.context.finalize_flow_span()
+                
+                # Update trace registry
+                # トレースレジストリを更新
+                self._update_trace_on_completion()
+                
                 return self.context
                 
             finally:
@@ -303,6 +471,14 @@ class Flow:
                 # 無限ループのチェック
                 if step_count >= self.max_steps:
                     raise FlowExecutionError(f"Flow exceeded maximum steps ({self.max_steps})")
+                
+                # Finalize any remaining span when flow completes
+                # フロー完了時に残りのスパンを終了
+                self.context.finalize_flow_span()
+                
+                # Update trace registry
+                # トレースレジストリを更新
+                self._update_trace_on_completion()
                 
             finally:
                 self._running = False
@@ -438,6 +614,10 @@ class Flow:
             step_name: Name of the failed step / 失敗したステップの名前
             error: The error that occurred / 発生したエラー
         """
+        # Finalize current span with error status
+        # エラーステータスで現在のスパンを終了
+        self.context._finalize_current_span("error", str(error))
+        
         # Mark flow as finished on error
         # エラー時はフローを完了としてマーク
         self.context.finish()
@@ -446,6 +626,10 @@ class Flow:
             "error": str(error),
             "type": type(error).__name__
         })
+        
+        # Update trace registry with error
+        # エラーでトレースレジストリを更新
+        self._update_trace_on_error(step_name, error)
     
     def add_hook(
         self, 
@@ -478,13 +662,31 @@ class Flow:
             List[Dict[str, Any]]: Step execution history / ステップ実行履歴
         """
         history = []
-        for msg in self.context.messages:
-            if msg.role == "system" and "Step" in msg.content:
-                history.append({
-                    "timestamp": msg.timestamp,
-                    "message": msg.content,
-                    "metadata": msg.metadata
-                })
+        
+        # Check execution history from context
+        # コンテキストから実行履歴をチェック
+        if hasattr(self.context, 'step_history') and self.context.step_history:
+            history = self.context.step_history
+        else:
+            # Fallback: extract from messages
+            # フォールバック: メッセージから抽出
+            for msg in self.context.messages:
+                if msg.role == "system" and "Step" in msg.content:
+                    # Try to extract step name from message
+                    # メッセージからステップ名を抽出しようとする
+                    step_name = None
+                    if "executing step:" in msg.content.lower():
+                        parts = msg.content.split(":")
+                        if len(parts) > 1:
+                            step_name = parts[1].strip()
+                    
+                    history.append({
+                        "timestamp": msg.timestamp,
+                        "step_name": step_name or "Unknown",
+                        "message": msg.content,
+                        "metadata": msg.metadata
+                    })
+        
         return history
     
     def get_flow_summary(self) -> Dict[str, Any]:
@@ -495,14 +697,21 @@ class Flow:
         Returns:
             Dict[str, Any]: Flow summary / フローサマリー
         """
+        trace_summary = self.context.get_trace_summary()
         return {
+            "flow_id": self.flow_id,
+            "flow_name": self.flow_name,
             "trace_id": self.trace_id,
+            "current_span_id": self.context.current_span_id,
             "start_step": self.start,
             "current_step": self.current_step_name,
             "next_step": self.next_step_name,
             "step_count": self.context.step_count,
             "finished": self.finished,
             "start_time": self.context.start_time,
+            "execution_history": self.get_step_history(),
+            "span_history": self.context.get_span_history(),
+            "trace_summary": trace_summary,
             "artifacts": self.context.artifacts,
             "message_count": len(self.context.messages)
         }
@@ -519,12 +728,250 @@ class Flow:
             self._run_loop_task.cancel()
             self._run_loop_task = None
     
+    def show(self, format: str = "mermaid", include_history: bool = True) -> str:
+        """
+        Show flow structure and execution path as a diagram.
+        フロー構造と実行パスを図として表示します。
+        
+        Args:
+            format: Output format ("mermaid" or "text") / 出力形式（"mermaid" または "text"）
+            include_history: Whether to include execution history / 実行履歴を含めるかどうか
+            
+        Returns:
+            str: Flow diagram representation / フロー図の表現
+        """
+        if format == "mermaid":
+            return self._generate_mermaid_diagram(include_history)
+        elif format == "text":
+            return self._generate_text_diagram(include_history)
+        else:
+            raise ValueError(f"Unsupported format: {format}")
+    
+    def get_possible_routes(self, step_name: str) -> List[str]:
+        """
+        Get possible routes from a given step.
+        指定されたステップから可能なルートを取得します。
+        
+        Args:
+            step_name: Name of the step / ステップ名
+            
+        Returns:
+            List[str]: List of possible next step names / 可能な次のステップ名のリスト
+        """
+        if step_name not in self.steps:
+            return []
+        
+        step = self.steps[step_name]
+        routes = []
+        
+        # Check different step types for routing information
+        # 様々なステップタイプのルーティング情報をチェック
+        if hasattr(step, 'next_step') and step.next_step:
+            routes.append(step.next_step)
+        
+        if hasattr(step, 'if_true') and hasattr(step, 'if_false'):
+            # ConditionStep
+            routes.extend([step.if_true, step.if_false])
+        
+        if hasattr(step, 'branches'):
+            # ForkStep
+            routes.extend(step.branches)
+        
+        if hasattr(step, 'config') and hasattr(step.config, 'routes'):
+            # RouterAgent
+            routes.extend(step.config.routes.values())
+        
+        return list(set(routes))  # Remove duplicates
+    
+    def _generate_mermaid_diagram(self, include_history: bool) -> str:
+        """
+        Generate Mermaid flowchart diagram.
+        Mermaidフローチャート図を生成します。
+        
+        Args:
+            include_history: Whether to include execution history / 実行履歴を含めるかどうか
+            
+        Returns:
+            str: Mermaid diagram code / Mermaid図のコード
+        """
+        lines = ["graph TD"]
+        visited_nodes = set()
+        execution_path = []
+        
+        # Get execution history if available
+        # 実行履歴があれば取得
+        if include_history:
+            step_history = self.get_step_history()
+            execution_path = [step['step_name'] for step in step_history if 'step_name' in step]
+        
+        # Add nodes and connections
+        # ノードと接続を追加
+        def add_node_and_connections(step_name: str, depth: int = 0):
+            if step_name in visited_nodes or depth > 10:  # Prevent infinite recursion
+                return
+            
+            visited_nodes.add(step_name)
+            
+            if step_name not in self.steps:
+                # End node
+                lines.append(f'    {step_name}["{step_name}<br/>(END)"]')
+                return
+            
+            step = self.steps[step_name]
+            
+            # Determine node style based on step type and execution
+            # ステップタイプと実行状況に基づいてノードスタイルを決定
+            node_style = self._get_node_style(step, step_name, execution_path, include_history)
+            lines.append(f'    {step_name}["{step_name}<br/>({step.__class__.__name__})"]{node_style}')
+            
+            # Add connections based on step type
+            # ステップタイプに基づいて接続を追加
+            possible_routes = self.get_possible_routes(step_name)
+            
+            if isinstance(step, self._get_condition_step_class()):
+                # ConditionStep with labeled edges
+                lines.append(f'    {step_name} -->|"True"| {step.if_true}')
+                lines.append(f'    {step_name} -->|"False"| {step.if_false}')
+                add_node_and_connections(step.if_true, depth + 1)
+                add_node_and_connections(step.if_false, depth + 1)
+                
+            elif hasattr(step, 'config') and hasattr(step.config, 'routes'):
+                # RouterAgent with route labels
+                for route_key, next_step in step.config.routes.items():
+                    lines.append(f'    {step_name} -->|"{route_key}"| {next_step}')
+                    add_node_and_connections(next_step, depth + 1)
+                    
+            elif hasattr(step, 'branches'):
+                # ForkStep
+                for branch in step.branches:
+                    lines.append(f'    {step_name} --> {branch}')
+                    add_node_and_connections(branch, depth + 1)
+                    
+            else:
+                # Simple step with next_step
+                for next_step in possible_routes:
+                    lines.append(f'    {step_name} --> {next_step}')
+                    add_node_and_connections(next_step, depth + 1)
+        
+        # Start from the beginning
+        # 開始点から始める
+        add_node_and_connections(self.start)
+        
+        # Add execution path highlighting if history is included
+        # 履歴が含まれる場合は実行パスをハイライト
+        if include_history and execution_path:
+            lines.append("")
+            lines.append("    %% Execution path highlighting")
+            for i, step_name in enumerate(execution_path):
+                if i > 0:
+                    prev_step = execution_path[i-1]
+                    lines.append(f'    linkStyle {i-1} stroke:#ff3,stroke-width:4px')
+        
+        return "\n".join(lines)
+    
+    def _generate_text_diagram(self, include_history: bool) -> str:
+        """
+        Generate text-based flow diagram.
+        テキストベースのフロー図を生成します。
+        
+        Args:
+            include_history: Whether to include execution history / 実行履歴を含めるかどうか
+            
+        Returns:
+            str: Text diagram / テキスト図
+        """
+        lines = ["Flow Diagram:"]
+        lines.append("=" * 50)
+        
+        visited = set()
+        
+        def add_step_info(step_name: str, indent: int = 0):
+            if step_name in visited:
+                lines.append("  " * indent + f"→ {step_name} (already shown)")
+                return
+            
+            visited.add(step_name)
+            prefix = "  " * indent
+            
+            if step_name not in self.steps:
+                lines.append(f"{prefix}→ {step_name} (END)")
+                return
+                
+            step = self.steps[step_name]
+            step_type = step.__class__.__name__
+            
+            lines.append(f"{prefix}→ {step_name} ({step_type})")
+            
+            # Show routing information
+            # ルーティング情報を表示
+            if hasattr(step, 'config') and hasattr(step.config, 'routes'):
+                lines.append(f"{prefix}  Routes:")
+                for route_key, next_step in step.config.routes.items():
+                    lines.append(f"{prefix}    {route_key} → {next_step}")
+                    
+            elif isinstance(step, self._get_condition_step_class()):
+                lines.append(f"{prefix}  True → {step.if_true}")
+                lines.append(f"{prefix}  False → {step.if_false}")
+                
+            elif hasattr(step, 'branches'):
+                lines.append(f"{prefix}  Branches:")
+                for branch in step.branches:
+                    lines.append(f"{prefix}    → {branch}")
+            
+            # Recursively show next steps
+            # 次のステップを再帰的に表示
+            possible_routes = self.get_possible_routes(step_name)
+            for next_step in possible_routes:
+                add_step_info(next_step, indent + 1)
+        
+        add_step_info(self.start)
+        
+        # Add execution history if requested
+        # 要求された場合は実行履歴を追加
+        if include_history:
+            step_history = self.get_step_history()
+            if step_history:
+                lines.append("")
+                lines.append("Execution History:")
+                lines.append("-" * 30)
+                for i, step_info in enumerate(step_history):
+                    step_name = step_info.get('step_name', 'Unknown')
+                    timestamp = step_info.get('timestamp', '')
+                    lines.append(f"{i+1}. {step_name} ({timestamp})")
+        
+        return "\n".join(lines)
+    
+    def _get_node_style(self, step, step_name: str, execution_path: List[str], include_history: bool) -> str:
+        """
+        Get Mermaid node style based on step type and execution status.
+        ステップタイプと実行状況に基づいてMermaidノードスタイルを取得します。
+        """
+        if include_history and step_name in execution_path:
+            return ":::executed"
+        elif step_name == self.start:
+            return ":::start"
+        elif hasattr(step, 'config') and hasattr(step.config, 'routes'):
+            return ":::router"
+        elif isinstance(step, self._get_condition_step_class()):
+            return ":::condition"
+        else:
+            return ""
+    
+    def _get_condition_step_class(self):
+        """Get ConditionStep class for type checking."""
+        try:
+            from .step import ConditionStep
+            return ConditionStep
+        except ImportError:
+            return type(None)  # Fallback if import fails
+    
     def stop(self) -> None:
         """
         Stop flow execution
         フロー実行を停止
         """
         self._running = False
+        self.context.finalize_flow_span()  # Finalize current span before stopping
         self.context.finish()
         if self._run_loop_task:
             self._run_loop_task.cancel()
@@ -557,7 +1004,8 @@ class Flow:
 
 def create_simple_flow(
     steps: List[tuple[str, Step]], 
-    context: Optional[Context] = None
+    context: Optional[Context] = None,
+    name: Optional[str] = None
 ) -> Flow:
     """
     Create a simple linear flow from a list of steps
@@ -566,6 +1014,7 @@ def create_simple_flow(
     Args:
         steps: List of (name, step) tuples / (名前, ステップ)タプルのリスト
         context: Initial context / 初期コンテキスト
+        name: Flow name for identification / 識別用フロー名
         
     Returns:
         Flow: Created flow / 作成されたフロー
@@ -574,18 +1023,19 @@ def create_simple_flow(
         raise ValueError("At least one step is required")
     
     step_dict = {}
-    for i, (name, step) in enumerate(steps):
+    for i, (step_name, step) in enumerate(steps):
         # Set next step for each step
         # 各ステップの次ステップを設定
         if hasattr(step, 'next_step') and step.next_step is None:
             if i < len(steps) - 1:
                 step.next_step = steps[i + 1][0]
-        step_dict[name] = step
+        step_dict[step_name] = step
     
     return Flow(
         start=steps[0][0],
         steps=step_dict,
-        context=context
+        context=context,
+        name=name
     )
 
 
@@ -594,7 +1044,8 @@ def create_conditional_flow(
     condition_step: Step,
     true_branch: List[Step],
     false_branch: List[Step],
-    context: Optional[Context] = None
+    context: Optional[Context] = None,
+    name: Optional[str] = None
 ) -> Flow:
     """
     Create a conditional flow with true/false branches
@@ -606,6 +1057,7 @@ def create_conditional_flow(
         true_branch: Steps for true branch / trueブランチのステップ
         false_branch: Steps for false branch / falseブランチのステップ
         context: Initial context / 初期コンテキスト
+        name: Flow name for identification / 識別用フロー名
         
     Returns:
         Flow: Created flow / 作成されたフロー
@@ -639,5 +1091,6 @@ def create_conditional_flow(
     return Flow(
         start="start",
         steps=steps,
-        context=context
+        context=context,
+        name=name
     ) 

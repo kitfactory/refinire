@@ -1,0 +1,79 @@
+{
+  "export_time": "2025-06-06T17:29:48.274113",
+  "traces": [
+    {
+      "trace_id": "customer_support_workflow_20250606_172948_264119",
+      "flow_name": "customer_support_workflow",
+      "flow_id": "customer_support_workflow_20250606_172948_264119",
+      "agent_names": [
+        "SupportAgent_step",
+        "AnalysisAgent_step",
+        "ResolutionAgent_step"
+      ],
+      "start_time": "2025-06-06 17:29:48.265114",
+      "end_time": "2025-06-06 17:29:48.266114",
+      "status": "completed",
+      "total_spans": 3,
+      "error_count": 0,
+      "duration_seconds": 0.001,
+      "tags": {
+        "flow_type": "default"
+      },
+      "artifacts": {
+        "SupportAgent_result": "Agent SupportAgent completed: Collect customer inquiry with input 'customer complaint about billing'",
+        "AnalysisAgent_result": "Agent AnalysisAgent completed: Analyze customer issue with input 'None'",
+        "ResolutionAgent_result": "Agent ResolutionAgent completed: Provide solution with input 'None'"
+      }
+    },
+    {
+      "trace_id": "data_processing_pipeline_20250606_172948_265114",
+      "flow_name": "data_processing_pipeline",
+      "flow_id": "data_processing_pipeline_20250606_172948_265114",
+      "agent_names": [
+        "LoaderAgent_step",
+        "ExtractorAgent_step",
+        "TransformAgent_step"
+      ],
+      "start_time": "2025-06-06 17:29:48.265114",
+      "end_time": "2025-06-06 17:29:48.267113",
+      "status": "completed",
+      "total_spans": 3,
+      "error_count": 0,
+      "duration_seconds": 0.001999,
+      "tags": {
+        "flow_type": "default"
+      },
+      "artifacts": {
+        "ExtractorAgent_result": "Agent ExtractorAgent completed: Extract data from source with input 'sales_data.csv'",
+        "TransformAgent_result": "Agent TransformAgent completed: Transform data format with input 'None'",
+        "LoaderAgent_result": "Agent LoaderAgent completed: Load data to destination with input 'None'"
+      }
+    },
+    {
+      "trace_id": "document_analysis_flow_20250606_172948_265114",
+      "flow_name": "document_analysis_flow",
+      "flow_id": "document_analysis_flow_20250606_172948_265114",
+      "agent_names": [
+        "SummaryAgent_step",
+        "OCRAgent_step",
+        "ScannerAgent_step",
+        "ClassifyAgent_step"
+      ],
+      "start_time": "2025-06-06 17:29:48.265114",
+      "end_time": "2025-06-06 17:29:48.267113",
+      "status": "completed",
+      "total_spans": 4,
+      "error_count": 0,
+      "duration_seconds": 0.001999,
+      "tags": {
+        "flow_type": "default"
+      },
+      "artifacts": {
+        "ScannerAgent_result": "Agent ScannerAgent completed: Scan document with input 'contract_document.pdf'",
+        "OCRAgent_result": "Agent OCRAgent completed: Extract text from document with input 'None'",
+        "ClassifyAgent_result": "Agent ClassifyAgent completed: Classify document type with input 'None'",
+        "SummaryAgent_result": "Agent SummaryAgent completed: Create document summary with input 'None'"
+      }
+    }
+  ]
+}

@@ -409,6 +409,131 @@ models = get_available_models(["ollama"], ollama_base_url="http://custom-host:11
 
 ---
 
+## 🛠️ LLMPipeline: Modern Tool-Enabled AI Pipelines (✅ Recommended)
+
+**✅ Recommended:** `LLMPipeline` provides a modern, stable implementation using OpenAI Python SDK directly, with full tool support and automatic function calling.
+
+### 🚀 Key Features
+
+- **🔧 Automatic Tool Execution**: LLM automatically decides when to use tools and executes them seamlessly
+- **🚀 No Manual Tool Calling**: Tools are called automatically by the LLM when needed  
+- **🔄 Function Calling Loop**: Handles complex multi-tool workflows automatically
+- **🔍 Trace Search**: Search and analyze execution traces by flow name, agent name, and custom criteria
+- **📊 Built-in Evaluation**: Optional content evaluation with scoring
+- **🛡️ Guardrails**: Input/output validation and safety checks
+- **💾 Session History**: Maintains conversation context
+- **📈 Observability**: Comprehensive tracing and monitoring with span-level tracking
+- **🎯 Structured Output**: Pydantic model support for typed responses
+
+### Quick Start with Tools
+
+```python
+from agents_sdk_models import create_tool_enabled_llm_pipeline
+
+# Define your tools as simple Python functions
+def get_weather(city: str) -> str:
+    """Get the current weather for a city"""
+    # Your weather API integration here
+    return f"Weather in {city}: Sunny, 22°C"
+
+def calculate(expression: str) -> float:
+    """Calculate mathematical expressions"""
+    return eval(expression)  # Use safer evaluation in production
+
+# Create pipeline with automatic tool registration
+pipeline = create_tool_enabled_llm_pipeline(
+    name="smart_assistant",
+    instructions="You are a helpful assistant with access to tools. Use them when needed.",
+    tools=[get_weather, calculate],  # Tools automatically registered
+    model="gpt-4o-mini"
+)
+
+# Use the pipeline - tools are called automatically! 🎯
+result = pipeline.run("What's the weather in Tokyo and what's 15 * 23?")
+print(result.content)
+# The LLM will automatically:
+# 1. Call get_weather("Tokyo") 
+# 2. Call calculate("15 * 23")
+# 3. Combine results in a natural response
+
+# 🔍 Search execution traces
+from agents_sdk_models import get_global_registry
+
+registry = get_global_registry()
+# Find all flows that used weather tools
+weather_traces = registry.search_by_agent_name("weather", exact_match=False)
+print(f"Found {len(weather_traces)} flows using weather tools")
+```
+
+### 🏗️ Pre-built Pipeline Types
+
+```python
+from agents_sdk_models import (
+    create_calculator_pipeline,
+    create_web_search_pipeline, 
+    create_evaluated_llm_pipeline
+)
+
+# 🧮 Calculator pipeline with safe math evaluation
+calc_pipeline = create_calculator_pipeline(
+    name="math_assistant",
+    model="gpt-4o-mini"
+)
+
+# 🔍 Web search pipeline (template for search integration)
+search_pipeline = create_web_search_pipeline(
+    name="search_assistant",
+    model="gpt-4o-mini"
+)
+
+# ⭐ Pipeline with evaluation and quality control
+quality_pipeline = create_evaluated_llm_pipeline(
+    name="quality_assistant",
+    generation_instructions="Provide helpful, accurate information.",
+    evaluation_instructions="Rate accuracy, helpfulness, and clarity (0-100).",
+    threshold=80.0,  # Minimum quality score
+    model="gpt-4o-mini"
+)
+```
+
+### ⚙️ Manual Tool Management
+
+```python
+from agents_sdk_models import LLMPipeline
+
+# Create pipeline and add tools dynamically
+pipeline = LLMPipeline(
+    name="custom_assistant",
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini",
+    tools=[]
+)
+
+# Add tools one by one
+def greet(name: str) -> str:
+    """Greet a user by name"""
+    return f"Hello, {name}!"
+
+pipeline.add_function_tool(greet)
+
+# Manage tools
+print(f"Available tools: {pipeline.list_tools()}")
+pipeline.remove_tool("greet")
+```
+
+### 📊 Why LLMPipeline is Better
+
+| Feature | AgentPipeline (Deprecated) | LLMPipeline (Recommended) |
+|---------|---------------------------|---------------------------|
+| **API Dependency** | ❌ OpenAI Agents SDK (deprecated APIs) | ✅ OpenAI Python SDK (stable) |
+| **Tool Execution** | ⚠️ Manual implementation required | ✅ Automatic tool calling loop |
+| **Function Calling** | ⚠️ Limited support | ✅ Full OpenAI function calling |
+| **Future Proof** | ❌ Will be removed in v0.1.0 | ✅ Stable, actively maintained |
+| **Async Issues** | ❌ Flow integration problems | ✅ Clean async/sync support |
+| **Tool Registration** | ⚠️ Complex setup | ✅ Simple function decoration |
+
+---
+
 ## 🏗️ AgentPipeline Class: Easy LLM Workflows (⚠️ Deprecated)
 
 **⚠️ Deprecated:** `AgentPipeline` is deprecated as of v0.0.22 and will be removed in v0.1.0. Please use [GenAgent with Flow/Step architecture](#-recommended-flowstep-architecture) instead.

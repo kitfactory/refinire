@@ -103,6 +103,8 @@ class UserInputStep(Step):
             ctx.provide_user_input(user_input)
             if self.next_step:
                 ctx.goto(self.next_step)
+            else:
+                ctx.finish()
             # Note: If next_step is None, flow will end
             # 注：next_stepがNoneの場合、フローは終了
         else:
@@ -231,10 +233,12 @@ class FunctionStep(Step):
         except Exception as e:
             ctx.add_system_message(f"Function execution error in {self.name}: {e}")
         
-        # Set next step if specified
-        # 指定されている場合は次ステップを設定
+        # Set next step if specified, otherwise finish the flow
+        # 指定されている場合は次ステップを設定、そうでなければフローを終了
         if self.next_step:
             ctx.goto(self.next_step)
+        else:
+            ctx.finish()
         
         return ctx
 
@@ -339,10 +343,12 @@ class JoinStep(Step):
         # 完全な実装では、これはブランチ結果を待機してマージする
         ctx.add_system_message(f"Joined {len(branches)} branches using {self.join_type} strategy")
         
-        # Set next step if specified
-        # 指定されている場合は次ステップを設定
+        # Set next step if specified, otherwise finish the flow
+        # 指定されている場合は次ステップを設定、そうでなければフローを終了
         if self.next_step:
             ctx.goto(self.next_step)
+        else:
+            ctx.finish()
         
         return ctx
 
@@ -406,10 +412,12 @@ class AgentPipelineStep(Step):
             ctx.add_system_message(f"Pipeline execution error in {self.name}: {e}")
             ctx.prev_outputs[self.name] = None
         
-        # Set next step if specified
-        # 指定されている場合は次ステップを設定
+        # Set next step if specified, otherwise finish the flow
+        # 指定されている場合は次ステップを設定、そうでなければフローを終了
         if self.next_step:
             ctx.goto(self.next_step)
+        else:
+            ctx.finish()
         
         return ctx
 
