@@ -346,11 +346,11 @@ print(result)
 
 ### Example: ClearifyAgent for Ambiguous Requests
 ```python
-from agents_sdk_models import create_simple_clearify_agent, Context
+from agents_sdk_models import create_simple_clarify_agent, Context
 import asyncio
 
 # Create ClearifyAgent for handling ambiguous requests
-agent = create_simple_clearify_agent(
+agent = create_simple_clarify_agent(
     name="clarify_agent",
     instructions="Ask questions to clarify ambiguous user requests. When the request is clear enough, output the clarified request.",
     model="gpt-4o-mini"

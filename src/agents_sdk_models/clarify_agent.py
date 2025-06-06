@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-"""ClearifyAgent — Interactive Requirements Clarification Agent for Flow workflows.
+"""ClarifyAgent — Interactive Requirements Clarification Agent for Flow workflows.
 
-ClearifyAgentはユーザーとの対話を通じて必要なデータモデルクラスの情報を収集するStepクラスです。
+ClarifyAgentはユーザーとの対話を通じて必要なデータモデルクラスの情報を収集するStepクラスです。
 GenAgentを参考に作成されており、Flowワークフロー内で使用できます。
 """
 
@@ -25,7 +25,7 @@ except ImportError:
 T = TypeVar('T')
 
 
-class ClearifyBase(BaseModel):
+class ClarifyBase(BaseModel):
     """
     Base class for requirement clarification output
     要件明確化出力のベースクラス
@@ -36,7 +36,7 @@ class ClearifyBase(BaseModel):
     clearity: bool  # True if requirements are confirmed / 要件が確定した場合True
 
 
-class ClearifyGeneric(ClearifyBase, Generic[T]):
+class ClarifyGeneric(ClarifyBase, Generic[T]):
     """
     Generic clarification output with typed user requirement
     型付きユーザー要求を持つジェネリック明確化出力
@@ -48,7 +48,7 @@ class ClearifyGeneric(ClearifyBase, Generic[T]):
     user_requirement: Optional[T] = None  # Confirmed user requirement / 確定したユーザー要求
 
 
-class Clearify(ClearifyBase):
+class Clarify(ClarifyBase):
     """
     Default clarification output with string user requirement
     文字列ユーザー要求を持つデフォルト明確化出力
@@ -86,9 +86,9 @@ class ClarificationQuestion:
         return f"[ターン {self.turn}/{self.turn + self.remaining_turns}] {self.question}"
 
 
-class ClearifyPipeline:
+class ClarifyPipeline:
     """
-    ClearifyPipeline class for requirements clarification using modern LLM Pipeline
+    ClarifyPipeline class for requirements clarification using modern LLM Pipeline
     モダンなLLMパイプラインを使用した要件明確化パイプラインクラス
     
     This class wraps LLMPipeline to handle:
@@ -113,8 +113,8 @@ class ClearifyPipeline:
         **kwargs
     ) -> None:
         """
-        Initialize the ClearifyPipeline with configuration parameters
-        設定パラメータでClearifyPipelineを初期化する
+        Initialize the ClarifyPipeline with configuration parameters
+        設定パラメータでClarifyPipelineを初期化する
         
         Args:
             name: Pipeline name / パイプライン名
@@ -145,7 +145,7 @@ class ClearifyPipeline:
         else:
             # English: For untyped output, use default string wrapper
             # 日本語: 型なし出力の場合、デフォルトの文字列ラッパーを使用
-            wrapped_output_model = Clearify
+            wrapped_output_model = Clarify
         
         # English: Enhanced generation instructions for clarification
         # 日本語: 明確化用の拡張生成指示
@@ -153,6 +153,17 @@ class ClearifyPipeline:
             generation_instructions, 
             output_data
         )
+        
+        # English: Filter kwargs for LLMPipeline compatibility
+        # 日本語: LLMPipeline互換性のためkwargsをフィルタリング
+        llm_pipeline_kwargs = {
+            k: v for k, v in kwargs.items() 
+            if k in [
+                'temperature', 'max_tokens', 'timeout', 'input_guardrails', 
+                'output_guardrails', 'session_history', 'history_size', 
+                'improvement_callback', 'locale'
+            ]
+        }
         
         # English: Create internal LLMPipeline instance
         # 日本語: 内部LLMPipelineインスタンスを作成
@@ -165,7 +176,7 @@ class ClearifyPipeline:
             evaluation_model=evaluation_model,
             threshold=threshold,
             max_retries=retries,
-            **kwargs
+            **llm_pipeline_kwargs
         )
     
     def _create_wrapped_model(self, output_data_type: Type[Any]) -> Type[BaseModel]:
@@ -182,11 +193,11 @@ class ClearifyPipeline:
         # English: Create dynamic Pydantic model that wraps the original type
         # 日本語: 元の型をラップする動的Pydanticモデルを作成
         
-        class WrappedClearify(BaseModel):
+        class WrappedClarify(BaseModel):
             clearity: bool  # True if requirements are confirmed / 要件が確定した場合True
             user_requirement: Optional[output_data_type] = None  # Confirmed user requirement / 確定したユーザー要求
         
-        return WrappedClearify
+        return WrappedClarify
     
     def _build_clarification_instructions(
         self, 
@@ -490,7 +501,7 @@ class ClarificationResult:
     remaining_turns: int  # Remaining turns / 残りターン数
 
 
-class ClearifyAgent(Step):
+class ClarifyAgent(Step):
     """
     Step implementation for interactive requirements clarification
     対話的要件明確化のためのStep実装
@@ -529,8 +540,8 @@ class ClearifyAgent(Step):
         conversation_key: Optional[str] = None,
     ) -> None:
         """
-        Initialize ClearifyAgent with clarification configuration
-        明確化設定でClearifyAgentを初期化する
+        Initialize ClarifyAgent with clarification configuration
+        明確化設定でClarifyAgentを初期化する
 
         Args:
             name: Step name / ステップ名
@@ -567,9 +578,9 @@ class ClearifyAgent(Step):
         self.store_result_key = store_result_key or f"{name}_result"
         self.conversation_key = conversation_key or f"{name}_conversation"
         
-        # Create internal ClearifyPipeline instance
-        # 内部ClearifyPipelineインスタンスを作成
-        self.pipeline = ClearifyPipeline(
+        # Create internal ClarifyPipeline instance
+        # 内部ClarifyPipelineインスタンスを作成
+        self.pipeline = ClarifyPipeline(
             name=f"{name}_pipeline",
             generation_instructions=generation_instructions,
             evaluation_instructions=evaluation_instructions,
@@ -594,8 +605,8 @@ class ClearifyAgent(Step):
 
     async def run(self, user_input: Optional[str], ctx: Context) -> Context:
         """
-        Execute ClearifyAgent step using ClearifyPipeline
-        ClearifyPipelineを使用してClearifyAgentステップを実行する
+        Execute ClarifyAgent step using ClarifyPipeline
+        ClarifyPipelineを使用してClarifyAgentステップを実行する
 
         Args:
             user_input: User input for clarification / 明確化用ユーザー入力
@@ -616,7 +627,7 @@ class ClearifyAgent(Step):
             if not input_text:
                 # English: If no input available, add system message and continue
                 # 日本語: 入力がない場合、システムメッセージを追加して続行
-                ctx.add_system_message(f"ClearifyAgent {self.name}: No input available, skipping clarification")
+                ctx.add_system_message(f"ClarifyAgent {self.name}: No input available, skipping clarification")
                 result = ClarificationResult(
                     is_complete=False,
                     data=None,
@@ -668,7 +679,7 @@ class ClearifyAgent(Step):
                 # English: Add completion message
                 # 日本語: 完了メッセージを追加
                 ctx.add_assistant_message(f"要求明確化完了: {str(result.data)}")
-                ctx.add_system_message(f"ClearifyAgent {self.name}: Clarification completed successfully")
+                ctx.add_system_message(f"ClarifyAgent {self.name}: Clarification completed successfully")
                 
                 # English: Set next step if specified
                 # 日本語: 指定されている場合は次ステップを設定
@@ -681,10 +692,10 @@ class ClearifyAgent(Step):
                 if isinstance(result.data, ClarificationQuestion):
                     question_text = str(result.data)
                     ctx.add_assistant_message(question_text)
-                    ctx.add_system_message(f"ClearifyAgent {self.name}: Clarification question asked (Turn {result.turn})")
+                    ctx.add_system_message(f"ClarifyAgent {self.name}: Clarification question asked (Turn {result.turn})")
                 else:
                     ctx.add_assistant_message(str(result.data))
-                    ctx.add_system_message(f"ClearifyAgent {self.name}: Clarification in progress")
+                    ctx.add_system_message(f"ClarifyAgent {self.name}: Clarification in progress")
                 
                 # English: Store intermediate result for potential continuation
                 # 日本語: 継続可能性のため中間結果を保存
@@ -694,7 +705,7 @@ class ClearifyAgent(Step):
                 # English: Check if max turns reached and force completion
                 # 日本語: 最大ターン数に達した場合は強制完了
                 if result.remaining_turns <= 0 and self.next_step:
-                    ctx.add_system_message(f"ClearifyAgent {self.name}: Maximum turns reached, proceeding to next step")
+                    ctx.add_system_message(f"ClarifyAgent {self.name}: Maximum turns reached, proceeding to next step")
                     ctx.goto(self.next_step)
                 
                 # English: Do not advance to next step - wait for user response
@@ -703,7 +714,7 @@ class ClearifyAgent(Step):
         except Exception as e:
             # English: Handle execution errors
             # 日本語: 実行エラーを処理
-            error_msg = f"ClearifyAgent {self.name} execution error: {str(e)}"
+            error_msg = f"ClarifyAgent {self.name} execution error: {str(e)}"
             ctx.add_system_message(error_msg)
             
             # English: Store error result
@@ -783,23 +794,23 @@ class ClearifyAgent(Step):
         return self.pipeline.remaining_turns
 
     def __str__(self) -> str:
-        return f"ClearifyAgent(name={self.name}, turns={self.current_turn}/{self.pipeline.clerify_max_turns})"
+        return f"ClarifyAgent(name={self.name}, turns={self.current_turn}/{self.pipeline.clerify_max_turns})"
 
     def __repr__(self) -> str:
         return self.__str__()
 
 
-def create_simple_clearify_agent(
+def create_simple_clarify_agent(
     name: str,
     instructions: str,
     output_data: Optional[Type[Any]] = None,
     max_turns: int = 20,
     model: Optional[str] = None,
     next_step: Optional[str] = None
-) -> ClearifyAgent:
+) -> ClarifyAgent:
     """
-    Create a simple ClearifyAgent with basic configuration
-    基本設定でシンプルなClearifyAgentを作成する
+    Create a simple ClarifyAgent with basic configuration
+    基本設定でシンプルなClarifyAgentを作成する
 
     Args:
         name: Agent name / エージェント名
@@ -810,9 +821,9 @@ def create_simple_clearify_agent(
         next_step: Next step after completion / 完了後の次ステップ
 
     Returns:
-        ClearifyAgent: Configured ClearifyAgent instance / 設定済みClearifyAgentインスタンス
+        ClarifyAgent: Configured ClarifyAgent instance / 設定済みClarifyAgentインスタンス
     """
-    return ClearifyAgent(
+    return ClarifyAgent(
         name=name,
         generation_instructions=instructions,
         output_data=output_data,
@@ -822,7 +833,7 @@ def create_simple_clearify_agent(
     )
 
 
-def create_evaluated_clearify_agent(
+def create_evaluated_clarify_agent(
     name: str,
     generation_instructions: str,
     evaluation_instructions: str,
@@ -833,10 +844,10 @@ def create_evaluated_clearify_agent(
     next_step: Optional[str] = None,
     threshold: int = 85,
     retries: int = 3
-) -> ClearifyAgent:
+) -> ClarifyAgent:
     """
-    Create a ClearifyAgent with evaluation capabilities
-    評価機能付きClearifyAgentを作成する
+    Create a ClarifyAgent with evaluation capabilities
+    評価機能付きClarifyAgentを作成する
 
     Args:
         name: Agent name / エージェント名
@@ -851,9 +862,9 @@ def create_evaluated_clearify_agent(
         retries: Number of retries / リトライ回数
 
     Returns:
-        ClearifyAgent: Configured ClearifyAgent instance / 設定済みClearifyAgentインスタンス
+        ClarifyAgent: Configured ClarifyAgent instance / 設定済みClarifyAgentインスタンス
     """
-    return ClearifyAgent(
+    return ClarifyAgent(
         name=name,
         generation_instructions=generation_instructions,
         evaluation_instructions=evaluation_instructions,

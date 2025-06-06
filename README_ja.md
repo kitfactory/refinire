@@ -352,11 +352,11 @@ Output: [生成された応答]
 
 ### ClearifyAgent：曖昧な要求の明確化例
 ```python
-from agents_sdk_models import create_simple_clearify_agent, Context
+from agents_sdk_models import create_simple_clarify_agent, Context
 import asyncio
 
 # 曖昧な要求を処理するClearifyAgentを作成
-agent = create_simple_clearify_agent(
+agent = create_simple_clarify_agent(
     name="clarify_agent",
     instructions="ユーザーの曖昧な要求を明確にするために質問をしてください。要求が十分明確になったら、明確化された要求を出力してください。",
     model="gpt-4o-mini"

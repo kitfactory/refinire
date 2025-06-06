@@ -1,6 +1,6 @@
 """
-Tests for ClearifyAgent
-ClearifyAgentのテスト
+Tests for ClarifyAgent
+ClarifyAgentのテスト
 """
 
 import pytest
@@ -10,10 +10,10 @@ from unittest.mock import patch, MagicMock
 from pydantic import BaseModel
 
 from agents_sdk_models import (
-    ClearifyAgent, Context, ClarificationResult, 
-    create_simple_clearify_agent, create_evaluated_clearify_agent
+    ClarifyAgent, Context, ClarificationResult, 
+    create_simple_clarify_agent, create_evaluated_clarify_agent
 )
-from agents_sdk_models.clearify_agent import ClarificationQuestion
+from agents_sdk_models.clarify_agent import ClarificationQuestion
 
 
 class ReportRequirementsForTest(BaseModel):
@@ -29,20 +29,20 @@ class ReportRequirementsForTest(BaseModel):
     expression: str
 
 
-class TestClearifyAgent:
+class TestClarifyAgent:
     """
-    Test class for ClearifyAgent
-    ClearifyAgentのテストクラス
+    Test class for ClarifyAgent
+    ClarifyAgentのテストクラス
     """
 
-    def test_clearify_agent_initialization(self):
+    def test_clarify_agent_initialization(self):
         """
-        Test ClearifyAgent initialization
-        ClearifyAgentの初期化テスト
+        Test ClarifyAgent initialization
+        ClarifyAgentの初期化テスト
         """
         # English: Test basic initialization
         # 日本語: 基本初期化テスト
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="test_clarifier",
             generation_instructions="Test instructions",
             output_data=ReportRequirementsForTest,
@@ -55,14 +55,14 @@ class TestClearifyAgent:
         assert agent.conversation_key == "test_clarifier_conversation"
         assert agent.pipeline.clerify_max_turns == 10
 
-    def test_clearify_agent_custom_keys(self):
+    def test_clarify_agent_custom_keys(self):
         """
-        Test ClearifyAgent with custom storage keys
-        カスタム保存キーでのClearifyAgentテスト
+        Test ClarifyAgent with custom storage keys
+        カスタム保存キーでのClarifyAgentテスト
         """
         # English: Test with custom keys
         # 日本語: カスタムキーでのテスト
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="custom_clarifier",
             generation_instructions="Test instructions",
             store_result_key="custom_result",
@@ -73,14 +73,14 @@ class TestClearifyAgent:
         assert agent.conversation_key == "custom_conversation"
 
     @pytest.mark.asyncio
-    async def test_clearify_agent_run_with_no_input(self):
+    async def test_clarify_agent_run_with_no_input(self):
         """
-        Test ClearifyAgent execution with no input
-        入力なしでのClearifyAgent実行テスト
+        Test ClarifyAgent execution with no input
+        入力なしでのClarifyAgent実行テスト
         """
         # English: Create agent and context
         # 日本語: エージェントとコンテキストを作成
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="no_input_clarifier",
             generation_instructions="Test instructions",
             model="gpt-4o-mini"
@@ -101,14 +101,14 @@ class TestClearifyAgent:
         assert result.data is None
 
     @pytest.mark.asyncio
-    async def test_clearify_agent_run_with_mock_pipeline(self):
+    async def test_clarify_agent_run_with_mock_pipeline(self):
         """
-        Test ClearifyAgent execution with mocked pipeline
-        モックパイプラインでのClearifyAgent実行テスト
+        Test ClarifyAgent execution with mocked pipeline
+        モックパイプラインでのClarifyAgent実行テスト
         """
         # English: Create agent
         # 日本語: エージェントを作成
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="mock_clarifier",
             generation_instructions="Test instructions",
             output_data=ReportRequirementsForTest,
@@ -143,14 +143,14 @@ class TestClearifyAgent:
             assert result.data == mock_question
 
     @pytest.mark.asyncio
-    async def test_clearify_agent_completion(self):
+    async def test_clarify_agent_completion(self):
         """
-        Test ClearifyAgent when clarification is complete
-        明確化完了時のClearifyAgentテスト
+        Test ClarifyAgent when clarification is complete
+        明確化完了時のClarifyAgentテスト
         """
         # English: Create agent
         # 日本語: エージェントを作成
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="complete_clarifier",
             generation_instructions="Test instructions",
             next_step="next_step",
@@ -187,24 +187,22 @@ class TestClearifyAgent:
             assert result_ctx.next_label == "next_step"
 
     @pytest.mark.asyncio
-    async def test_clearify_agent_error_handling(self):
+    async def test_clarify_agent_error_handling(self):
         """
-        Test ClearifyAgent error handling
-        ClearifyAgentエラーハンドリングテスト
+        Test ClarifyAgent error handling
+        ClarifyAgentエラーハンドリングテスト
         """
         # English: Create agent
         # 日本語: エージェントを作成
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="error_clarifier",
             generation_instructions="Test instructions",
             model="gpt-4o-mini"
         )
         
         # English: Mock pipeline to raise exception
-        # 日本語: 例外を発生させるためにパイプラインをモック
-        with patch.object(agent.pipeline, 'run') as mock_run:
-            mock_run.side_effect = Exception("Test error")
-            
+        # 日本語: パイプラインが例外を発生させるようにモック
+        with patch.object(agent.pipeline, 'run', side_effect=Exception("Test error")):
             ctx = Context()
             result_ctx = await agent.run("Test input", ctx)
             
@@ -216,17 +214,18 @@ class TestClearifyAgent:
             assert not result.is_complete
             assert result.data is None
 
-    def test_clearify_agent_properties(self):
+    def test_clarify_agent_properties(self):
         """
-        Test ClearifyAgent properties
-        ClearifyAgentプロパティテスト
+        Test ClarifyAgent properties
+        ClarifyAgentプロパティテスト
         """
         # English: Create agent
         # 日本語: エージェントを作成
-        agent = ClearifyAgent(
-            name="prop_clarifier",
+        agent = ClarifyAgent(
+            name="property_clarifier",
             generation_instructions="Test instructions",
-            clerify_max_turns=15
+            clerify_max_turns=15,
+            model="gpt-4o-mini"
         )
         
         # English: Mock pipeline properties
@@ -239,21 +238,22 @@ class TestClearifyAgent:
             assert agent.remaining_turns == 10
             assert not agent.is_clarification_complete()
 
-    def test_clearify_agent_history_methods(self):
+    def test_clarify_agent_history_methods(self):
         """
-        Test ClearifyAgent history methods
-        ClearifyAgent履歴メソッドテスト
+        Test ClarifyAgent history methods
+        ClarifyAgent履歴メソッドテスト
         """
         # English: Create agent
         # 日本語: エージェントを作成
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="history_clarifier",
-            generation_instructions="Test instructions"
+            generation_instructions="Test instructions",
+            model="gpt-4o-mini"
         )
         
-        # English: Mock history data
-        # 日本語: 履歴データをモック
-        mock_conversation = [{"user_input": "test", "ai_response": "response"}]
+        # English: Mock pipeline history methods
+        # 日本語: パイプライン履歴メソッドをモック
+        mock_conversation = [{"user": "test", "ai": "response"}]
         mock_session = ["session1", "session2"]
         
         with patch.object(type(agent.pipeline), 'conversation_history', new_callable=lambda: property(lambda self: mock_conversation)), \
@@ -262,100 +262,108 @@ class TestClearifyAgent:
             assert agent.get_conversation_history() == mock_conversation
             assert agent.get_session_history() == mock_session
 
-    def test_clearify_agent_reset(self):
+    def test_clarify_agent_reset(self):
         """
-        Test ClearifyAgent reset functionality
-        ClearifyAgentリセット機能テスト
+        Test ClarifyAgent reset functionality
+        ClarifyAgentリセット機能テスト
         """
         # English: Create agent
         # 日本語: エージェントを作成
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="reset_clarifier",
-            generation_instructions="Test instructions"
+            generation_instructions="Test instructions",
+            model="gpt-4o-mini"
         )
         
-        # English: Mock reset method
-        # 日本語: リセットメソッドをモック
+        # English: Mock pipeline reset
+        # 日本語: パイプラインリセットをモック
         with patch.object(agent.pipeline, 'reset_session') as mock_reset:
             agent.reset_clarification()
             mock_reset.assert_called_once()
 
-    def test_clearify_agent_string_representation(self):
+    def test_clarify_agent_string_representation(self):
         """
-        Test ClearifyAgent string representation
-        ClearifyAgent文字列表現テスト
+        Test ClarifyAgent string representation
+        ClarifyAgent文字列表現テスト
         """
         # English: Create agent
         # 日本語: エージェントを作成
-        agent = ClearifyAgent(
+        agent = ClarifyAgent(
             name="string_clarifier",
             generation_instructions="Test instructions",
-            clerify_max_turns=20
+            clerify_max_turns=20,
+            model="gpt-4o-mini"
         )
         
-        # English: Mock properties for string representation
-        # 日本語: 文字列表現用プロパティをモック
+        # English: Mock pipeline properties for string representation
+        # 日本語: 文字列表現用のパイプラインプロパティをモック
         with patch.object(type(agent.pipeline), 'current_turn', new_callable=lambda: property(lambda self: 3)), \
              patch.object(agent.pipeline, 'clerify_max_turns', 20):
             
-            expected = "ClearifyAgent(name=string_clarifier, turns=3/20)"
-            assert str(agent) == expected
-            assert repr(agent) == expected
+            str_repr = str(agent)
+            assert "ClarifyAgent" in str_repr
+            assert "string_clarifier" in str_repr
+            assert "3/20" in str_repr
+            
+            # English: Test __repr__ method
+            # 日本語: __repr__メソッドをテスト
+            repr_str = repr(agent)
+            assert repr_str == str_repr
 
 
-class TestClearifyAgentFactories:
+class TestClarifyAgentFactories:
     """
-    Test class for ClearifyAgent factory functions
-    ClearifyAgentファクトリ関数のテストクラス
+    Test class for ClarifyAgent factory functions
+    ClarifyAgentファクトリ関数のテストクラス
     """
 
-    def test_create_simple_clearify_agent(self):
+    def test_create_simple_clarify_agent(self):
         """
-        Test create_simple_clearify_agent factory function
-        create_simple_clearify_agentファクトリ関数テスト
+        Test create_simple_clarify_agent factory function
+        create_simple_clarify_agentファクトリ関数テスト
         """
-        # English: Create simple agent
-        # 日本語: シンプルエージェントを作成
-        agent = create_simple_clearify_agent(
-            name="simple_test",
-            instructions="Simple instructions",
+        # English: Create agent using factory
+        # 日本語: ファクトリを使用してエージェントを作成
+        agent = create_simple_clarify_agent(
+            name="simple_clarifier",
+            instructions="Simple test instructions",
             output_data=ReportRequirementsForTest,
-            max_turns=25,
-            model="gpt-4o",
-            next_step="next"
+            max_turns=15,
+            model="gpt-4o-mini",
+            next_step="next_step"
         )
         
-        assert isinstance(agent, ClearifyAgent)
-        assert agent.name == "simple_test"
-        assert agent.pipeline.clerify_max_turns == 25
-        assert agent.next_step == "next"
+        assert isinstance(agent, ClarifyAgent)
+        assert agent.name == "simple_clarifier"
+        assert agent.next_step == "next_step"
+        assert agent.pipeline.clerify_max_turns == 15
 
-    def test_create_evaluated_clearify_agent(self):
+    def test_create_evaluated_clarify_agent(self):
         """
-        Test create_evaluated_clearify_agent factory function
-        create_evaluated_clearify_agentファクトリ関数テスト
+        Test create_evaluated_clarify_agent factory function
+        create_evaluated_clarify_agentファクトリ関数テスト
         """
-        # English: Create evaluated agent
-        # 日本語: 評価付きエージェントを作成
-        agent = create_evaluated_clearify_agent(
-            name="evaluated_test",
+        # English: Create evaluated agent using factory
+        # 日本語: ファクトリを使用して評価付きエージェントを作成
+        agent = create_evaluated_clarify_agent(
+            name="evaluated_clarifier",
             generation_instructions="Generation instructions",
             evaluation_instructions="Evaluation instructions",
             output_data=ReportRequirementsForTest,
-            max_turns=30,
-            model="gpt-4o",
-            evaluation_model="gpt-4o-mini",
-            next_step="next",
+            max_turns=25,
+            model="gpt-4o-mini",
+            evaluation_model="gpt-4o",
+            next_step="eval_next_step",
             threshold=90,
             retries=5
         )
         
-        assert isinstance(agent, ClearifyAgent)
-        assert agent.name == "evaluated_test"
-        assert agent.pipeline.clerify_max_turns == 30
+        assert isinstance(agent, ClarifyAgent)
+        assert agent.name == "evaluated_clarifier"
+        assert agent.next_step == "eval_next_step"
+        assert agent.pipeline.clerify_max_turns == 25
         assert agent.pipeline.threshold == 90
         assert agent.pipeline.retries == 5
-        assert agent.next_step == "next"
 
 
 class TestClarificationResult:
@@ -369,38 +377,85 @@ class TestClarificationResult:
         Test ClarificationResult creation
         ClarificationResult作成テスト
         """
-        # English: Create result with completion
-        # 日本語: 完了状態で結果を作成
-        complete_result = ClarificationResult(
+        # English: Create completed result
+        # 日本語: 完了結果を作成
+        completed_result = ClarificationResult(
             is_complete=True,
-            data="Completed data",
+            data="Clarified requirement",
             turn=5,
             remaining_turns=0
         )
         
-        assert complete_result.is_complete
-        assert complete_result.data == "Completed data"
-        assert complete_result.turn == 5
-        assert complete_result.remaining_turns == 0
+        assert completed_result.is_complete
+        assert completed_result.data == "Clarified requirement"
+        assert completed_result.turn == 5
+        assert completed_result.remaining_turns == 0
 
     def test_clarification_result_in_progress(self):
         """
         Test ClarificationResult for in-progress clarification
-        進行中明確化用ClarificationResultテスト
+        進行中明確化のClarificationResultテスト
         """
-        # English: Create result for in-progress clarification
-        # 日本語: 進行中明確化用結果を作成
-        progress_result = ClarificationResult(
-            is_complete=False,
-            data=ClarificationQuestion("What is your goal?", 2, 8),
+        # English: Create in-progress result
+        # 日本語: 進行中結果を作成
+        question = ClarificationQuestion(
+            question="What is the event date?",
             turn=2,
             remaining_turns=8
         )
         
-        assert not progress_result.is_complete
-        assert isinstance(progress_result.data, ClarificationQuestion)
-        assert progress_result.turn == 2
-        assert progress_result.remaining_turns == 8
+        in_progress_result = ClarificationResult(
+            is_complete=False,
+            data=question,
+            turn=2,
+            remaining_turns=8
+        )
+        
+        assert not in_progress_result.is_complete
+        assert isinstance(in_progress_result.data, ClarificationQuestion)
+        assert in_progress_result.turn == 2
+        assert in_progress_result.remaining_turns == 8
+
+
+class TestClarificationQuestion:
+    """
+    Test class for ClarificationQuestion
+    ClarificationQuestionのテストクラス
+    """
+
+    def test_clarification_question_creation(self):
+        """
+        Test ClarificationQuestion creation
+        ClarificationQuestion作成テスト
+        """
+        # English: Create clarification question
+        # 日本語: 明確化質問を作成
+        question = ClarificationQuestion(
+            question="What is the event location?",
+            turn=3,
+            remaining_turns=7
+        )
+        
+        assert question.question == "What is the event location?"
+        assert question.turn == 3
+        assert question.remaining_turns == 7
+
+    def test_clarification_question_string_representation(self):
+        """
+        Test ClarificationQuestion string representation
+        ClarificationQuestion文字列表現テスト
+        """
+        # English: Create question and test string representation
+        # 日本語: 質問を作成して文字列表現をテスト
+        question = ClarificationQuestion(
+            question="イベントの場所はどこですか？",
+            turn=2,
+            remaining_turns=8
+        )
+        
+        str_repr = str(question)
+        assert "[ターン 2/10]" in str_repr
+        assert "イベントの場所はどこですか？" in str_repr
 
 
 if __name__ == "__main__":

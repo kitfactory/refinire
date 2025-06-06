@@ -7,7 +7,7 @@ This module demonstrates the core features of the agents-sdk-models library:
 このモジュールはagents-sdk-modelsライブラリの主要機能を示します:
 
 - GenAgent for text generation
-- ClearifyAgent for clarification
+- ClarifyAgent for clarification
 - Flow/Step for workflow management
 - get_llm for multi-provider LLM access
 
@@ -34,9 +34,9 @@ from agents_sdk_models import (
     create_simple_gen_agent,
     create_evaluated_gen_agent,
     
-    # ClearifyAgent関連
-    create_simple_clearify_agent,
-    create_evaluated_clearify_agent,
+    # ClarifyAgent関連
+create_simple_clarify_agent,
+create_evaluated_clarify_agent,
     
     # Flow/Step関連
     create_simple_flow,
@@ -131,23 +131,23 @@ def example_genagent_with_evaluation() -> Dict[str, Any]:
     }
 
 
-def example_clearify_agent() -> Dict[str, Any]:
+def example_clarify_agent() -> Dict[str, Any]:
     """
-    ClearifyAgent example for handling ambiguous requests
-    曖昧な要求を処理するClearifyAgentの例
+    ClarifyAgent example for handling ambiguous requests
+    曖昧な要求を処理するClarifyAgentの例
     
     Returns:
         Clarification result
         明確化の結果
     
     Examples:
-        >>> result = example_clearify_agent()  # doctest: +SKIP
+        >>> result = example_clarify_agent()  # doctest: +SKIP
         >>> isinstance(result, dict)  # doctest: +SKIP
         True
     """
-    # Create ClearifyAgent
-    # ClearifyAgentを作成
-    agent = create_simple_clearify_agent(
+    # Create ClarifyAgent
+    # ClarifyAgentを作成
+    agent = create_simple_clarify_agent(
         name="clarify_agent",
         instructions="ユーザーの曖昧な要求を明確にするために質問をしてください。要求が十分明確になったら、明確化された要求を出力してください。",
         model="gpt-4o-mini"
@@ -425,9 +425,9 @@ def main() -> None:
     except Exception as e:
         print(f"Error / エラー: {e}")
     
-    print("\n3. ClearifyAgent / ClearifyAgent:")
+    print("\n3. ClarifyAgent / ClarifyAgent:")
     try:
-        result = example_clearify_agent()
+        result = example_clarify_agent()
         print(f"Original / 元の要求: {result['original_request']}")
         print(f"Clarified / 明確化後: {result['clarified_request']}")
         if result['questions']:
