@@ -13,7 +13,7 @@ from refinire import (
     ClarifyAgent, Context, ClarificationResult, 
     create_simple_clarify_agent, create_evaluated_clarify_agent
 )
-from refinire.clarify_agent import ClarificationQuestion
+from refinire.agents.clarify_agent import ClarificationQuestion
 
 
 class ReportRequirementsForTest(BaseModel):

@@ -80,7 +80,7 @@ class TestLogChannel:
         channel = LogChannel("test_log", "INFO")
         ctx = Context()
         
-        with patch('agents_sdk_models.agents.notification.logger') as mock_logger:
+        with patch('refinire.agents.notification.logger') as mock_logger:
             result = await channel.send("Test message", "Test subject", ctx)
             
             assert result == True
@@ -92,7 +92,7 @@ class TestLogChannel:
         channel = LogChannel("test_log", "WARNING")
         ctx = Context()
         
-        with patch('agents_sdk_models.agents.notification.logger') as mock_logger:
+        with patch('refinire.agents.notification.logger') as mock_logger:
             result = await channel.send("Test message", None, ctx)
             
             assert result == True
@@ -394,7 +394,7 @@ class TestNotificationAgent:
         agent = NotificationAgent(log_config)
         ctx = Context()
         
-        with patch('agents_sdk_models.agents.notification.logger') as mock_logger:
+        with patch('refinire.agents.notification.logger') as mock_logger:
             result_ctx = await agent.run("Test notification", ctx)
             
             assert result_ctx.shared_state["log_notifier_status"] == "success"
@@ -465,7 +465,7 @@ class TestNotificationAgent:
             agent = NotificationAgent(multi_config)
             ctx = Context()
             
-            with patch('agents_sdk_models.agents.notification.logger') as mock_logger:
+            with patch('refinire.agents.notification.logger') as mock_logger:
                 result_ctx = await agent.run("Test multi notification", ctx)
                 
                 assert result_ctx.shared_state["multi_notifier_status"] == "success"
@@ -493,7 +493,7 @@ class TestNotificationAgent:
         # Set custom subject
         agent.set_subject("Custom Subject", ctx)
         
-        with patch('agents_sdk_models.agents.notification.logger') as mock_logger:
+        with patch('refinire.agents.notification.logger') as mock_logger:
             result_ctx = await agent.run("Test notification", ctx)
             
             assert result_ctx.shared_state["log_notifier_status"] == "success"
@@ -520,7 +520,7 @@ class TestNotificationAgent:
         agent = NotificationAgent(config)
         ctx = Context()
         
-        with patch('agents_sdk_models.agents.notification.logger') as mock_logger:
+        with patch('refinire.agents.notification.logger') as mock_logger:
             result_ctx = await agent.run("Test notification", ctx)
             
             # Should have partial success due to fail_fast
@@ -654,7 +654,7 @@ class TestNotificationUtilities:
         log_notifier = create_log_notifier("log_test", "INFO")
         ctx = Context()
         
-        with patch('agents_sdk_models.agents.notification.logger') as mock_logger:
+        with patch('refinire.agents.notification.logger') as mock_logger:
             result_ctx = await log_notifier.run("Test log message", ctx)
             assert result_ctx.shared_state["log_test_status"] == "success"
             mock_logger.info.assert_called()

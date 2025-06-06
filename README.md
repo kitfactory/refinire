@@ -3,7 +3,7 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/agents-sdk-models)](https://pepy.tech/projects/agents-sdk-models)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.9](https://img.shields.io/badge/OpenAI-Agents_0.0.9-green.svg)](https://github.com/openai/openai-agents-python)
-[![Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen.svg)]
+[![Coverage](https://img.shields.io/badge/coverage-74%25-brightgreen.svg)]
 
 A collection of model adapters and workflow utilities for the OpenAI Agents SDK, enabling you to use various LLM providers and build practical agent pipelines with a unified interface!
 
@@ -293,10 +293,10 @@ pip install -e .[dev]
 Run tests and generate a coverage report:
 
 ```bash
-pytest --cov=agents_sdk_models --cov-report=term-missing
+pytest --cov=refinire --cov-report=term-missing
 ```
 - ✅ All tests currently pass successfully.
-- The coverage badge indicates the line coverage percentage for the `agents_sdk_models` package (measured by pytest-cov).
+- The coverage badge indicates the line coverage percentage for the `refinire` package (measured by pytest-cov).
 
 ---
 

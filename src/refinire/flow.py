@@ -377,6 +377,7 @@ class Flow:
                 while not self.finished and step_count < self.max_steps:
                     step_name = self.context.next_label
                     if not step_name or step_name not in self.steps:
+                        self.context.finish()  # Finish flow when no next step or unknown step
                         break
                     
                     step = self.steps[step_name]
@@ -442,6 +443,7 @@ class Flow:
                 while not self.finished and step_count < self.max_steps:
                     step_name = self.context.next_label
                     if not step_name or step_name not in self.steps:
+                        self.context.finish()  # Finish flow when no next step or unknown step
                         break
                     
                     step = self.steps[step_name]
@@ -661,31 +663,30 @@ class Flow:
         Returns:
             List[Dict[str, Any]]: Step execution history / ステップ実行履歴
         """
-        history = []
+        # Use span_history from context as primary source
+        # コンテキストのspan_historyを主要ソースとして使用
+        if hasattr(self.context, 'span_history') and self.context.span_history:
+            return self.context.span_history
         
-        # Check execution history from context
-        # コンテキストから実行履歴をチェック
-        if hasattr(self.context, 'step_history') and self.context.step_history:
-            history = self.context.step_history
-        else:
-            # Fallback: extract from messages
-            # フォールバック: メッセージから抽出
-            for msg in self.context.messages:
-                if msg.role == "system" and "Step" in msg.content:
-                    # Try to extract step name from message
-                    # メッセージからステップ名を抽出しようとする
-                    step_name = None
-                    if "executing step:" in msg.content.lower():
-                        parts = msg.content.split(":")
-                        if len(parts) > 1:
-                            step_name = parts[1].strip()
-                    
-                    history.append({
-                        "timestamp": msg.timestamp,
-                        "step_name": step_name or "Unknown",
-                        "message": msg.content,
-                        "metadata": msg.metadata
-                    })
+        # Fallback: extract from messages
+        # フォールバック: メッセージから抽出
+        history = []
+        for msg in self.context.messages:
+            if msg.role == "system" and "Step" in msg.content:
+                # Try to extract step name from message
+                # メッセージからステップ名を抽出しようとする
+                step_name = None
+                if "executing step:" in msg.content.lower():
+                    parts = msg.content.split(":")
+                    if len(parts) > 1:
+                        step_name = parts[1].strip()
+                
+                history.append({
+                    "timestamp": msg.timestamp,
+                    "step_name": step_name or "Unknown",
+                    "message": msg.content,
+                    "metadata": msg.metadata
+                })
         
         return history
     

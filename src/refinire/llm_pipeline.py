@@ -1087,6 +1087,14 @@ class InteractivePipeline(LLMPipeline):
             user_input: User input / ユーザー入力
             llm_result: LLM result / LLM結果
         """
+        # Get timestamp safely
+        try:
+            timestamp = asyncio.get_event_loop().time()
+        except RuntimeError:
+            # Fallback to regular time if no event loop is running
+            import time
+            timestamp = time.time()
+            
         interaction = {
             'user_input': user_input,
             'ai_result': {
@@ -1095,7 +1103,7 @@ class InteractivePipeline(LLMPipeline):
                 'metadata': llm_result.metadata
             },
             'turn': self._turn_count,
-            'timestamp': asyncio.get_event_loop().time()
+            'timestamp': timestamp
         }
         self._conversation_history.append(interaction)
     

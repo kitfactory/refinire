@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 from typing import Dict, Any
 
-from src.agents_sdk_models.context import Context
+from refinire.context import Context
 
 
 class TestContext:
@@ -363,7 +363,8 @@ class TestContextSerialization:
         assert isinstance(ctx_dict, dict)
         assert ctx_dict["trace_id"] == "test_trace"
         assert ctx_dict["last_user_input"] == "Hello"
-        assert len(ctx_dict["messages"]) == 1
+        assert len(ctx_dict["history"]) == 1  # messages are converted to history
+        assert "messages" not in ctx_dict  # messages key is removed
     
     def test_from_dict(self):
         """

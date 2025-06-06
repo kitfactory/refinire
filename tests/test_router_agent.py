@@ -300,7 +300,7 @@ class TestRouterAgent:
     
     def test_llm_router_without_pipeline_creates_default(self, llm_config):
         """Test LLM router creates default pipeline if none provided."""
-        with patch('agents_sdk_models.agents.router.create_simple_llm_pipeline') as mock_create:
+        with patch('refinire.agents.router.create_simple_llm_pipeline') as mock_create:
             mock_pipeline = Mock(spec=LLMPipeline)
             mock_create.return_value = mock_pipeline
             
@@ -337,58 +337,63 @@ class TestRouterAgent:
                 classifier_type="invalid"
             )
     
-    def test_router_run_successful_classification(self, llm_config, mock_pipeline):
+    @pytest.mark.asyncio
+    async def test_router_run_successful_classification(self, llm_config, mock_pipeline):
         """Test successful routing execution."""
         mock_pipeline.run.return_value = "route2"
         router = RouterAgent(llm_config, mock_pipeline)
         context = Context()
         
-        result = router.run("test input", context)
+        result = await router.run("test input", context)
         
-        assert result == "test input"  # Input should be returned unchanged
-        assert context.shared_state.get("next_step") == "step2"
-        assert context.shared_state.get("test_router_classification") == "route2"
-        assert context.shared_state.get("test_router_next_step") == "step2"
+        assert isinstance(result, Context)  # Router now returns Context
+        assert result.shared_state.get("test_router_classification") == "route2"
+        assert result.shared_state.get("test_router_next_step") == "step2"
+        assert result.next_label == "step2"
     
-    def test_router_run_with_invalid_route(self, llm_config, mock_pipeline):
+    @pytest.mark.asyncio
+    async def test_router_run_with_invalid_route(self, llm_config, mock_pipeline):
         """Test routing with invalid route falls back to default."""
         mock_pipeline.run.return_value = "invalid_route"
         router = RouterAgent(llm_config, mock_pipeline)
         context = Context()
         
-        result = router.run("test input", context)
+        result = await router.run("test input", context)
         
-        assert result == "test input"
-        assert context.shared_state.get("next_step") == "step1"  # First route as fallback
+        assert isinstance(result, Context)
+        assert result.next_label == "step1"  # First route as fallback
     
-    def test_router_run_classification_error(self, llm_config, mock_pipeline):
+    @pytest.mark.asyncio
+    async def test_router_run_classification_error(self, llm_config, mock_pipeline):
         """Test routing handles classification errors gracefully."""
         mock_pipeline.run.side_effect = Exception("Classification error")
         router = RouterAgent(llm_config, mock_pipeline)
         context = Context()
         
-        result = router.run("test input", context)
+        result = await router.run("test input", context)
         
-        assert result == "test input"
-        assert context.shared_state.get("next_step") == "step1"  # Fallback route
-        assert context.shared_state.get("test_router_classification") == "route1"
-        assert "classification failed" in context.shared_state.get("test_router_error", "").lower()
+        assert isinstance(result, Context)
+        assert result.next_label == "step1"  # Fallback route
+        assert result.shared_state.get("test_router_classification") == "route1"
+        assert "classification failed" in result.shared_state.get("test_router_error", "").lower()
     
-    def test_router_run_without_storing_results(self, llm_config, mock_pipeline):
+    @pytest.mark.asyncio
+    async def test_router_run_without_storing_results(self, llm_config, mock_pipeline):
         """Test routing without storing classification results."""
         llm_config.store_classification_result = False
         mock_pipeline.run.return_value = "route2"
         router = RouterAgent(llm_config, mock_pipeline)
         context = Context()
         
-        result = router.run("test input", context)
+        result = await router.run("test input", context)
         
-        assert result == "test input"
-        assert context.shared_state.get("next_step") == "step2"
-        assert context.shared_state.get("test_router_classification") is None
-        assert context.shared_state.get("test_router_next_step") is None
+        assert isinstance(result, Context)
+        assert result.next_label == "step2"
+        assert result.shared_state.get("test_router_classification") is None
+        assert result.shared_state.get("test_router_next_step") is None
     
-    def test_router_run_with_default_route(self, mock_pipeline):
+    @pytest.mark.asyncio
+    async def test_router_run_with_default_route(self, mock_pipeline):
         """Test routing with configured default route."""
         config = RouterConfig(
             name="test_router",
@@ -401,16 +406,16 @@ class TestRouterAgent:
         router = RouterAgent(config, mock_pipeline)
         context = Context()
         
-        result = router.run("test input", context)
+        result = await router.run("test input", context)
         
-        assert result == "test input"
-        assert context.shared_state.get("next_step") == "step2"  # Default route
+        assert isinstance(result, Context)
+        assert result.next_label == "step2"  # Default route
 
 
 class TestUtilityFunctions:
     """Test utility functions for creating common routers."""
     
-    @patch('agents_sdk_models.agents.router.create_simple_llm_pipeline')
+    @patch('refinire.agents.router.create_simple_llm_pipeline')
     def test_create_intent_router_defaults(self, mock_create_pipeline):
         """Test creating intent router with defaults."""
         mock_pipeline = Mock(spec=LLMPipeline)
@@ -439,7 +444,7 @@ class TestUtilityFunctions:
         assert router.name == "custom_router"
         assert router.config.routes == custom_intents
     
-    @patch('agents_sdk_models.agents.router.create_simple_llm_pipeline')
+    @patch('refinire.agents.router.create_simple_llm_pipeline')
     def test_create_content_type_router_defaults(self, mock_create_pipeline):
         """Test creating content type router with defaults."""
         mock_pipeline = Mock(spec=LLMPipeline)

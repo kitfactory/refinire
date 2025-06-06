@@ -3,9 +3,9 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
 
-from src.agents_sdk_models.flow import Flow, FlowExecutionError, create_simple_flow, create_conditional_flow
-from src.agents_sdk_models.step import Step, UserInputStep, ConditionStep, FunctionStep
-from src.agents_sdk_models.context import Context
+from refinire.flow import Flow, FlowExecutionError, create_simple_flow, create_conditional_flow
+from refinire.step import Step, UserInputStep, ConditionStep, FunctionStep
+from refinire.context import Context
 
 
 class DummyStep(Step):
@@ -35,6 +35,9 @@ class DummyStep(Step):
         
         if self.next_step:
             ctx.goto(self.next_step)
+        else:
+            # No next step means this is the end
+            ctx.finish()
         
         return ctx
 
@@ -160,7 +163,8 @@ class TestFlow:
         # Flow should stop on error but not raise
         # フローはエラー時に停止するが例外は発生させない
         assert step1.executed
-        assert not flow.finished  # Stopped due to error
+        assert flow.finished  # Flow is finished due to error
+        assert "error" in result_context.artifacts  # Error artifact should be set
     
     @pytest.mark.asyncio
     async def test_flow_run_unknown_step(self):
@@ -177,7 +181,7 @@ class TestFlow:
         # Flow should stop when unknown step is encountered
         # 未知のステップに遭遇したときフローは停止する
         assert step1.executed
-        assert not flow.finished
+        assert flow.finished  # Flow finishes when reaching unknown step
     
     @pytest.mark.asyncio
     async def test_flow_run_loop_basic(self):
@@ -453,11 +457,11 @@ class TestFlowHelperFunctions:
         # Check flow creation
         # フロー作成をチェック
         assert isinstance(flow, Flow)
-        assert flow.start == "initial"
-        assert "initial" in flow.steps
+        assert flow.start == "start"  # create_conditional_flow uses "start" as initial step name
+        assert "start" in flow.steps  # Initial step is named "start"
         assert "condition" in flow.steps
-        assert "true_branch" in flow.steps
-        assert "false_branch" in flow.steps
+        assert "true_0" in flow.steps  # True branch steps are named "true_N"
+        assert "false_0" in flow.steps  # False branch steps are named "false_N"
 
 
 class TestFlowUserInput:
@@ -478,17 +482,27 @@ class TestFlowUserInput:
         
         flow = Flow(start="input", steps=steps)
         
-        # Run without user input - should wait
-        # ユーザー入力なしで実行 - 待機するはず
-        result_context = await flow.run()
-        assert result_context.awaiting_user_input
-        assert result_context.pending_user_prompt == "Please enter something:"
+        # Create background task for interactive flow
+        # 対話的フロー用のバックグラウンドタスクを作成
+        flow_task = asyncio.create_task(flow.run_loop())
+        
+        # Wait a moment for the task to start and reach user input
+        # タスクが開始してユーザー入力に到達するまで少し待つ
+        await asyncio.sleep(0.1)
+        
+        # Check that flow is waiting for user input
+        # フローがユーザー入力を待機していることをチェック
+        assert flow.context.awaiting_user_input
+        assert flow.context.awaiting_prompt == "Please enter something:"
         assert not step2.executed
         
-        # Provide user input and continue
-        # ユーザー入力を提供して続行
+        # Provide user input
+        # ユーザー入力を提供
         flow.feed("user response")
-        flow.step()
+        
+        # Wait for flow to complete
+        # フローの完了を待つ
+        await flow_task
         
         # Now step2 should be executed
         # 今度はstep2が実行されるはず

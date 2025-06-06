@@ -10,7 +10,7 @@ from typing import Optional
 from refinire.flow import Flow
 from refinire.step import Step, UserInputStep, DebugStep
 from refinire.context import Context
-from refinire.gen_agent import create_simple_gen_agent
+from refinire.agents.gen_agent import create_simple_gen_agent
 
 
 class DummyStep(Step):

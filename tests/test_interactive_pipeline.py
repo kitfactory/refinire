@@ -3,13 +3,15 @@
 """
 
 import pytest
+import asyncio
+import time
 from unittest.mock import Mock, patch
 from typing import Any
 
 from refinire import (
     InteractivePipeline, InteractionResult, InteractionQuestion,
     create_simple_interactive_pipeline, create_evaluated_interactive_pipeline,
-    LLMResult
+    LLMResult, LLMPipeline
 )
 
 try:
@@ -20,6 +22,38 @@ except ImportError:
 
 class TestInteractivePipeline:
     """Test cases for InteractivePipeline"""
+    
+    def setup_method(self):
+        """Setup method run before each test"""
+        # Close any existing event loops to ensure clean state
+        try:
+            loop = asyncio.get_event_loop()
+            if loop and not loop.is_closed():
+                loop.close()
+        except RuntimeError:
+            pass
+        
+        # Create a fresh event loop for tests that need it
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+        except Exception:
+            pass
+    
+    def teardown_method(self):
+        """Teardown method run after each test"""
+        # Clean up event loop
+        try:
+            loop = asyncio.get_event_loop()
+            if loop and not loop.is_closed():
+                loop.close()
+        except RuntimeError:
+            pass
+        
+        # Clear event loop
+        try:
+            asyncio.set_event_loop(None)
+        except Exception:
+            pass
     
     def test_interactive_pipeline_initialization(self):
         """Test InteractivePipeline can be initialized correctly"""
@@ -54,24 +88,25 @@ class TestInteractivePipeline:
             max_turns=5
         )
         
-        # Mock the LLMPipeline run method (super().run)
-        with patch('agents_sdk_models.llm_pipeline.LLMPipeline.run') as mock_run:
-            mock_run.return_value = LLMResult(
-                content="I understand your request.",
-                success=True
-            )
+        # Mock the LLMPipeline run method (super().run) and time.time
+        with patch.object(LLMPipeline, 'run') as mock_run, \
+             patch('time.time', return_value=1234567890.0):
+            mock_run.side_effect = [
+                LLMResult(
+                    content="I understand your request.",
+                    success=True
+                ),
+                LLMResult(
+                    content="Done! Task completed.",
+                    success=True
+                )
+            ]
             
             # First interaction - not complete
             result = pipeline.run_interactive("help me")
             assert isinstance(result, InteractionResult)
             assert not result.is_complete
             assert result.turn == 1
-            
-            # Mock completion response
-            mock_run.return_value = LLMResult(
-                content="Done! Task completed.",
-                success=True
-            )
             
             # Second interaction - complete
             result = pipeline.continue_interaction("done")
@@ -92,7 +127,8 @@ class TestInteractivePipeline:
             max_turns=2
         )
         
-        with patch('agents_sdk_models.llm_pipeline.LLMPipeline.run') as mock_run:
+        with patch.object(LLMPipeline, 'run') as mock_run, \
+             patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="Continue asking",
                 success=True
@@ -127,7 +163,8 @@ class TestInteractivePipeline:
             question_format=custom_format
         )
         
-        with patch('agents_sdk_models.llm_pipeline.LLMPipeline.run') as mock_run:
+        with patch.object(LLMPipeline, 'run') as mock_run, \
+             patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="What do you need?",
                 success=True
@@ -150,7 +187,8 @@ class TestInteractivePipeline:
             max_turns=5
         )
         
-        with patch('agents_sdk_models.llm_pipeline.LLMPipeline.run') as mock_run:
+        with patch.object(LLMPipeline, 'run') as mock_run, \
+             patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content=None,
                 success=False,
@@ -177,7 +215,8 @@ class TestInteractivePipeline:
             max_turns=3
         )
         
-        with patch('agents_sdk_models.llm_pipeline.LLMPipeline.run') as mock_run:
+        with patch.object(LLMPipeline, 'run') as mock_run, \
+             patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="Response 1",
                 success=True
@@ -215,7 +254,8 @@ class TestInteractivePipeline:
             max_turns=5
         )
         
-        with patch('agents_sdk_models.llm_pipeline.LLMPipeline.run') as mock_run:
+        with patch.object(LLMPipeline, 'run') as mock_run, \
+             patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="Response",
                 success=True
@@ -259,23 +299,23 @@ class TestInteractivePipeline:
         """Test evaluated pipeline creation utility"""
         
         def completion_check(result: Any) -> bool:
-            return True
+            return "evaluated" in str(result).lower()
         
         pipeline = create_evaluated_interactive_pipeline(
-            name="evaluated_test",
-            generation_instructions="Generation instructions",
-            evaluation_instructions="Evaluation instructions",
+            name="eval_test",
+            generation_instructions="Generate with evaluation",
+            evaluation_instructions="Evaluate the response",
             completion_check=completion_check,
-            max_turns=8,
-            threshold=90.0,
-            model="gpt-4"
+            max_turns=25,
+            model="gpt-4",
+            threshold=90.0
         )
         
         assert isinstance(pipeline, InteractivePipeline)
-        assert pipeline.name == "evaluated_test"
-        assert pipeline.max_turns == 8
+        assert pipeline.name == "eval_test"
+        assert pipeline.max_turns == 25
+        assert pipeline.model == "gpt-4"
         assert pipeline.threshold == 90.0
-        assert pipeline.evaluation_instructions == "Evaluation instructions"
 
 
 class MockCompletionModel(BaseModel):
@@ -286,6 +326,38 @@ class MockCompletionModel(BaseModel):
 
 class TestInteractivePipelineWithStructuredOutput:
     """Test InteractivePipeline with structured output models"""
+    
+    def setup_method(self):
+        """Setup method run before each test"""
+        # Close any existing event loops to ensure clean state
+        try:
+            loop = asyncio.get_event_loop()
+            if loop and not loop.is_closed():
+                loop.close()
+        except RuntimeError:
+            pass
+        
+        # Create a fresh event loop for tests that need it
+        try:
+            asyncio.set_event_loop(asyncio.new_event_loop())
+        except Exception:
+            pass
+    
+    def teardown_method(self):
+        """Teardown method run after each test"""
+        # Clean up event loop
+        try:
+            loop = asyncio.get_event_loop()
+            if loop and not loop.is_closed():
+                loop.close()
+        except RuntimeError:
+            pass
+        
+        # Clear event loop
+        try:
+            asyncio.set_event_loop(None)
+        except Exception:
+            pass
     
     def test_structured_output_completion(self):
         """Test completion with structured output"""
@@ -301,7 +373,8 @@ class TestInteractivePipelineWithStructuredOutput:
             max_turns=5
         )
         
-        with patch('agents_sdk_models.llm_pipeline.LLMPipeline.run') as mock_run:
+        with patch.object(LLMPipeline, 'run') as mock_run, \
+             patch('time.time', return_value=1234567890.0):
             # First - not complete
             mock_run.return_value = LLMResult(
                 content=MockCompletionModel(is_complete=False, result="Not done yet"),

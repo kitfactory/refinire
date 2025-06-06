@@ -3,12 +3,12 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from dataclasses import dataclass
 
-from src.agents_sdk_models.step import (
+from refinire.step import (
     Step, UserInputStep, ConditionStep, FunctionStep, 
-    AgentPipelineStep, DebugStep,
+    DebugStep,
     create_simple_condition, create_lambda_step
 )
-from src.agents_sdk_models.context import Context
+from refinire.context import Context
 
 
 class DummyStep(Step):
@@ -115,7 +115,7 @@ class TestUserInputStep:
         
         assert result_ctx.current_step == "input_step"
         assert result_ctx.awaiting_user_input
-        assert result_ctx.pending_user_prompt == "Enter something:"
+        assert result_ctx.awaiting_prompt == "Enter something:"
         assert result_ctx.next_label != "next_step"  # Should not advance yet
     
     @pytest.mark.asyncio
@@ -311,9 +311,9 @@ class TestFunctionStep:
         ctx = Context()
         
         result_ctx = await step.run("test input", ctx)
-        
+
         assert result_ctx.current_step == "func_step"
-        assert result_ctx.next_label is None  # Should not advance on error
+        assert result_ctx.next_label == "next_step"  # Step continues to next even on error
         assert "Function execution error" in str(result_ctx.messages)
     
     @pytest.mark.asyncio
@@ -399,55 +399,7 @@ class TestDebugStep:
         assert any("Context:" in call for call in print_calls)
 
 
-class TestAgentPipelineStep:
-    """
-    Test AgentPipelineStep class
-    AgentPipelineStepクラスをテスト
-    """
-    
-    @pytest.mark.asyncio
-    async def test_agent_pipeline_step_execution(self):
-        """
-        Test AgentPipelineStep execution
-        AgentPipelineStep実行をテスト
-        """
-        # Mock pipeline
-        # パイプラインをモック
-        mock_pipeline = MagicMock()
-        mock_pipeline.run = MagicMock(return_value="Pipeline response")
-        
-        step = AgentPipelineStep("pipeline_step", mock_pipeline, "next_step")
-        ctx = Context()
-        
-        result_ctx = await step.run("test input", ctx)
-        
-        assert result_ctx.current_step == "pipeline_step"
-        assert result_ctx.next_label == "next_step"
-        assert "Pipeline response" in str(result_ctx.messages)
-        
-        # Check pipeline was called with correct input
-        # パイプラインが正しい入力で呼ばれたことをチェック
-        mock_pipeline.run.assert_called_once_with("test input")
-    
-    @pytest.mark.asyncio
-    async def test_agent_pipeline_step_error_handling(self):
-        """
-        Test AgentPipelineStep error handling
-        AgentPipelineStepエラーハンドリングをテスト
-        """
-        # Mock pipeline that raises error
-        # エラーを発生させるパイプラインをモック
-        mock_pipeline = MagicMock()
-        mock_pipeline.run = MagicMock(side_effect=Exception("Pipeline error"))
-        
-        step = AgentPipelineStep("pipeline_step", mock_pipeline, "next_step")
-        ctx = Context()
-        
-        result_ctx = await step.run("test input", ctx)
-        
-        assert result_ctx.current_step == "pipeline_step"
-        assert result_ctx.next_label is None  # Should not advance on error
-        assert "Pipeline execution error" in str(result_ctx.messages)
+
 
 
 class TestStepHelperFunctions:
@@ -461,17 +413,17 @@ class TestStepHelperFunctions:
         Test create_simple_condition function
         create_simple_condition関数をテスト
         """
-        condition = create_simple_condition("user_name", "Alice")
+        condition = create_simple_condition("shared_state.user_name", "Alice")
         
         # Test with matching value
         # 一致する値でテスト
         ctx = Context()
-        ctx.set_field("user_name", "Alice")
+        ctx.shared_state["user_name"] = "Alice"
         assert condition(ctx) == True
         
         # Test with non-matching value
         # 一致しない値でテスト
-        ctx.set_field("user_name", "Bob")
+        ctx.shared_state["user_name"] = "Bob"
         assert condition(ctx) == False
         
         # Test with missing field

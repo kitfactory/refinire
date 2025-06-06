@@ -70,6 +70,8 @@ class ConsoleTracingProcessor(TracingProcessor):
 
     def on_span_end(self, span):
         # Called at the end of each span; outputs color-coded Instruction/Prompt/Output and logs span end
+        if span is None:
+            return
         data = span.span_data
         instr = ""
         prompt = ""
@@ -86,6 +88,8 @@ class ConsoleTracingProcessor(TracingProcessor):
             # Irrelevant span type
             return
         # Color-coded output with localized labels
+        if self.output_stream is None:
+            return
         if instr:
             instr_label = get_message("trace_instruction", DEFAULT_LANGUAGE)
             self.output_stream.write(f"\033[93m{instr_label} {instr}\033[0m\n")
@@ -110,7 +114,7 @@ class ConsoleTracingProcessor(TracingProcessor):
 
     def force_flush(self):
         # Forces flush of the output stream
-        if hasattr(self, 'output_stream'):
+        if hasattr(self, 'output_stream') and self.output_stream is not None:
             self.output_stream.flush()
 
 
