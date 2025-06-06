@@ -570,7 +570,7 @@ pipeline.remove_tool("greet")
 
 | Feature | AgentPipeline (Deprecated) | LLMPipeline (Recommended) |
 |---------|---------------------------|---------------------------|
-| **API Dependency** | ❌ OpenAI Agents SDK (deprecated APIs) | ✅ OpenAI Python SDK (stable) |
+| **API Implementation** | ⚠️ Legacy implementation patterns | ✅ Proper OpenAI Agents SDK usage |
 | **Tool Execution** | ⚠️ Manual implementation required | ✅ Automatic tool calling loop |
 | **Function Calling** | ⚠️ Limited support | ✅ Full OpenAI function calling |
 | **Future Proof** | ❌ Will be removed in v0.1.0 | ✅ Stable, actively maintained |

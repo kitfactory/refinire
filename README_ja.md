@@ -225,7 +225,7 @@ for turn, user_input in enumerate(user_inputs, 1):
 
 | 機能 | AgentPipeline（非推奨） | LLMPipeline（推奨） |
 |------|------------------------|-------------------|
-| **API依存** | ❌ OpenAI Agents SDK（非推奨API） | ✅ OpenAI Python SDK（安定） |
+| **API実装** | ⚠️ 古い実装パターン | ✅ OpenAI Agents SDK適切使用 |
 | **ツール実行** | ⚠️ 手動実装が必要 | ✅ 自動ツール呼び出しループ |
 | **関数呼び出し** | ⚠️ 限定的サポート | ✅ 完全なOpenAI関数呼び出し |
 | **将来性** | ❌ v0.1.0で削除予定 | ✅ 安定、積極的に保守 |
