@@ -7,6 +7,14 @@ This example demonstrates how to use NotificationAgent for sending notifications
 through various channels including logs, files, webhooks, and more.
 この例では、ログ、ファイル、webhook等の様々なチャネルを通じて
 通知を送信するためにNotificationAgentを使用する方法を示します。
+
+SECURITY NOTE: This file contains example/demo URLs only. 
+Never commit real webhook URLs, API keys, or secrets to version control.
+Use environment variables for production credentials.
+
+セキュリティ注意: このファイルには例/デモ用のURLのみが含まれています。
+実際のWebhook URL、APIキー、機密情報をバージョン管理にコミットしないでください。
+本番認証情報には環境変数を使用してください。
 """
 
 import sys
@@ -282,9 +290,12 @@ async def example_5_slack_teams_notifications():
     
     # Create Slack notifier
     # Slack通知エージェントを作成
+    # NOTE: Use environment variable SLACK_WEBHOOK_URL in production
+    # 注意：本番環境では環境変数SLACK_WEBHOOK_URLを使用してください
+    slack_webhook_url = os.getenv('SLACK_WEBHOOK_URL', 'https://hooks.slack.com/services/EXAMPLE/DUMMY/WEBHOOK_URL_FOR_DEMO_ONLY')
     slack_notifier = create_slack_notifier(
         "team_slack",
-        "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+        slack_webhook_url,
         "#general"
     )
     
@@ -308,6 +319,8 @@ async def example_5_slack_teams_notifications():
     print("チーム通知を送信中:")
     print("(Note: These are simulated - no actual webhooks sent)")
     print("（注意：これらはシミュレートです - 実際のWebhookは送信されません）")
+    print("SECURITY: Use environment variables for real webhook URLs")
+    print("セキュリティ: 実際のWebhook URLには環境変数を使用してください")
     
     ctx = Context()
     for i, update in enumerate(team_updates, 1):
@@ -537,6 +550,34 @@ async def example_7_notification_error_handling():
         pass
 
 
+def example_production_setup():
+    """
+    Example of production-ready setup with environment variables.
+    環境変数を使用した本番対応セットアップの例。
+    """
+    print("\n" + "="*60)
+    print("Production Setup Example (Environment Variables)")
+    print("本番セットアップ例（環境変数）")
+    print("="*60)
+    
+    print("To use real webhooks in production, set these environment variables:")
+    print("本番で実際のWebhookを使用するには、以下の環境変数を設定してください:")
+    print()
+    print("export SLACK_WEBHOOK_URL='https://hooks.slack.com/services/YOUR/REAL/WEBHOOK'")
+    print("export TEAMS_WEBHOOK_URL='https://outlook.office.com/webhook/YOUR/REAL/WEBHOOK'")
+    print("export API_WEBHOOK_URL='https://your-api.com/webhooks/notifications'")
+    print()
+    print("Then use them in your code like this:")
+    print("そして、コード内で以下のように使用します:")
+    print()
+    print("    import os")
+    print("    slack_url = os.getenv('SLACK_WEBHOOK_URL')")
+    print("    if not slack_url:")
+    print("        raise ValueError('SLACK_WEBHOOK_URL environment variable not set')")
+    print("    slack_notifier = create_slack_notifier('production_slack', slack_url)")
+    print()
+
+
 async def main():
     """
     Main function to run all examples.
@@ -555,6 +596,10 @@ async def main():
         example_6_custom_notification_channel,
         example_7_notification_error_handling
     ]
+    
+    # Show production setup example (non-async)
+    # 本番セットアップ例を表示（非同期でない）
+    example_production_setup()
     
     for example in examples:
         try:
