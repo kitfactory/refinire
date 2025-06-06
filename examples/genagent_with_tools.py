@@ -1,4 +1,4 @@
-"""
+﻿"""
 GenAgent example with tools for enhanced generation
 ツールを使用した拡張生成のGenAgentの例
 
@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with tools (Flow/Step architecture
 """
 
 import asyncio
-from agents_sdk_models import GenAgent, create_simple_flow
+from refinire import GenAgent, create_simple_flow
 from agents import function_tool
 
 @function_tool
@@ -115,7 +115,7 @@ async def main():
     # 方法2: 異なる専門ツールを持つマルチエージェントフロー
     print("\n\n=== Multi-Agent Flow with Specialized Tools ===")
     
-    from agents_sdk_models import Flow
+    from refinire import Flow
     
     # Weather specialist agent
     # 天気専門エージェント

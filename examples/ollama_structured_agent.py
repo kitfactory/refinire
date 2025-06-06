@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example of using Ollama with structured output
 Ollamaで構造化された出力を使用する例
 """
@@ -7,7 +7,7 @@ import asyncio
 from typing import List
 from pydantic import BaseModel
 from agents import Agent, Runner
-from agents_sdk_models import OllamaModel
+from refinire import OllamaModel
 
 class WeatherInfo(BaseModel):
     """

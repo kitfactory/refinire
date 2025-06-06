@@ -1,4 +1,4 @@
-"""
+﻿"""
 Anthropic model implementation for OpenAI Agents
 OpenAI AgentsのためのAnthropic Claude モデル実装
 """

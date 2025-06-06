@@ -1,4 +1,4 @@
-"""
+﻿"""
 RouterAgent Usage Examples
 
 RouterAgentの使用例
@@ -16,15 +16,15 @@ from typing import Any
 # 例のための環境設定
 os.environ.setdefault("OPENAI_API_KEY", "your-api-key-here")
 
-from agents_sdk_models.agents.router import (
+from refinire.agents.router import (
     RouterAgent,
     RouterConfig,
     RuleBasedClassifier,
     create_intent_router,
     create_content_type_router
 )
-from agents_sdk_models.context import Context
-from agents_sdk_models.llm_pipeline import create_simple_llm_pipeline
+from refinire.context import Context
+from refinire.llm_pipeline import create_simple_llm_pipeline
 
 
 def example_1_basic_llm_router():

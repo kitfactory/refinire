@@ -1,4 +1,4 @@
-"""
+﻿"""
 GenAgent, ClarifyAgent, LLMPipelineの単体実行デモ
 Standalone execution demo for GenAgent, ClarifyAgent, and LLMPipeline
 
@@ -10,7 +10,7 @@ import asyncio
 from typing import List
 from pydantic import BaseModel
 
-from agents_sdk_models import (
+from refinire import (
     GenAgent, ClarifyAgent, LLMPipeline, Context,
     create_simple_gen_agent, create_simple_clarify_agent,
     create_simple_llm_pipeline, create_evaluated_llm_pipeline,

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example of using Claude with structured output
 Claudeで構造化された出力を使用する例
 """
@@ -8,7 +8,7 @@ import os
 from typing import List
 from pydantic import BaseModel
 from agents import Agent, Runner
-from agents_sdk_models import ClaudeModel
+from refinire import ClaudeModel
 
 class WeatherInfo(BaseModel):
     """

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests for RouterAgent functionality.
 
 RouterAgent機能のテスト。
@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import Mock, patch
 from typing import Any, Dict
 
-from agents_sdk_models.agents.router import (
+from refinire.agents.router import (
     RouterAgent,
     RouterConfig,
     LLMClassifier,
@@ -17,8 +17,8 @@ from agents_sdk_models.agents.router import (
     create_intent_router,
     create_content_type_router
 )
-from agents_sdk_models.context import Context
-from agents_sdk_models.llm_pipeline import LLMPipeline
+from refinire.context import Context
+from refinire.llm_pipeline import LLMPipeline
 
 
 class TestRouteClassifier:

@@ -1,5 +1,5 @@
-import pytest
-from agents_sdk_models import AgentPipeline, EvaluationResult
+﻿import pytest
+from refinire import AgentPipeline, EvaluationResult
 
 class DummyAgent:
     def __init__(self, name, model=None, tools=None, instructions=None, input_guardrails=None, output_guardrails=None):
@@ -86,7 +86,7 @@ def test_dynamic_prompt():
 
 def test_openai_pipeline(monkeypatch):
     # get_llmの返り値をダミーに
-    from agents_sdk_models import pipeline as pipeline_mod
+    from refinire import pipeline as pipeline_mod
     monkeypatch.setattr(pipeline_mod, "get_llm", lambda model=None, provider=None: f"llm-openai-{model}")
     pipeline = AgentPipeline(
         name="openai_test",
@@ -101,7 +101,7 @@ def test_openai_pipeline(monkeypatch):
 
 def test_ollama_pipeline(monkeypatch):
     # get_llmの返り値をダミーに
-    from agents_sdk_models import pipeline as pipeline_mod
+    from refinire import pipeline as pipeline_mod
     monkeypatch.setattr(pipeline_mod, "get_llm", lambda model=None, provider=None: f"llm-ollama-{model}")
     pipeline = AgentPipeline(
         name="ollama_test",

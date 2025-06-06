@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Flow Show Example
 フローショー例
@@ -13,10 +13,10 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from agents_sdk_models.flow import Flow
-from agents_sdk_models.step import UserInputStep, ConditionStep, FunctionStep
-from agents_sdk_models.context import Context
-from agents_sdk_models.agents.router import RouterAgent, RouterConfig
+from refinire.flow import Flow
+from refinire.step import UserInputStep, ConditionStep, FunctionStep
+from refinire.context import Context
+from refinire.agents.router import RouterAgent, RouterConfig
 
 
 def main():

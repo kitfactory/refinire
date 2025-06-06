@@ -1,4 +1,4 @@
-"""
+﻿"""
 ExtractorAgent implementation for information extraction from unstructured data.
 
 ExtractorAgentは非構造化データから情報抽出を行うエージェントです。

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 ExtractorAgent Examples
 ExtractorAgentの使用例
@@ -14,13 +14,13 @@ import os
 import asyncio
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from agents_sdk_models.agents.extractor import (
+from refinire.agents.extractor import (
     ExtractorAgent, ExtractorConfig, ExtractionRule,
     RegexExtractionRule, EmailExtractionRule, PhoneExtractionRule, URLExtractionRule,
     HTMLExtractionRule, JSONExtractionRule, CustomFunctionExtractionRule,
     create_contact_extractor, create_html_extractor, create_json_extractor
 )
-from agents_sdk_models.context import Context
+from refinire.context import Context
 
 
 async def example_1_contact_extraction():

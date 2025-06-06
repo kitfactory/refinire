@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example script demonstrating how to get available models from different providers.
 
 English:
@@ -15,7 +15,7 @@ import os
 # Add the src directory to the Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from agents_sdk_models.llm import get_available_models, get_available_models_async
+from refinire.llm import get_available_models, get_available_models_async
 
 
 async def main():

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "agents-sdk-models"
+name = "refinire"
 version = "0.0.24"
 description = "Model adapters for OpenAI Agents SDK"
 readme = "README.md"
@@ -17,13 +17,13 @@ dependencies = [
     "httpx>=0.28.1",
 ]
 [project.urls]
-Homepage = "https://github.com/kitfactory/agents-sdk-models"
-Documentation = "https://kitfactory.github.io/agents-sdk-models/"
-Repository = "https://github.com/kitfactory/agents-sdk-models"
-Bug-Tracker = "https://github.com/kitfactory/agents-sdk-models/issues"
+Homepage = "https://github.com/kitfactory/refinire"
+Documentation = "https://kitfactory.github.io/refinire/"
+Repository = "https://github.com/kitfactory/refinire"
+Bug-Tracker = "https://github.com/kitfactory/refinire/issues"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/agents_sdk_models"]
+packages = ["src/refinire"]
 
 [dependency-groups]
 dev = [

@@ -1,4 +1,4 @@
-"""Test cases for the enhanced Flow constructor.
+﻿"""Test cases for the enhanced Flow constructor.
 
 新しい拡張されたFlowコンストラクタのテストケース。
 """
@@ -7,10 +7,10 @@ import pytest
 import asyncio
 from typing import Optional
 
-from agents_sdk_models.flow import Flow
-from agents_sdk_models.step import Step, UserInputStep, DebugStep
-from agents_sdk_models.context import Context
-from agents_sdk_models.gen_agent import create_simple_gen_agent
+from refinire.flow import Flow
+from refinire.step import Step, UserInputStep, DebugStep
+from refinire.context import Context
+from refinire.gen_agent import create_simple_gen_agent
 
 
 class DummyStep(Step):

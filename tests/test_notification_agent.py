@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Test NotificationAgent implementation.
 
@@ -13,13 +13,13 @@ import json
 from unittest.mock import Mock, patch, MagicMock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from agents_sdk_models.agents.notification import (
+from refinire.agents.notification import (
     NotificationAgent, NotificationConfig, NotificationChannel, NotificationResult,
     LogChannel, EmailChannel, WebhookChannel, SlackChannel, TeamsChannel, FileChannel,
     create_log_notifier, create_file_notifier, create_webhook_notifier,
     create_slack_notifier, create_teams_notifier, create_multi_channel_notifier
 )
-from agents_sdk_models.context import Context
+from refinire.context import Context
 
 
 class TestNotificationResult:

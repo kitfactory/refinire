@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example of using ClaudeModel with OpenAI Agents
 OpenAI AgentsでClaudeModelを使用する例
 """
@@ -7,7 +7,7 @@ import asyncio
 import os
 from agents.agent import Agent
 from agents.run import Runner
-from agents_sdk_models import ClaudeModel
+from refinire import ClaudeModel
 
 async def main():
     # Get API key from environment variable

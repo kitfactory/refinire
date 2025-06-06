@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example of using OpenAI Agents with streaming responses from Ollama
 OllamaからのストリーミングレスポンスをOpenAI Agentsで使用する例
 """
@@ -7,7 +7,7 @@ import asyncio
 import sys
 from openai.types.responses import ResponseTextDeltaEvent
 from agents import Agent, Runner
-from agents_sdk_models import OllamaModel
+from refinire import OllamaModel
 
 async def main():
     """

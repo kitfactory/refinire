@@ -1,14 +1,14 @@
-"""Test GenAgent - Modern LLM-based Step using LLMPipeline"""
+﻿"""Test GenAgent - Modern LLM-based Step using LLMPipeline"""
 
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 from typing import Optional
 
-from agents_sdk_models.gen_agent import (
+from refinire.gen_agent import (
     GenAgent, create_simple_gen_agent, create_evaluated_gen_agent
 )
-from agents_sdk_models.context import Context
-from agents_sdk_models.llm_pipeline import LLMResult
+from refinire.context import Context
+from refinire.llm_pipeline import LLMResult
 
 try:
     from pydantic import BaseModel

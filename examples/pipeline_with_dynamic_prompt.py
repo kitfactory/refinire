@@ -1,9 +1,9 @@
-"""
+﻿"""
 Pipeline example with dynamic_prompt function
 動的プロンプト生成関数（dynamic_prompt）を使ったPipelineの例
 """
 
-from agents_sdk_models import AgentPipeline
+from refinire import AgentPipeline
 
 def my_dynamic_prompt(user_input: str) -> str:
     # 例: ユーザー入力を大文字化し、履歴やセッションは含めないシンプルなカスタムプロンプト

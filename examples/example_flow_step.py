@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example usage of Flow/Step workflow system
 Flow/Stepワークフローシステムの使用例
 """
@@ -7,7 +7,7 @@ import asyncio
 import os
 from typing import List
 
-from agents_sdk_models import (
+from refinire import (
     Flow, Context, UserInputStep, ConditionStep, FunctionStep, DebugStep,
     AgentPipelineStep, AgentPipeline, create_simple_condition, create_simple_flow
 )

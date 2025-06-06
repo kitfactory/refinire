@@ -1,4 +1,4 @@
-"""
+﻿"""
 Comprehensive GenAgent tests migrated from pipeline_* test files
 pipeline_*テストファイルから移行したGenAgentの包括的テスト
 
@@ -9,7 +9,7 @@ This test suite ensures GenAgent maintains all functionality from AgentPipeline.
 import pytest
 from pydantic import BaseModel
 from dataclasses import dataclass
-from agents_sdk_models import AgentPipeline, GenAgent, Flow, EvaluationResult
+from refinire import AgentPipeline, GenAgent, Flow, EvaluationResult
 
 class DummyAgent:
     """

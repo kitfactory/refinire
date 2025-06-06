@@ -1,4 +1,4 @@
-"""LLM Pipeline - A replacement for deprecated AgentPipeline using OpenAI Python SDK directly.
+﻿"""LLM Pipeline - A replacement for deprecated AgentPipeline using OpenAI Python SDK directly.
 
 LLMパイプライン - 非推奨のAgentPipelineに代わって、OpenAI Python SDKを直接使用する新しい実装。
 """

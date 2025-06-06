@@ -1,4 +1,4 @@
-"""
+﻿"""
 Ollama model implementation for OpenAI Agents
 OpenAI AgentsのためのOllamaモデル実装
 """

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Minimal example of agents-sdk-models usage
 agents-sdk-modelsの最小使用例
@@ -17,7 +17,7 @@ Examples:
     
     >>> import os
     >>> os.environ['OPENAI_API_KEY'] = 'your-api-key'  # doctest: +SKIP
-    >>> from agents_sdk_models import create_simple_gen_agent, get_llm  # doctest: +SKIP
+    >>> from refinire import create_simple_gen_agent, get_llm  # doctest: +SKIP
     >>> llm = get_llm(provider="openai", model="gpt-4o-mini")  # doctest: +SKIP
     >>> agent = create_simple_gen_agent(llm=llm)  # doctest: +SKIP
     >>> result = agent.run("Hello, world!")  # doctest: +SKIP
@@ -29,7 +29,7 @@ import os
 import asyncio
 from typing import Optional, Dict, Any
 
-from agents_sdk_models import (
+from refinire import (
     # GenAgent関連
     create_simple_gen_agent,
     create_evaluated_gen_agent,

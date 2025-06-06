@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Test ValidatorAgent implementation.
 
@@ -10,12 +10,12 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from agents_sdk_models.agents.validator import (
+from refinire.agents.validator import (
     ValidatorAgent, ValidatorConfig, ValidationRule, ValidationResult,
     RequiredRule, EmailFormatRule, LengthRule, RangeRule, RegexRule, CustomFunctionRule,
     create_email_validator, create_required_validator, create_length_validator, create_custom_validator
 )
-from agents_sdk_models.context import Context
+from refinire.context import Context
 
 
 class TestValidationRules:

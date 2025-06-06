@@ -1,4 +1,4 @@
-# English: Example to connect to Claude using OpenAI SDK compatibility (beta)
+﻿# English: Example to connect to Claude using OpenAI SDK compatibility (beta)
 # 日本語: OpenAI SDK互換API（ベータ）でClaudeに接続するサンプル
 
 import openai

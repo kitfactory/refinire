@@ -1,4 +1,4 @@
-"""
+﻿"""
 Interactive Pipeline Example - Demonstrating the new InteractivePipeline functionality
 対話的パイプライン例 - 新しいInteractivePipeline機能のデモンストレーション
 
@@ -11,7 +11,7 @@ This example shows how to use InteractivePipeline for:
 
 import os
 from typing import Any
-from agents_sdk_models import (
+from refinire import (
     create_simple_interactive_pipeline,
     create_evaluated_interactive_pipeline,
     InteractivePipeline,

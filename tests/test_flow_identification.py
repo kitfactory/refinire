@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Tests for Flow identification and tracing features
 Flow識別とトレース機能のテスト
@@ -7,7 +7,7 @@ Flow識別とトレース機能のテスト
 import pytest
 import asyncio
 from datetime import datetime
-from agents_sdk_models import (
+from refinire import (
     Flow, Context, FunctionStep, DebugStep, UserInputStep,
     create_simple_flow, create_conditional_flow
 )

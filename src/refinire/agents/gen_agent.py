@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 """GenAgent — Modern LLMPipeline-based Step for Flow workflows.
 

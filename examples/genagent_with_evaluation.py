@@ -1,4 +1,4 @@
-"""
+﻿"""
 GenAgent example with generation and evaluation
 生成と評価を行うGenAgentの例
 
@@ -7,7 +7,7 @@ This example demonstrates the recommended way to replace AgentPipeline with eval
 """
 
 import asyncio
-from agents_sdk_models import create_evaluated_gen_agent, create_simple_flow
+from refinire import create_evaluated_gen_agent, create_simple_flow
 
 async def main():
     """
@@ -78,7 +78,7 @@ async def main():
     # 方法2: 評価機能付きGenAgentの手動作成
     print("\n\n=== Method 2: Manual GenAgent creation with evaluation ===")
     
-    from agents_sdk_models import GenAgent, Flow
+    from refinire import GenAgent, Flow
     
     # Create GenAgent manually with evaluation
     # 評価機能付きGenAgentを手動で作成

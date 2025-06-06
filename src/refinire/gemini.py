@@ -1,4 +1,4 @@
-"""
+﻿"""
 Gemini model implementation for OpenAI Agents
 OpenAI AgentsのためのGeminiモデル実装
 """

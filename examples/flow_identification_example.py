@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Flow Identification and Tracing Example
 Flowの識別とトレース機能の例
@@ -11,7 +11,7 @@ to track and debug workflow execution.
 """
 
 import asyncio
-from agents_sdk_models import (
+from refinire import (
     Flow, Context, UserInputStep, FunctionStep, DebugStep,
     create_simple_flow, enable_console_tracing
 )

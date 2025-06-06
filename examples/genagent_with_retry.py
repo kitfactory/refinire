@@ -1,4 +1,4 @@
-"""
+﻿"""
 GenAgent example with retry generation based on evaluation comment importance
 評価コメントの重要度に基づくリトライ機能付きGenAgentの例
 
@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with retry functionality (Flow/Ste
 """
 
 import asyncio
-from agents_sdk_models import create_evaluated_gen_agent, create_simple_flow
+from refinire import create_evaluated_gen_agent, create_simple_flow
 
 async def main():
     """
@@ -87,7 +87,7 @@ async def main():
     # 方法2: 特定のコメント重要度フィルタリングによるリトライ
     print("\n\n--- Retry with Comment Importance Filtering ---")
     
-    from agents_sdk_models import GenAgent
+    from refinire import GenAgent
     
     selective_retry_agent = GenAgent(
         name="selective_retry_generator",
@@ -163,7 +163,7 @@ async def main():
     # 方法3: リトライロジック付きマルチエージェントフロー
     print("\n\n--- Multi-Agent Flow with Retry Logic ---")
     
-    from agents_sdk_models import Flow
+    from refinire import Flow
     
     # Agent 1: Content generator with retry
     # エージェント1: リトライ付きコンテンツ生成者

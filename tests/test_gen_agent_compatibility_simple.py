@@ -1,4 +1,4 @@
-"""
+﻿"""
 Simple GenAgent compatibility tests without async
 非同期処理を使わない簡単なGenAgent互換性テスト
 
@@ -7,7 +7,7 @@ This test suite provides basic compatibility verification without complex async 
 """
 
 import pytest
-from agents_sdk_models import AgentPipeline, GenAgent
+from refinire import AgentPipeline, GenAgent
 
 class DummyAgent:
     """
@@ -106,8 +106,8 @@ class TestSimpleCompatibility:
         Test that all required imports work
         必要なimportが動作することをテスト
         """
-        from agents_sdk_models import AgentPipeline, GenAgent, Flow
-        from agents_sdk_models import create_simple_gen_agent, create_evaluated_gen_agent
+        from refinire import AgentPipeline, GenAgent, Flow
+        from refinire import create_simple_gen_agent, create_evaluated_gen_agent
         
         # All imports should work without error
         # 全てのimportがエラーなしで動作するはず

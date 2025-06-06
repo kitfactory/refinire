@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Trace Demo - Flow/Step to Trace/Span mapping demonstration
 フロー/ステップからトレース/スパンマッピングのデモンストレーション
@@ -10,7 +10,7 @@ This example demonstrates how Flow acts as a Trace and Step acts as a Span
 import asyncio
 import json
 from datetime import datetime
-from agents_sdk_models import Flow, Context, FunctionStep
+from refinire import Flow, Context, FunctionStep
 
 
 def simple_task(name: str):

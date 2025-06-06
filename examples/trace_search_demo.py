@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Trace Search Demo - Search traces by flow name and agent name
 トレース検索デモ - フロー名とエージェント名でトレースを検索
@@ -14,7 +14,7 @@ import os
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from agents_sdk_models import (
+from refinire import (
     Flow, Context, FunctionStep, TraceRegistry, 
     get_global_registry, set_global_registry
 )

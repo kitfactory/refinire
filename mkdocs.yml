@@ -1,9 +1,9 @@
-site_name: Agents SDK Models
-site_description: OpenAI Agents SDKを拡張するモデルアダプター＆ワークフロー集
+site_name: Refinire
+site_description: 複数のLLMプロバイダーに対応した統一インターフェースライブラリ
 site_author: kitfactory
-repo_url: https://github.com/kitfactory/agents-sdk-models
-repo_name: kitfactory/agents-sdk-models
-site_url: https://kitfactory.github.io/agents-sdk-models/
+repo_url: https://github.com/kitfactory/refinire
+repo_name: kitfactory/refinire
+site_url: https://kitfactory.github.io/refinire/
 
 theme:
   name: material

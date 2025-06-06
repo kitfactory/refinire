@@ -1,4 +1,4 @@
-"""
+﻿"""
 Simple generation example using GenAgent (Flow/Step architecture)
 GenAgent（Flow/Stepアーキテクチャ）を使用したシンプルな生成の例
 
@@ -7,7 +7,7 @@ This example demonstrates the recommended way to replace AgentPipeline usage.
 """
 
 import asyncio
-from agents_sdk_models import create_simple_gen_agent, create_simple_flow
+from refinire import create_simple_gen_agent, create_simple_flow
 
 async def main():
     """
@@ -46,7 +46,7 @@ async def main():
     # 方法2: 手動でGenAgent作成
     print("\n\n=== Method 2: Manual GenAgent creation ===")
     
-    from agents_sdk_models import GenAgent, Flow
+    from refinire import GenAgent, Flow
     
     # Create GenAgent manually
     # GenAgentを手動で作成

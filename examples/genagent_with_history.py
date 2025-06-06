@@ -1,4 +1,4 @@
-"""
+﻿"""
 GenAgent example with conversation history
 会話履歴（history）を活用したGenAgentの例
 
@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with conversation history (Flow/St
 """
 
 import asyncio
-from agents_sdk_models import GenAgent, create_simple_flow
+from refinire import GenAgent, create_simple_flow
 
 async def main():
     """
@@ -65,7 +65,7 @@ async def main():
     # 方法2: コンテキストを共有する複数エージェントのフロー
     print("\n\n--- Multi-Agent Flow with Shared Context ---")
     
-    from agents_sdk_models import Flow
+    from refinire import Flow
     
     # Agent 1: Information gatherer
     # エージェント1: 情報収集者

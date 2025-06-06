@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Simple Trace CLI
 ---
@@ -17,7 +17,7 @@ except ImportError:
 
 import argparse
 from agents.tracing import set_tracing_disabled, set_trace_processors, trace, custom_span
-from agents_sdk_models.processor import DialogProcessor
+from refinire.processor import DialogProcessor
 
 
 def parse_metadata(items: list[str]) -> dict[str, str]:

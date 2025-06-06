@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 """Pipeline — ultra‑light builder for OpenAI Agents SDK.
 
@@ -15,8 +15,8 @@ import textwrap  # English: Import textwrap for dedenting multi-line JSON instru
 from enum import Enum  # English: Import Enum for defining comment importance levels. 日本語: コメント重要度レベル定義用Enumをインポートします。
 
 from agents import Agent, Runner
-from agents_sdk_models.llm import get_llm
-from agents_sdk_models.message import get_message  # Import for localized messages
+from refinire.llm import get_llm
+from refinire.message import get_message  # Import for localized messages
 
 try:
     from pydantic import BaseModel  # type: ignore

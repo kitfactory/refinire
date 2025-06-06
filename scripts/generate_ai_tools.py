@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Generate AI tool definitions for better IDE completion
 IDE補完を向上させるためのAIツール定義を生成します

@@ -1,9 +1,9 @@
-"""
+﻿"""
 Example: Retry generation based on evaluation comment importance
 例: 評価コメントの重要度に基づくリトライ例
 """
 
-from agents_sdk_models import AgentPipeline
+from refinire import AgentPipeline
 
 
 def main():

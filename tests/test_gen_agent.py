@@ -1,7 +1,7 @@
-import pytest
+﻿import pytest
 import asyncio
 from unittest.mock import MagicMock, patch
-from agents_sdk_models import GenAgent, Context, create_simple_gen_agent, create_evaluated_gen_agent
+from refinire import GenAgent, Context, create_simple_gen_agent, create_evaluated_gen_agent
 
 
 # モック Agent と Runner を適用するフィクスチャ

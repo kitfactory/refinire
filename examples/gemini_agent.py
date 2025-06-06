@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example of using GeminiModel with OpenAI Agents
 OpenAI AgentsでGeminiModelを使用する例
 """
@@ -7,7 +7,7 @@ import asyncio
 import os
 from agents.agent import Agent
 from agents.run import Runner
-from agents_sdk_models import GeminiModel
+from refinire import GeminiModel
 
 async def main():
     # Get API key from environment variable

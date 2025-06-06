@@ -1,9 +1,9 @@
-"""
+﻿"""
 Simple generation example using Pipeline without evaluation
 評価なしのPipelineを使用したシンプルな生成の例
 """
 
-from agents_sdk_models import AgentPipeline
+from refinire import AgentPipeline
 
 def main():
     # Initialize pipeline with generation template only

@@ -1,5 +1,5 @@
-import pytest
-from agents_sdk_models import AgentPipeline
+﻿import pytest
+from refinire import AgentPipeline
 
 @pytest.fixture(autouse=True)
 def patch_agent_and_runner(monkeypatch):

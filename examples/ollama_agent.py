@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example of using OllamaModel with OpenAI Agents v0.0.4
 OpenAI Agents v0.0.4でOllamaModelを使用する例
 """
@@ -7,7 +7,7 @@ import asyncio
 from agents.agent import Agent
 from agents.run import Runner
 from agents.items import ItemHelpers
-from agents_sdk_models import OllamaModel
+from refinire import OllamaModel
 
 async def main():
     # Initialize the Ollama model

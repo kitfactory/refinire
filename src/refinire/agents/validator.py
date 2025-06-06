@@ -1,4 +1,4 @@
-"""
+﻿"""
 ValidatorAgent implementation for data validation and business rule enforcement.
 
 ValidatorAgentはデータ検証とビジネスルール適用を行うエージェントです。

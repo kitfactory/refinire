@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Tests for Trace/Span functionality
 トレース/スパン機能のテスト
@@ -10,7 +10,7 @@ FlowからTrace、StepからSpanへのマッピングをテスト
 import pytest
 import asyncio
 from datetime import datetime
-from agents_sdk_models import Flow, Context, FunctionStep
+from refinire import Flow, Context, FunctionStep
 
 
 def simple_function(input_data: str, ctx: Context) -> Context:

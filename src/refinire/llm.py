@@ -1,4 +1,4 @@
-from typing import Literal, Optional, Any, List
+﻿from typing import Literal, Optional, Any, List
 from agents.models.interface import Model
 from agents import OpenAIChatCompletionsModel  # Import from agents library
 from agents import set_tracing_disabled  # Import set_tracing_disabled for tracing control

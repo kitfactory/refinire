@@ -1,4 +1,4 @@
-"""
+﻿"""
 Example of using GeminiModel with streaming responses in OpenAI Agents
 OpenAI Agentsでストリーミングレスポンスを使用したGeminiモデルの例
 """
@@ -9,7 +9,7 @@ import sys
 from openai.types.responses import ResponseTextDeltaEvent
 from agents.agent import Agent
 from agents.run import Runner
-from agents_sdk_models import GeminiModel
+from refinire import GeminiModel
 
 async def main():
     """

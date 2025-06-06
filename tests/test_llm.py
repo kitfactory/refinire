@@ -1,5 +1,5 @@
-import pytest
-from agents_sdk_models import llm
+﻿import pytest
+from refinire import llm
 
 class DummyOpenAIResponsesModel:
     def __init__(self, openai_client=None, **kwargs):

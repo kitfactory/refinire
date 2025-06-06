@@ -1,4 +1,4 @@
-"""
+﻿"""
 Tests for ClarifyAgent
 ClarifyAgentのテスト
 """
@@ -9,11 +9,11 @@ from typing import List
 from unittest.mock import patch, MagicMock
 from pydantic import BaseModel
 
-from agents_sdk_models import (
+from refinire import (
     ClarifyAgent, Context, ClarificationResult, 
     create_simple_clarify_agent, create_evaluated_clarify_agent
 )
-from agents_sdk_models.clarify_agent import ClarificationQuestion
+from refinire.clarify_agent import ClarificationQuestion
 
 
 class ReportRequirementsForTest(BaseModel):

@@ -1,4 +1,4 @@
-"""Tests for InteractivePipeline - Generic interactive conversation pipeline
+﻿"""Tests for InteractivePipeline - Generic interactive conversation pipeline
 対話的パイプラインのテスト - 汎用対話パイプライン
 """
 
@@ -6,7 +6,7 @@ import pytest
 from unittest.mock import Mock, patch
 from typing import Any
 
-from agents_sdk_models import (
+from refinire import (
     InteractivePipeline, InteractionResult, InteractionQuestion,
     create_simple_interactive_pipeline, create_evaluated_interactive_pipeline,
     LLMResult

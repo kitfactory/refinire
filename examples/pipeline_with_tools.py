@@ -1,9 +1,9 @@
-"""
+﻿"""
 Pipeline example with tools for enhanced generation
 ツールを使用した拡張生成のPipelineの例
 """
 
-from agents_sdk_models import AgentPipeline
+from refinire import AgentPipeline
 from agents import function_tool
 
 @function_tool

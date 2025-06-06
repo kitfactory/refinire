@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Simple Flow Test
 シンプルなFlowテスト
@@ -8,7 +8,7 @@ Test basic Flow functionality to debug execution issues.
 """
 
 import asyncio
-from agents_sdk_models import Flow, FunctionStep, DebugStep
+from refinire import Flow, FunctionStep, DebugStep
 
 
 async def main():

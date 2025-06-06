@@ -1,4 +1,4 @@
-"""
+﻿"""
 Module for localized message strings
 日本語/英語のメッセージ文字列を提供するモジュール
 """

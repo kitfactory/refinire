@@ -1,4 +1,4 @@
-"""
+﻿"""
 LLMPipeline and GenAgentV2 Example - Modern replacement for deprecated AgentPipeline
 LLMPipelineとGenAgentV2の例 - 非推奨のAgentPipelineに代わるモダンな実装
 """
@@ -7,7 +7,7 @@ import asyncio
 from typing import Optional
 from pydantic import BaseModel
 
-from agents_sdk_models import (
+from refinire import (
     LLMPipeline, GenAgentV2, Flow, Context,
     create_simple_llm_pipeline, create_evaluated_llm_pipeline,
     create_simple_gen_agent_v2, create_evaluated_gen_agent_v2,

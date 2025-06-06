@@ -1,4 +1,4 @@
-"""
+﻿"""
 GenAgent compatibility tests with AgentPipeline
 AgentPipelineとGenAgentの互換性確認テスト
 
@@ -7,7 +7,7 @@ This test suite ensures GenAgent can provide equivalent functionality to AgentPi
 """
 
 import pytest
-from agents_sdk_models import AgentPipeline, GenAgent, Flow, create_simple_flow, create_simple_gen_agent, create_evaluated_gen_agent
+from refinire import AgentPipeline, GenAgent, Flow, create_simple_flow, create_simple_gen_agent, create_evaluated_gen_agent
 
 class DummyAgent:
     """
@@ -76,7 +76,7 @@ class TestGenAgentCompatibility:
 
         # GenAgent version  
         # GenAgentバージョン
-        from agents_sdk_models import GenAgent, Flow
+        from refinire import GenAgent, Flow
         
         gen_agent = GenAgent(
             name="test_gen",
@@ -245,7 +245,7 @@ class TestGenAgentCompatibility:
         """
         # Mock get_llm for testing
         # テスト用にget_llmをモック
-        from agents_sdk_models import pipeline as pipeline_mod
+        from refinire import pipeline as pipeline_mod
         
         def mock_get_llm(model=None, provider=None):
             return f"llm-{provider or 'openai'}-{model}"
@@ -349,12 +349,12 @@ class TestBackwardCompatibility:
         """
         # All these imports should still work
         # これらのインポートはすべて引き続き動作するはず
-        from agents_sdk_models import AgentPipeline
-        from agents_sdk_models import GenAgent
-        from agents_sdk_models import create_simple_gen_agent
-        from agents_sdk_models import create_evaluated_gen_agent
-        from agents_sdk_models import Flow
-        from agents_sdk_models import create_simple_flow
+        from refinire import AgentPipeline
+        from refinire import GenAgent
+        from refinire import create_simple_gen_agent
+        from refinire import create_evaluated_gen_agent
+        from refinire import Flow
+        from refinire import create_simple_flow
         
         # Verify classes exist
         # クラスが存在することを確認

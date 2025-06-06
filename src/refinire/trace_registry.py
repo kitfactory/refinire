@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Trace Registry - Storage and search functionality for traces
 トレースレジストリ - トレースの保存・検索機能

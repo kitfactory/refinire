@@ -1,4 +1,4 @@
-"""
+﻿"""
 Test LLMPipeline tool functionality
 LLMPipelineのtool機能をテスト
 
@@ -10,7 +10,7 @@ function calling, and automatic tool execution.
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from agents_sdk_models.llm_pipeline import (
+from refinire.llm_pipeline import (
     LLMPipeline, LLMResult,
     create_tool_enabled_llm_pipeline,
     create_calculator_pipeline,

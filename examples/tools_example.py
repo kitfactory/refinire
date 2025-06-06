@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Tools function example for agents-sdk-models
 エージェントSDKモデルのツール機能例
@@ -10,7 +10,7 @@ This example demonstrates how to use OpenAI tools with GenAgent and ClarifyAgent
 import asyncio
 import json
 from typing import Optional
-from agents_sdk_models import (
+from refinire import (
     GenAgent, 
     ClarifyAgent, 
     create_simple_gen_agent, 
@@ -156,7 +156,7 @@ async def test_direct_llm_pipeline_with_tools():
     print("\n⚙️ Testing LLMPipeline directly with Tools")
     print("LLMPipelineを直接ツールでテスト")
     
-    from agents_sdk_models.llm_pipeline import LLMPipeline
+    from refinire.llm_pipeline import LLMPipeline
     
     tools = [calculator_tool()]
     
