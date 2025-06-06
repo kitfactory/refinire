@@ -9,7 +9,7 @@ A collection of model adapters and workflow utilities for the OpenAI Agents SDK,
 
 ## ⚡ Recommended: Flow/Step Architecture - **Super Simple!** 
 
-**🎉 New in v0.0.22:** We now recommend using the **Flow/Step architecture** with **GenAgent**. It's incredibly simple and powerful!
+**🎉 New in v0.0.24:** Enhanced **Flow/Step architecture** with **standalone agent execution** and **trace search capabilities**. All agents can now run independently!
 
 ### 🚀 **Just 3 Lines to Get Started!**
 
@@ -24,14 +24,15 @@ gen_agent = create_simple_gen_agent(
     model="gpt-4o-mini"
 )
 
-# Step 2: Create a Flow (even simpler now!)
-flow = Flow(steps=gen_agent)  # Single step - that's it!
-
-# Step 3: Run it! (same simple interface as before)
+# Step 2: Run standalone (no Flow needed!) - NEW in v0.24!
 context = Context()
-context.add_user_message("Hello! Tell me about Japanese culture briefly.")
 result = asyncio.run(gen_agent.run("Hello! Tell me about Japanese culture briefly.", context))
 print(result.shared_state["simple_gen_result"])  # Your response is ready!
+
+# OR Step 2: Create a Flow (if you need complex workflows)
+flow = Flow(steps=gen_agent)  # Single step - that's it!
+result = asyncio.run(flow.run(input_data="Hello! Tell me about Japanese culture briefly."))
+print(result.get_result("simple_gen_result"))
 ```
 
 ### 🚀 **NEW: Ultra-Simple Flow Creation!**
@@ -223,13 +224,26 @@ print(result.shared_state.get("message"))  # "Starting beginner tutorial."
 - 🔄 **Unified Factory**: Use the `get_llm` function to easily get model instances for different providers.
 - 🧩 **Multiple Providers**: Support for OpenAI, Ollama, Google Gemini, and Anthropic Claude.
 - 📊 **Structured Output**: All models instantiated via `get_llm` support structured output using Pydantic models.
-- 🏗️ **AgentPipeline Class**: Easily compose generation, evaluation, tool integration, and guardrails in one workflow.
+- 🤖 **Standalone Agent Execution**: All agents (GenAgent, ClarifyAgent, LLMPipeline) can run independently without Flow.
+- 🔍 **Trace Search & Monitoring**: Search and analyze execution traces by flow name, agent name, and custom criteria.
+- 💬 **Interactive Agents**: Multi-turn conversation support with state management and context persistence.
 - 🛡️ **Guardrails**: Add input/output guardrails for safe and compliant agent behavior.
 - 🛠️ **Simple Interface**: Minimal code, maximum flexibility.
 - ✨ **Zero-Code Evaluation & Self-Improvement**: Just specify model names and system prompts to automatically run generation, evaluation, and feedback-driven retries.
 - 🔍 **Custom Console Tracing**: Console tracing is enabled by default using `ConsoleTracingProcessor`. While the OpenAI Agents SDK uses OpenAI's Tracing service by default (requiring `OPENAI_API_KEY`), this library provides a lightweight console-based tracer that works with any provider. You can disable tracing entirely with `disable_tracing()`.
 
 ---
+
+## v0.24 Release Notes
+- **🔍 TraceRegistry System** - Comprehensive trace search and analysis by flow name, agent name, tags, status, and time ranges
+- **🤖 Agent Standalone Execution** - All agents (GenAgent, ClarifyAgent, LLMPipeline) can now run independently without Flow
+- **💬 Interactive Agent Enhancements** - ClarifyAgent with multi-turn conversation loops and state management
+- **📁 Agent Organization** - Restructured agents into `/agents` folder for better organization
+- **📊 Real-time Flow Monitoring** - Search and monitor running flows with comprehensive statistics
+- **📤 Trace Export/Import** - Data persistence for trace analysis and backup
+- **🧪 Comprehensive Test Suite** - Full test coverage for all new features
+- **📖 Japanese Documentation** - Complete Japanese language documentation and examples
+- **⚠️ Library Name Change Notice** - Starting from v0.1.0, this library will be renamed to `ai-flow-sdk`. Please plan for migration.
 
 ## v0.22 Release Notes
 - **🚀 Major: New Flow Constructor** - Added ultra-simple Flow creation with 3 modes:
@@ -344,26 +358,57 @@ with trace("MyTrace"):
 print(result)
 ```
 
-### Example: ClearifyAgent for Ambiguous Requests
+### 🔍 NEW: Trace Search & Flow Monitoring
+```python
+from agents_sdk_models import get_global_registry, Flow
+import asyncio
+
+# Create and run flows
+flow = Flow(steps=create_simple_gen_agent("ai_assistant", "You are helpful", "gpt-4o-mini"))
+await flow.run(input_data="Hello!")
+
+# Search traces by flow and agent names
+registry = get_global_registry()
+
+# Find flows by name (exact or partial match)
+flows = registry.search_by_flow_name("ai_assistant")
+print(f"Found {len(flows)} flows")
+
+# Find flows by agent name
+agent_flows = registry.search_by_agent_name("ai_assistant", exact_match=False)
+print(f"Found {len(agent_flows)} flows using similar agents")
+
+# Complex search with multiple criteria
+complex_results = registry.complex_search(
+    flow_name_pattern="ai",
+    agent_name_pattern="assistant", 
+    status="completed"
+)
+```
+
+### 🤖 NEW: Standalone Agent Execution
 ```python
 from agents_sdk_models import create_simple_clarify_agent, Context
 import asyncio
 
-# Create ClearifyAgent for handling ambiguous requests
+# Create ClarifyAgent for handling ambiguous requests
 agent = create_simple_clarify_agent(
     name="clarify_agent",
-    instructions="Ask questions to clarify ambiguous user requests. When the request is clear enough, output the clarified request.",
+    instructions="Ask questions to clarify ambiguous user requests.",
     model="gpt-4o-mini"
 )
 
-# Process ambiguous request
-ambiguous_request = "I want to create an API"
+# Run standalone - no Flow needed!
 context = Context()
-context.add_user_message(ambiguous_request)
+result = asyncio.run(agent.run("I want to create an API", context))
+print("Clarified:", result.shared_state.get("clarify_agent_result"))
 
-result = asyncio.run(agent.run(ambiguous_request, context))
-print("Original:", ambiguous_request)
-print("Clarified:", result.shared_state.get("clarify_agent_result", "Still clarifying"))
+# Interactive loop for multi-turn clarification
+user_inputs = ["Create a task", "Web app development", "High priority, due next week"]
+for turn, user_input in enumerate(user_inputs, 1):
+    result = asyncio.run(agent.run(user_input, context))
+    print(f"Turn {turn}: {result.shared_state.get('clarify_agent_result')}")
+    context = result  # Continue conversation
 ```
 
 ### Example: Multi-Provider LLM Access
@@ -712,10 +757,29 @@ print(result)
 
 ## 📂 Examples
 
-See the `examples/` directory for more advanced usage:
-- `pipeline_simple_generation.py`: Minimal generation
-- `pipeline_with_evaluation.py`: Generation + evaluation
-- `pipeline_with_tools.py`: Tool-augmented generation
+See the `examples/` directory for comprehensive usage examples:
+
+### Core Features
+- `standalone_agent_demo.py`: Standalone agent execution (GenAgent, ClarifyAgent, LLMPipeline)
+- `trace_search_demo.py`: Trace search and flow monitoring
+- `llm_pipeline_example.py`: Tool-enabled LLM pipelines
+- `interactive_pipeline_example.py`: Multi-turn interactive conversations
+
+### Flow Architecture
+- `flow_show_example.py`: Flow visualization and debugging
+- `simple_flow_test.py`: Basic flow construction and execution
+- `router_agent_example.py`: Flow routing and conditional logic
+
+### Agent Types
+- `clarify_agent_example.py`: Interactive requirement clarification
+- `notification_agent_example.py`: Event-driven notifications
+- `extractor_agent_example.py`: Data extraction from text
+- `validator_agent_example.py`: Content validation and safety
+
+### Legacy (Deprecated)
+- `pipeline_simple_generation.py`: Minimal generation (use GenAgent instead)
+- `pipeline_with_evaluation.py`: Generation + evaluation (use LLMPipeline instead)
+- `pipeline_with_tools.py`: Tool-augmented generation (use LLMPipeline instead)
 - `pipeline_with_guardrails.py`: Guardrails (input filtering)
 
 ---

@@ -4,9 +4,20 @@
 
 agents-sdk-modelsは、OpenAI、Anthropic、Google、Ollamaなどの様々なLLMプロバイダーを統一インターフェースで利用できるPythonライブラリです。
 
+## 📢 重要なお知らせ
+**⚠️ ライブラリ名変更予告**: v0.1.0から、このライブラリは `ai-flow-sdk` に名前が変更されます。移行の準備をお願いします。
+
+## 🎉 v0.24の新機能
+- **💬 インタラクティブAgent強化**: 複数ターン会話ループと状態管理
+- **📁 Agent整理**: `/agents`フォルダによる構造化
+- **📊 リアルタイムFlow監視**: 実行中Flowの検索と包括的統計
+- **📤 Trace エクスポート/インポート**: 分析・バックアップ用データ永続化
+
 ## ✨ 特徴
 
 - **🔄 統一インターフェース**: すべての主要LLMプロバイダーを同じAPIで利用
+- **🤖 Agent単体実行**: 全AgentがFlow不要で独立実行可能
+- **💬 インタラクティブAgent**: 状態管理と複数ターン会話対応
 - **🛠️ 自動Tool実行**: LLMが必要に応じてツールを自動実行  
 - **🔧 簡単設定**: 最小限のコードで強力なAIパイプラインを構築
 - **📊 品質評価**: コンテンツの自動評価とスコアリング
@@ -24,6 +35,25 @@ pip install agents-sdk-models
 ```
 
 ### 基本的な使用方法
+
+```python
+from agents_sdk_models import create_simple_gen_agent, Context
+import asyncio
+
+# Agent単体実行（Flow不要！）- v0.24の新機能
+agent = create_simple_gen_agent(
+    name="簡単AI",
+    instructions="親切なアシスタントとして日本語で回答してください。",
+    model="gpt-4o-mini"
+)
+
+# 単体で実行
+context = Context()
+result = asyncio.run(agent.run("こんにちは！日本の文化について教えて", context))
+print(result.shared_state["簡単AI_result"])
+```
+
+### 従来の方法（LLMのみ）
 
 ```python
 from agents_sdk_models import get_llm
@@ -136,6 +166,61 @@ print(f"利用可能なツール: {pipeline.list_tools()}")
 pipeline.remove_tool("greet")
 ```
 
+### 🔍 新機能: Trace検索・Flow監視
+
+```python
+from agents_sdk_models import get_global_registry, Flow
+import asyncio
+
+# Flowを作成・実行
+flow = Flow(steps=create_simple_gen_agent("AIアシスタント", "親切に回答", "gpt-4o-mini"))
+await flow.run(input_data="こんにちは！")
+
+# Flow名・Agent名でTrace検索
+registry = get_global_registry()
+
+# Flow名で検索（完全一致・部分一致）
+flows = registry.search_by_flow_name("AIアシスタント")
+print(f"{len(flows)}個のFlowが見つかりました")
+
+# Agent名で検索
+agent_flows = registry.search_by_agent_name("アシスタント", exact_match=False)
+print(f"{len(agent_flows)}個のFlowが類似Agentを使用")
+
+# 複合検索（複数条件）
+complex_results = registry.complex_search(
+    flow_name_pattern="AI",
+    agent_name_pattern="アシスタント", 
+    status="completed"
+)
+```
+
+### 🤖 新機能: Agent単体実行
+
+```python
+from agents_sdk_models import create_simple_clarify_agent, Context
+import asyncio
+
+# 要件明確化Agent作成
+agent = create_simple_clarify_agent(
+    name="要件明確化",
+    instructions="曖昧な要求を明確にするために質問をしてください。",
+    model="gpt-4o-mini"
+)
+
+# 単体実行（Flow不要！）
+context = Context()
+result = asyncio.run(agent.run("APIを作りたい", context))
+print("明確化結果:", result.shared_state.get("要件明確化_result"))
+
+# インタラクティブループ（複数ターン会話）
+user_inputs = ["タスクを作成", "ウェブアプリ開発", "高優先度、来週まで"]
+for turn, user_input in enumerate(user_inputs, 1):
+    result = asyncio.run(agent.run(user_input, context))
+    print(f"ターン{turn}: {result.shared_state.get('要件明確化_result')}")
+    context = result  # 会話継続
+```
+
 ### 📊 LLMPipelineが優れている理由
 
 | 機能 | AgentPipeline（非推奨） | LLMPipeline（推奨） |
@@ -195,10 +280,28 @@ for provider, model in providers:
 ## 📂 使用例
 
 より高度な使用方法については`examples/`ディレクトリを参照してください：
-- `llm_pipeline_example.py`: LLMPipelineのツール機能例
-- `pipeline_simple_generation.py`: 最小限の生成例
-- `pipeline_with_evaluation.py`: 生成 + 評価
-- `pipeline_with_tools.py`: ツール拡張生成
+
+### コア機能
+- `standalone_agent_demo.py`: Agent単体実行（GenAgent、ClarifyAgent、LLMPipeline）
+- `trace_search_demo.py`: Trace検索・Flow監視
+- `llm_pipeline_example.py`: ツール対応LLMパイプライン
+- `interactive_pipeline_example.py`: 複数ターンインタラクティブ会話
+
+### Flowアーキテクチャ
+- `flow_show_example.py`: Flow可視化・デバッグ
+- `simple_flow_test.py`: 基本Flow構築・実行
+- `router_agent_example.py`: Flowルーティング・条件分岐
+
+### Agentタイプ
+- `clarify_agent_example.py`: インタラクティブ要件明確化
+- `notification_agent_example.py`: イベント駆動通知
+- `extractor_agent_example.py`: テキストからデータ抽出
+- `validator_agent_example.py`: コンテンツ検証・安全性
+
+### レガシー（非推奨）
+- `pipeline_simple_generation.py`: 最小限の生成例（GenAgent使用推奨）
+- `pipeline_with_evaluation.py`: 生成 + 評価（LLMPipeline使用推奨）
+- `pipeline_with_tools.py`: ツール拡張生成（LLMPipeline使用推奨）
 - `pipeline_with_guardrails.py`: ガードレール（入力フィルタリング）
 
 ---
