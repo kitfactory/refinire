@@ -3,7 +3,7 @@ Agents SDK Models
 エージェントSDKモデル
 """
 
-__version__ = "0.0.24"
+__version__ = "0.1.0"
 
 # Import models
 # モデルをインポート
@@ -30,7 +30,7 @@ from .agents.clarify_agent import (
 from .context import Context, Message
 from .step import (
     Step, UserInputStep, ConditionStep, FunctionStep, ForkStep, JoinStep,
-    AgentPipelineStep, DebugStep, create_simple_condition, create_lambda_step
+    AgentPipelineStep, DebugStep, ParallelStep, create_simple_condition, create_lambda_step
 )
 from .flow import Flow, FlowExecutionError, create_simple_flow, create_conditional_flow
 from .agents.gen_agent import (
@@ -86,6 +86,7 @@ __all__ = [
     "JoinStep",
     "AgentPipelineStep",
     "DebugStep",
+    "ParallelStep",
     "Flow",
     "FlowExecutionError",
     "create_simple_condition",

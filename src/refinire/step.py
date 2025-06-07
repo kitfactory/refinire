@@ -537,4 +537,184 @@ def create_lambda_step(name: str, func: Callable[[Context], Any], next_step: Opt
         func(ctx)
         return ctx
     
-    return FunctionStep(name, wrapper, next_step) 
+    return FunctionStep(name, wrapper, next_step)
+
+
+class ParallelStep(Step):
+    """
+    Step that executes multiple steps in parallel
+    複数のステップを並列実行するステップ
+    
+    This step automatically manages parallel execution of child steps.
+    このステップは子ステップの並列実行を自動管理します。
+    It waits for all parallel steps to complete before proceeding.
+    全ての並列ステップが完了するまで待機してから進行します。
+    """
+    
+    def __init__(
+        self, 
+        name: str, 
+        parallel_steps: List[Step], 
+        next_step: Optional[str] = None,
+        max_workers: Optional[int] = None
+    ):
+        """
+        Initialize parallel step
+        並列ステップを初期化
+        
+        Args:
+            name: Step name / ステップ名
+            parallel_steps: List of steps to execute in parallel / 並列実行するステップのリスト
+            next_step: Next step after all parallel steps complete / 全並列ステップ完了後の次ステップ
+            max_workers: Maximum number of concurrent workers / 最大同時ワーカー数
+        """
+        super().__init__(name)
+        self.parallel_steps = parallel_steps
+        self.next_step = next_step
+        self.max_workers = max_workers or min(32, len(parallel_steps) + 4)
+        
+        # Validate that all steps have names
+        # 全ステップに名前があることを検証
+        for step in parallel_steps:
+            if not hasattr(step, 'name') or not step.name:
+                raise ValueError(f"All parallel steps must have valid names: {step}")
+    
+    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+        """
+        Execute parallel steps
+        並列ステップを実行
+        
+        Args:
+            user_input: User input (passed to all parallel steps) / ユーザー入力（全並列ステップに渡される）
+            ctx: Current context / 現在のコンテキスト
+            
+        Returns:
+            Context: Updated context with merged results / マージされた結果を持つ更新済みコンテキスト
+        """
+        ctx.update_step_info(self.name)
+        
+        # Create separate contexts for each parallel step
+        # 各並列ステップ用に別々のコンテキストを作成
+        parallel_contexts = []
+        for step in self.parallel_steps:
+            # Clone context for each parallel execution
+            # 各並列実行用にコンテキストをクローン
+            step_ctx = self._clone_context_for_parallel(ctx, step.name)
+            parallel_contexts.append((step, step_ctx))
+        
+        # Execute all steps in parallel
+        # 全ステップを並列実行
+        async def run_parallel_step(step_and_ctx):
+            step, step_ctx = step_and_ctx
+            try:
+                result_ctx = await step.run(user_input, step_ctx)
+                return step.name, result_ctx, None
+            except Exception as e:
+                return step.name, step_ctx, e
+        
+        # Use asyncio.gather for parallel execution
+        # 並列実行にasyncio.gatherを使用
+        results = await asyncio.gather(
+            *[run_parallel_step(sc) for sc in parallel_contexts],
+            return_exceptions=True
+        )
+        
+        # Merge results back into main context
+        # 結果をメインコンテキストにマージ
+        errors = []
+        for result in results:
+            if isinstance(result, Exception):
+                errors.append(result)
+                continue
+                
+            step_name, result_ctx, error = result
+            if error:
+                errors.append(f"Step {step_name}: {error}")
+                continue
+            
+            # Merge parallel step results
+            # 並列ステップ結果をマージ
+            self._merge_parallel_result(ctx, step_name, result_ctx)
+        
+        # Handle errors if any
+        # エラーがあれば処理
+        if errors:
+            error_msg = f"Parallel execution errors: {'; '.join(map(str, errors))}"
+            ctx.add_system_message(error_msg)
+            raise RuntimeError(error_msg)
+        
+        # Set next step or finish
+        # 次ステップを設定または終了
+        if self.next_step:
+            ctx.goto(self.next_step)
+        else:
+            ctx.finish()
+        
+        return ctx
+    
+    def _clone_context_for_parallel(self, ctx: Context, step_name: str) -> Context:
+        """
+        Clone context for parallel execution
+        並列実行用にコンテキストをクローン
+        
+        Args:
+            ctx: Original context / 元のコンテキスト
+            step_name: Name of the step / ステップ名
+            
+        Returns:
+            Context: Cloned context / クローンされたコンテキスト
+        """
+        # Create new context with shared state
+        # 共有状態を持つ新しいコンテキストを作成
+        cloned_ctx = Context()
+        
+        # Copy essential state
+        # 必須状態をコピー
+        cloned_ctx.shared_state = ctx.shared_state.copy()
+        cloned_ctx.messages = ctx.messages.copy()
+        cloned_ctx.last_user_input = ctx.last_user_input
+        cloned_ctx.trace_id = ctx.trace_id
+        cloned_ctx.span_history = ctx.span_history.copy()
+        
+        # Set step-specific information
+        # ステップ固有情報を設定
+        cloned_ctx.current_step = step_name
+        
+        return cloned_ctx
+    
+    def _merge_parallel_result(self, main_ctx: Context, step_name: str, result_ctx: Context) -> None:
+        """
+        Merge parallel step result into main context
+        並列ステップ結果をメインコンテキストにマージ
+        
+        Args:
+            main_ctx: Main context / メインコンテキスト
+            step_name: Name of the completed step / 完了したステップ名
+            result_ctx: Result context from parallel step / 並列ステップからの結果コンテキスト
+        """
+        # Merge shared state with step-specific keys
+        # ステップ固有キーで共有状態をマージ
+        for key, value in result_ctx.shared_state.items():
+            if key not in main_ctx.shared_state:
+                main_ctx.shared_state[key] = value
+            else:
+                # Handle conflicts by prefixing with step name
+                # ステップ名をプレフィックスとして衝突を処理
+                prefixed_key = f"{step_name}_{key}"
+                main_ctx.shared_state[prefixed_key] = value
+        
+        # Merge conversation history
+        # 会話履歴をマージ
+        main_ctx.messages.extend(result_ctx.messages)
+        
+        # Update execution path
+        # 実行パスを更新
+        main_ctx.span_history.extend(result_ctx.span_history)
+        
+        # Store step-specific results
+        # ステップ固有結果を保存
+        main_ctx.shared_state[f"{step_name}_result"] = {
+            "status": "completed",
+            "output": result_ctx.shared_state,
+            "messages": result_ctx.messages
+        } 

@@ -13,7 +13,7 @@ from datetime import datetime
 import traceback
 
 from .context import Context
-from .step import Step
+from .step import Step, ParallelStep
 from .trace_registry import get_global_registry, TraceRegistry
 
 
@@ -71,12 +71,12 @@ class Flow:
         # Handle flexible step definitions
         # 柔軟なステップ定義を処理
         if isinstance(steps, dict):
-            # Traditional mode: Dict[str, Step]
-            # 従来モード: Dict[str, Step]
+            # Traditional mode: Dict[str, Step] with parallel support
+            # 従来モード: 並列サポート付きDict[str, Step]
             if start is None:
                 raise ValueError("start parameter is required when steps is a dictionary")
             self.start = start
-            self.steps = steps
+            self.steps = self._process_dag_structure(steps)
         elif isinstance(steps, list):
             # Sequential mode: List[Step] 
             # シーケンシャルモード: List[Step]
@@ -148,6 +148,60 @@ class Flow:
         # Register trace in global registry
         # グローバルレジストリにトレースを登録
         self._register_trace()
+    
+    def _process_dag_structure(self, steps_def: Dict[str, Any]) -> Dict[str, Step]:
+        """
+        Process DAG structure and convert parallel definitions to ParallelStep
+        DAG構造を処理し、並列定義をParallelStepに変換
+        
+        Args:
+            steps_def: Step definitions which may contain parallel structures
+                      並列構造を含む可能性があるステップ定義
+                      
+        Returns:
+            Dict[str, Step]: Processed step definitions with ParallelStep instances
+                           ParallelStepインスタンスを含む処理済みステップ定義
+        """
+        processed_steps = {}
+        
+        for step_name, step_def in steps_def.items():
+            if isinstance(step_def, dict) and "parallel" in step_def:
+                # Handle parallel step definition
+                # 並列ステップ定義を処理
+                parallel_steps = step_def["parallel"]
+                if not isinstance(parallel_steps, list):
+                    raise ValueError(f"'parallel' value must be a list of steps for step '{step_name}'")
+                
+                # Validate all parallel steps are Step instances
+                # 全並列ステップがStepインスタンスであることを検証
+                for i, parallel_step in enumerate(parallel_steps):
+                    if not isinstance(parallel_step, Step):
+                        raise ValueError(f"Parallel step {i} in '{step_name}' must be a Step instance")
+                
+                # Get next step from definition
+                # 定義から次ステップを取得
+                next_step = step_def.get("next_step")
+                max_workers = step_def.get("max_workers")
+                
+                # Create ParallelStep
+                # ParallelStepを作成
+                parallel_step_instance = ParallelStep(
+                    name=step_name,
+                    parallel_steps=parallel_steps,
+                    next_step=next_step,
+                    max_workers=max_workers
+                )
+                
+                processed_steps[step_name] = parallel_step_instance
+                
+            elif isinstance(step_def, Step):
+                # Regular step
+                # 通常ステップ
+                processed_steps[step_name] = step_def
+            else:
+                raise ValueError(f"Invalid step definition for '{step_name}': {type(step_def)}")
+        
+        return processed_steps
     
     def _register_trace(self) -> None:
         """
