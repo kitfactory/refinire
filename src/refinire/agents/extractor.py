@@ -17,9 +17,9 @@ import html
 from html.parser import HTMLParser
 from urllib.parse import urlparse
 
-from ..flow.context import Context
-from ..flow.step import Step
-from ..pipeline.llm_pipeline import LLMPipeline
+from .flow.context import Context
+from .flow.step import Step
+from .pipeline.llm_pipeline import LLMPipeline
 
 logger = logging.getLogger(__name__)
 

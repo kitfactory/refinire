@@ -3,9 +3,9 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
 
-from src.refinire.flow import Flow, FlowExecutionError, create_simple_flow, create_conditional_flow
-from src.refinire.flow import Step, UserInputStep, ConditionStep, FunctionStep
-from src.refinire.flow import Context
+from src.refinire.agents.flow import Flow, FlowExecutionError, create_simple_flow, create_conditional_flow
+from src.refinire.agents.flow import Step, UserInputStep, ConditionStep, FunctionStep
+from src.refinire.agents.flow import Context
 
 
 class DummyStep(Step):

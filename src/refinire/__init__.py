@@ -16,7 +16,7 @@ Key Features:
 - Interactive multi-turn conversation support
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 # Core LLM functionality - most commonly used
 from .core import (
@@ -27,6 +27,7 @@ from .core import (
     PromptStore,
     StoredPrompt,
     PromptReference,
+    P,
     detect_system_language,
     get_default_storage_dir,
     enable_console_tracing,
@@ -43,7 +44,7 @@ from .core import (
 )
 
 # Workflow orchestration
-from .flow import (
+from .agents.flow import (
     Flow,
     FlowExecutionError,
     Step,
@@ -64,7 +65,7 @@ from .flow import (
 )
 
 # Modern pipeline functionality
-from .pipeline import (
+from .agents.pipeline import (
     LLMPipeline,
     LLMResult,
     InteractivePipeline,
@@ -106,6 +107,7 @@ __all__ = [
     "PromptStore",
     "StoredPrompt",
     "PromptReference",
+    "P",
     "detect_system_language",
     "get_default_storage_dir",
     "ClaudeModel",

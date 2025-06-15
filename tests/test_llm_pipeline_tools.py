@@ -11,7 +11,7 @@ function calling, and automatic tool execution.
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from refinire import LLMPipeline, LLMResult, create_tool_enabled_llm_pipeline
-from refinire.pipeline.llm_pipeline import create_calculator_pipeline, create_web_search_pipeline
+from refinire.agents.pipeline.llm_pipeline import create_calculator_pipeline, create_web_search_pipeline
 
 
 class TestLLMPipelineTools:
@@ -133,7 +133,7 @@ class TestLLMPipelineTools:
         removed = pipeline.remove_tool("non_existent")
         assert removed is False
     
-    @patch('refinire.pipeline.llm_pipeline.OpenAI')
+    @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_tool_execution_in_pipeline(self, mock_openai):
         """Test tool execution within pipeline / パイプライン内でのtool実行をテスト"""
         # Mock OpenAI client
@@ -317,7 +317,7 @@ class TestLLMPipelineTools:
 class TestLLMPipelineToolIntegration:
     """Integration tests for LLMPipeline tools / LLMPipelineのtools統合テスト"""
     
-    @patch('refinire.pipeline.llm_pipeline.OpenAI')
+    @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_multiple_tool_calls(self, mock_openai):
         """Test handling multiple tool calls in sequence / 複数tool呼び出しの連続処理をテスト"""
         # This would test the full tool calling loop

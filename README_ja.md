@@ -17,8 +17,9 @@
 from refinire import create_simple_gen_agent, Context
 agent = create_simple_gen_agent("assistant", "親切なアシスタントです", model="gpt-4o-mini")
 print(agent.run_sync("こんにちは", Context()).text)
-The Four Pillars
 ```
+
+## The Four Pillars
 
 Refinire は、AI エージェント開発を支える四つの柱を提供します。これらは、開発者が効率的かつ柔軟にエージェントを構築するための基盤です。
 
@@ -120,3 +121,25 @@ API Reference — 型ヒント付きで迷わない
 Contributing — 初回PR歓迎！
 
 Refinire は、複雑さを洗練されたシンプルさに変えることで、AIエージェント開発をより直感的で効率的なものにします。
+
+---
+
+## リリースノート - v0.2.1
+
+### 新機能
+- **P() 関数**: `PromptStore.get()` の便利な短縮エイリアス - `PromptStore.get("name")` の代わりに `P("name")` でプロンプトにアクセス可能
+
+### アーキテクチャの改善
+- **単一パッケージ構造**: マルチパッケージ構造から統一パッケージ構造に統合し、保守性を向上
+- **階層の再編成**: flow と pipeline モジュールを `agents` サブパッケージ下に移動してより清潔な構造に
+- **依存関係の更新**: Python 3.10+ 要件と OpenAI Agents SDK 0.0.17+ にアップグレード
+
+### 品質 & テスト
+- **100% テスト合格率**: 包括的な移行修正により、408個のテストがすべて合格
+- **72% テストカバレッジ**: 70% から 72% にコードカバレッジが向上し、テスト品質も改善
+- **互換性の強化**: Pydantic v2 互換性と Context API の改善を修正
+
+### 開発者体験
+- **シンプルなインポート**: すべての機能が単一の `refinire` パッケージ経由でアクセス可能
+- **より良い構造**: core、agents、flow、pipeline モジュール間の明確な分離
+- **後方互換性の維持**: 既存のコードは新しい構造でも継続して動作

@@ -15,8 +15,8 @@ import textwrap  # English: Import textwrap for dedenting multi-line JSON instru
 from enum import Enum  # English: Import Enum for defining comment importance levels. 日本語: コメント重要度レベル定義用Enumをインポートします。
 
 from agents import Agent, Runner
-from ..core.llm import get_llm
-from ..core.message import get_message  # Import for localized messages
+from ...core.llm import get_llm
+from ...core.message import get_message  # Import for localized messages
 
 try:
     from pydantic import BaseModel  # type: ignore

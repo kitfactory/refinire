@@ -26,7 +26,7 @@ from .trace_registry import TraceRegistry, TraceMetadata, get_global_registry, s
 from .message import get_message, DEFAULT_LANGUAGE
 
 # Prompt management
-from .prompt_store import PromptStore, StoredPrompt, PromptReference, detect_system_language, get_default_storage_dir
+from .prompt_store import PromptStore, StoredPrompt, PromptReference, P, detect_system_language, get_default_storage_dir
 
 __all__ = [
     # LLM abstraction
@@ -56,6 +56,7 @@ __all__ = [
     "PromptStore",
     "StoredPrompt", 
     "PromptReference",
+    "P",
     "detect_system_language",
     "get_default_storage_dir"
 ]

@@ -14,7 +14,7 @@ import traceback
 
 from .context import Context
 from .step import Step, ParallelStep
-from ..core.trace_registry import get_global_registry, TraceRegistry
+from ...core.trace_registry import get_global_registry, TraceRegistry
 
 
 logger = logging.getLogger(__name__)

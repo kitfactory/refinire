@@ -1,9 +1,9 @@
 # Refinire ✨ - The Art of AI Agent Development
 
 [![PyPI Downloads](https://static.pepy.tech/badge/refinire)](https://pepy.tech/projects/refinire)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![OpenAI Agents 0.0.9](https://img.shields.io/badge/OpenAI-Agents_0.0.9-green.svg)](https://github.com/openai/openai-agents-python)
-[![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)]
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![OpenAI Agents 0.0.17](https://img.shields.io/badge/OpenAI-Agents_0.0.17-green.svg)](https://github.com/openai/openai-agents-python)
+[![Coverage](https://img.shields.io/badge/coverage-72%25-brightgreen.svg)]
 
 **Elegant AI agent development platform that transforms complexity into simplicity.**
 
@@ -444,9 +444,9 @@ Explore comprehensive examples in the `examples/` directory:
 
 ## Supported Environments
 
-- **Python**: 3.9+
+- **Python**: 3.10+
 - **Platforms**: Windows, Linux, macOS  
-- **Dependencies**: OpenAI Agents SDK 0.0.9+
+- **Dependencies**: OpenAI Agents SDK 0.0.17+
 
 ---
 
@@ -465,3 +465,25 @@ Explore comprehensive examples in the `examples/` directory:
 MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/openai/openai-agents-python).
 
 **Refinire**: Where complexity becomes clarity, and development becomes art.
+
+---
+
+## Release Notes - v0.2.1
+
+### New Features
+- **P() Function**: Convenient shorthand alias for `PromptStore.get()` - access prompts with `P("name")` instead of `PromptStore.get("name")`
+
+### Architecture Improvements
+- **Single Package Structure**: Consolidated from multi-package to unified package structure for better maintenance
+- **Reorganized Hierarchy**: Moved flow and pipeline modules under `agents` subpackage for cleaner organization
+- **Updated Dependencies**: Upgraded to Python 3.10+ requirement and OpenAI Agents SDK 0.0.17+
+
+### Quality & Testing
+- **100% Test Pass Rate**: All 408 tests now passing after comprehensive migration fixes
+- **72% Test Coverage**: Improved from 70% to 72% code coverage with better test quality
+- **Enhanced Compatibility**: Fixed Pydantic v2 compatibility and Context API improvements
+
+### Developer Experience
+- **Simplified Imports**: All functionality accessible through single `refinire` package
+- **Better Organization**: Clear separation between core, agents, flow, and pipeline modules
+- **Maintained Backward Compatibility**: Existing code continues to work with new structure

@@ -617,4 +617,35 @@ Japanese translation:"""
         except Exception as e:
             # Translation failed, but don't crash
             print(f"Translation failed: {e}")
+
+
+def P(
+    name: str,
+    tag: Optional[str] = None,
+    language: Optional[LanguageCode] = None,
+    storage_dir: Optional[Path] = None
+) -> Optional[PromptReference]:
+    """
+    Short alias for PromptStore.get() - convenient function for prompt retrieval
+    PromptStore.get()の短縮エイリアス - プロンプト取得用の便利関数
+    
+    Args:
+        name: Prompt name / プロンプト名
+        tag: Specific tag to identify the prompt / プロンプト識別用の特定タグ
+        language: Desired language. If None, uses system language / 希望言語。Noneの場合はシステム言語を使用
+        storage_dir: Storage directory override / ストレージディレクトリの上書き
+        
+    Returns:
+        PromptReference object with metadata or None if not found
+        メタデータ付きPromptReferenceオブジェクト、見つからない場合はNone
+        
+    Example:
+        # Long form / 通常の書き方
+        prompt = PromptStore.get("greeting", tag="formal", language="en")
+        
+        # Short form / 短縮形
+        prompt = P("greeting", tag="formal", language="en")
+        prompt = P("greeting")  # Uses default tag and system language
+    """
+    return PromptStore.get(name=name, tag=tag, language=language, storage_dir=storage_dir)
     

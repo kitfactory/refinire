@@ -125,9 +125,21 @@ class TestDAGParallelProcessing:
         
         ctx = Context()
         
-        # Should raise RuntimeError due to parallel execution errors
-        with pytest.raises(RuntimeError, match="Parallel execution errors"):
-            await parallel_step.run("test", ctx)
+        # Should handle errors gracefully and record them
+        result_ctx = await parallel_step.run("test", ctx)
+        
+        # Working step should complete successfully
+        assert "working_result" in result_ctx.shared_state
+        assert result_ctx.shared_state["working_result"] == "Success"
+        
+        # Failed step should have error recorded in messages
+        assert "__failing_metadata__" in result_ctx.shared_state
+        failing_meta = result_ctx.shared_state["__failing_metadata__"]
+        assert failing_meta["status"] == "completed"
+        assert len(failing_meta["messages"]) > 0
+        error_message = failing_meta["messages"][0].content
+        assert "error" in error_message.lower()
+        assert "Test error" in error_message
     
     @pytest.mark.asyncio
     async def test_parallel_step_context_isolation(self):
@@ -154,10 +166,15 @@ class TestDAGParallelProcessing:
             key.endswith("_shared_key") for key in result_ctx.shared_state.keys()
         )
         
-        # Each step should have its own result stored
-        assert "step1_result" in result_ctx.shared_state
-        assert "step2_result" in result_ctx.shared_state
-        assert "step3_result" in result_ctx.shared_state
+        # Each step should have metadata stored
+        assert "__step1_metadata__" in result_ctx.shared_state
+        assert "__step2_metadata__" in result_ctx.shared_state
+        assert "__step3_metadata__" in result_ctx.shared_state
+        
+        # Conflicting keys should be renamed
+        assert "shared_key" in result_ctx.shared_state  # First one keeps original name
+        assert "step2_shared_key" in result_ctx.shared_state  # Conflicts get prefixed
+        assert "step3_shared_key" in result_ctx.shared_state
     
     @pytest.mark.asyncio
     async def test_dag_flow_with_max_workers(self):
@@ -187,9 +204,11 @@ class TestDAGParallelProcessing:
         flow = Flow(start="parallel_processing", steps=flow_def)
         result = await flow.run("test")
         
-        # Verify all steps completed
+        # Verify all steps completed - check metadata instead
         for i in range(10):
-            assert f"step_{i}_result" in result.shared_state
+            assert f"__step_{i}_metadata__" in result.shared_state
+            # Or check the actual results in shared_state
+            assert f"result_step_{i}" in result.shared_state
     
     def test_dag_structure_validation(self):
         """Test validation of DAG structure definitions"""

@@ -12,8 +12,8 @@ from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 import re
 
-from ..flow.context import Context
-from ..flow.step import Step
+from .flow.context import Context
+from .flow.step import Step
 
 logger = logging.getLogger(__name__)
 

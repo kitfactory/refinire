@@ -11,9 +11,9 @@ from typing import Any, Callable, List, Dict, Optional, Type, TypeVar, Generic
 from dataclasses import dataclass
 import json
 
-from ..flow.step import Step
-from ..flow.context import Context
-from ..pipeline.llm_pipeline import (
+from .flow.step import Step
+from .flow.context import Context
+from .pipeline.llm_pipeline import (
     LLMPipeline, LLMResult, InteractivePipeline, InteractionResult, InteractionQuestion
 )
 

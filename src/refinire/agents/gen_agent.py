@@ -9,9 +9,9 @@ GenAgentはLLMPipelineをStepとして使用するためのモダンなクラス
 import warnings
 from typing import Any, Callable, List, Dict, Optional, Type
 
-from ..flow.step import Step
-from ..flow.context import Context
-from ..pipeline.llm_pipeline import LLMPipeline, LLMResult
+from .flow.step import Step
+from .flow.context import Context
+from .pipeline.llm_pipeline import LLMPipeline, LLMResult
 
 
 # GenAgent implementation using LLMPipeline

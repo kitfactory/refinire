@@ -58,25 +58,34 @@ mkdocs build
 
 ### Core Components
 
-**src/refinire/** - Main package
+**src/refinire/core/** - Core functionality
 - `llm.py` - Provider abstraction layer with `get_llm()` factory
-- `flow.py` - Workflow orchestration engine for complex multi-step processes  
-- `step.py` - Individual workflow step implementations (Function, Condition, Parallel, etc.)
-- `context.py` - Shared state management between steps
-- `tracing.py` - Execution monitoring and observability
-- `trace_registry.py` - Centralized trace storage and search
-
-**src/refinire/agents/** - Specialized agent implementations
-- `gen_agent.py` - General-purpose generation agents
-- `clarify_agent.py` - Requirement clarification workflows  
-- `llm_pipeline.py` - Tool-enabled pipelines with evaluation
-- `extractor.py`, `validator.py`, `router.py`, `notification.py` - Specialized agents
-
-**Provider Models** (unified under `get_llm()`)
 - `anthropic.py` - Claude integration
 - `gemini.py` - Google Gemini integration  
 - `ollama.py` - Local Ollama integration
+- `tracing.py` - Execution monitoring and observability
+- `trace_registry.py` - Centralized trace storage and search
+- `prompt_store.py` - Prompt management and storage
+- `message.py` - Message handling and localization
+
+**src/refinire/agents/** - Comprehensive agent framework
+- **flow/** - Workflow orchestration
+  - `flow.py` - Workflow orchestration engine for complex multi-step processes  
+  - `step.py` - Individual workflow step implementations (Function, Condition, Parallel, etc.)
+  - `context.py` - Shared state management between steps
+- **pipeline/** - LLM pipeline functionality
+  - `llm_pipeline.py` - Modern LLM pipeline with evaluation and tool support
+  - `pipeline.py` - Legacy AgentPipeline (deprecated)
+- **Specialized agents**
+  - `gen_agent.py` - General-purpose generation agents
+  - `clarify_agent.py` - Requirement clarification workflows  
+  - `extractor.py`, `validator.py`, `router.py`, `notification.py` - Specialized agents
+
+**Provider Support** (unified under `get_llm()`)
 - OpenAI support via base agents library
+- Anthropic Claude via core.anthropic
+- Google Gemini via core.gemini
+- Local Ollama via core.ollama
 
 ### Key Architectural Patterns
 

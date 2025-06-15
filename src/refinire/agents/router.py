@@ -12,9 +12,9 @@ from pydantic import BaseModel, Field, field_validator
 from abc import ABC, abstractmethod
 import logging
 
-from ..flow.step import Step
-from ..flow.context import Context
-from ..pipeline.llm_pipeline import LLMPipeline, create_simple_llm_pipeline
+from .flow.step import Step
+from .flow.context import Context
+from .pipeline.llm_pipeline import LLMPipeline, create_simple_llm_pipeline
 
 logger = logging.getLogger(__name__)
 
