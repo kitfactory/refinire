@@ -18,6 +18,11 @@ try:
 except ImportError as e:
     raise ImportError(f"Required dependencies not found: {e}. Please install openai and pydantic.")
 
+try:
+    from refinire.core.prompt_store import PromptReference
+except ImportError:
+    PromptReference = None
+
 
 @dataclass
 class LLMResult:
@@ -116,8 +121,23 @@ class LLMPipeline:
         """
         # Basic configuration
         self.name = name
-        self.generation_instructions = generation_instructions
-        self.evaluation_instructions = evaluation_instructions
+        
+        # Handle PromptReference for generation instructions
+        self._generation_prompt_metadata = None
+        if PromptReference and isinstance(generation_instructions, PromptReference):
+            self._generation_prompt_metadata = generation_instructions.get_metadata()
+            self.generation_instructions = str(generation_instructions)
+        else:
+            self.generation_instructions = generation_instructions
+        
+        # Handle PromptReference for evaluation instructions
+        self._evaluation_prompt_metadata = None
+        if PromptReference and isinstance(evaluation_instructions, PromptReference):
+            self._evaluation_prompt_metadata = evaluation_instructions.get_metadata()
+            self.evaluation_instructions = str(evaluation_instructions)
+        else:
+            self.evaluation_instructions = evaluation_instructions
+        
         self.model = model
         self.evaluation_model = evaluation_model or model
         self.output_model = output_model
@@ -206,14 +226,23 @@ class LLMPipeline:
                         continue
                 
                 # Success - store in history and return
+                metadata = {
+                    "model": self.model,
+                    "temperature": self.temperature,
+                    "attempts": attempt
+                }
+                
+                # Add prompt metadata if available
+                if self._generation_prompt_metadata:
+                    metadata.update(self._generation_prompt_metadata)
+                
+                if self._evaluation_prompt_metadata:
+                    metadata["evaluation_prompt"] = self._evaluation_prompt_metadata
+                
                 result = LLMResult(
                     content=parsed_content,
                     success=True,
-                    metadata={
-                        "model": self.model,
-                        "temperature": self.temperature,
-                        "attempts": attempt
-                    },
+                    metadata=metadata,
                     evaluation_score=evaluation_result.score if evaluation_result else None,
                     attempts=attempt
                 )

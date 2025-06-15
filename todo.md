@@ -1,380 +1,237 @@
-# 実装TODO
+# Namespace Package 移行計画
 
-- [x] AnthropicModel の async テストを作成する
-- [x] GeminiModel の async テストを作成する
-- [x] OllamaModel のテストを作成する
-- [x] AgentPipeline の `_build_generation_prompt` メソッドのテストを作成する
-- [x] AgentPipeline の `_build_evaluation_prompt` メソッドのテストを作成する
-- [x] 評価が閾値未満の場合の `improvements_callback` の動作テストを作成する
-- [x] ガードレール機能（Guardrails）統合テストを作成する
-- [x] ツール統合のテストを作成する
-- [x] ダイナミックプロンプト機能のテストを作成する
-- [x] ルーティング機能のテストを作成する
-- [x] コードカバレッジを90%以上に向上させる
-- [x] examples フォルダ内のスクリプトを動作検証する
-- [x] docs フォルダ内のドキュメントの整合性を確認・更新する
+## Phase 1: パッケージ構造設計 ✅ 完了
 
-## docs/ APIリファレンス & チュートリアル構築（MkDocs Material）
-- [x] MkDocs Material をプロジェクトに開発環境に導入する
-- [x] mkdocs.yml 設定ファイルを作成し、サイト構成を設計する
-- [x] docs/index.md にプロジェクト概要・導入方法を記載する
-- [x] docs/api_reference.md に主要クラス・関数のAPIリファレンスを記載する
-- [x] docs/tutorials/ ディレクトリを作成し、チュートリアル記事（例：クイックスタート、応用例）を追加する
-- [x] コードブロックや図（PlantUML等）を活用し、分かりやすいドキュメントにする
-- [x] mkdocs serve でローカルプレビューし、表示・リンク切れ等を確認する
-- [x] 完成したらGitにコミット・プッシュする
+### 分割戦略の確定
+- [x] **refinire.core**: LLMプロバイダー抽象化、トレーシング・モニタリング
+- [x] **refinire.agents**: Flow/Step、各種エージェント実装、パイプライン機能
+- [x] 現在の `src/refinire/__init__.py` の機能分割計画策定
 
-## 粒度の確認
+### 移行後の構造設計
+- [x] refinire-core パッケージ構造の設計
+- [x] refinire-agents パッケージ構造の設計  
+- [x] namespace package の仕組み確認（refinire.rag の独立提供可能性）
 
-- 上記のステップは対象ファイルと対象機能が明確であり、現状の粒度で十分です。
+## Phase 2: refinire-core パッケージ作成 ✅ 完了
 
-# TODO
+### ディレクトリ構造作成
+- [x] `refinire-core/` ディレクトリ作成
+- [x] `refinire-core/src/refinire/core/` 構造作成
+- [x] `refinire-core/pyproject.toml` 作成
 
-- [x] OpenAI Agents SDK標準Tracerの無効化方法を調査する
-- [x] set_tracing_disabledの挙動を確認し、ソースコード上で依存箇所を特定する
-- [x] 独自TracingProcessorに必要な要件を整理する
-- [x] 独自TracingProcessorのインターフェース設計を行う
-  - [x] トレース入力フォーマットを定義する
-  - [x] トレース出力フォーマットを定義する
-- [x] 独自TracingProcessorの機能クラスを実装する
-- [x] 独自TracingProcessorのテストを作成し、機能を検証する
-- [x] set_tracing_disabledと独自TracingProcessorを組み合わせて動作確認を行う
-- [x] トレース表示の簡易UI/CLIコンポーネントを設計・実装する
-- [x] pytestを実行し、すべてのテストがパスすることを確認する
-- [x] 全体の動作テストを実行し、問題がないことを確認する
+### コアモジュールの移行
+- [x] `llm.py` → `refinire-core/src/refinire/core/llm.py`
+- [x] `anthropic.py` → `refinire-core/src/refinire/core/anthropic.py`
+- [x] `gemini.py` → `refinire-core/src/refinire/core/gemini.py`
+- [x] `ollama.py` → `refinire-core/src/refinire/core/ollama.py`
+- [x] `tracing.py` → `refinire-core/src/refinire/core/tracing.py`
+- [x] `trace_registry.py` → `refinire-core/src/refinire/core/trace_registry.py`
+- [x] `message.py` → `refinire-core/src/refinire/core/message.py`
 
-## 粒度確認
-各ステップは単一責務に基づき、末端機能のテスト作成→実装→結合テストの順で実行可能な粒度に細分化しています。
+### refinire.core の __init__.py 作成
+- [x] コア機能のエクスポート設定
+```python
+from .llm import ProviderType, get_llm, get_available_models, get_available_models_async
+from .anthropic import ClaudeModel
+from .gemini import GeminiModel  
+from .ollama import OllamaModel
+from .tracing import enable_console_tracing, disable_tracing
+from .trace_registry import TraceRegistry, TraceMetadata, get_global_registry, set_global_registry
+```
 
-## 調査結果
-- `set_tracing_disabled`はGLOBAL_TRACE_PROVIDER.set_disabledを呼び出し、トレースの有効/無効を切り替える。
-- デフォルトTraceProcessor(`default_processor`)はimport時にGLOBAL_TRACE_PROVIDERに登録されている。
-- 標準Tracerを無効化し、独自Processorを使用するには`set_trace_processors`でProcessorリストを置き換える必要がある。
-- 依存箇所: `src/agents_sdk_models/llm.py`、examplesディレクトリ内の各スクリプト。
+### pyproject.toml 設定
+- [x] パッケージメタデータ設定（name: "refinire-core"）
+- [x] 依存関係の最小化（OpenAI、Anthropic、Google等のAPI依存のみ）
+- [x] namespace package ビルド設定
 
-## 要件整理
-- `on_trace_start`, `on_trace_end`, `on_span_start`, `on_span_end`, `shutdown`, `force_flush`のすべてのメソッドを実装すること
-- デフォルトProcessor(`default_processor`)への依存を排除し、OpenAIへの通信を行わないこと
-- コンソールやファイルなど、出力先を設定可能にすること
-- トレースおよびスパン情報を開始時刻、終了時刻、ID、親子関係を含む読みやすいフォーマットで出力すること
-- 例外を投げず、安全に動作すること
-- アプリケーション終了時に`force_flush`を必ず呼び出すこと
-- 並列実行や高頻度呼び出しに耐えうる性能を確保すること
-- テスト可能性を考慮し、出力を検証できること
-- 他の機能に影響を与えない設計とすること
+## Phase 3: refinire-agents パッケージ作成 ✅ 完了
 
-## 次フェーズ: TracingProcessor拡張タスク
-- [x] `todo.md`に計画をチェックリスト形式で追加・更新し、タスクの進捗を管理する
-- [x] SDKの`llm.get_llm`で`set_tracing_disabled`を呼び出し、依存箇所を特定する
-- [x] `TracingProcessor`インターフェースを確認し、独自Processorの要件を整理する
-- [x] `src/agents_sdk_models/tracing_processor.py`に`ConsoleTracingProcessor`スケルトンを作成する
-- [x] クラスドキュメントにトレース／スパンの入出力フォーマットを定義する
-- [x] `ConsoleTracingProcessor`に`on_trace_start`、`on_trace_end`、`on_span_start`、`on_span_end`、`shutdown`、`force_flush`を実装する
-- [x] テスト（`tests/test_tracing_processor.py`、`tests/test_tracing_integration.py`）を作成し、正常動作および`set_tracing_disabled`時の無効化を検証する
-- [x] `pyproject.toml`のTOML構文エラー（`Bug Tracker`キー）を修正する
-- [x] `examples/simple_llm_query.py`と`examples/pipeline_trace_example.py`を追加する
-- [x] CLIコンポーネント`examples/trace_cli.py`を実装する
-- [x] `ConsoleTracingProcessor`に`simple_mode`を追加し、ANSIカラーで`SPAN START`、`Input`、`Output`、`SPAN END`を表示する
-- [x] ユーザー入力やプロンプト、実際のLLMレスポンス本文のみをカラー出力するよう改良する
-- [x] `PipelineTracingProcessor`を定義し、`Runner.run_sync`をモンキーパッチしてプロンプトを捕捉し、生成と評価のinstruction、prompt、outputを一貫して表示する
-- [x] `PipelineTracingProcessor`の`on_trace_start`/`on_trace_end`で単一のSpanにまとめて色分け表示する方法を示唆する
+### ディレクトリ構造作成
+- [x] `refinire-agents/` ディレクトリ作成
+- [x] `refinire-agents/src/refinire/agents/` 構造作成
+- [x] `refinire-agents/pyproject.toml` 作成
 
-- [ ] ConsoleTracingProcessorの最終レビュー
-  - [ ] ANSIカラー表示の動作検証（Span開始・終了、Instruction/Prompt/Output）
-  - [ ] コードコメント・ドキュメントの整備
-- [ ] PipelineTracingProcessorの重複表示防止ロジックのテスト作成
-  - [ ] 正常系テストケースの追加
-  - [ ] エッジケース（カスタムスパン含む）の動作確認
-- [ ] DialogProcessorのユニットテスト実装
-  - [ ] モックAgentPipelineを用いた入力・出力検証
-  - [ ] 異常系テスト（入力なし、空リストなど）の作成
-- [ ] examplesディレクトリのスクリプト動作確認
-  - [ ] simple_llm_query.pyの動作検証
-  - [ ] 他例スクリプトの動作検証
-- [ ] docsフォルダにドキュメント作成
-  - [ ] 要件定義書(requirements.md)の作成
-  - [ ] アーキテクチャ設計書(architecture.md)の作成
-  - [ ] 機能仕様書(function_spec.md)の作成
-- [ ] README.mdとREADME_ja.mdの作成
-  - [ ] README.md（英語、絵文字・サポート環境・メリット訴求）
-  - [ ] README_ja.md（日本語のみ）
-- [ ] pyproject.tomlの依存確認と調整
-- [ ] 仮想環境(.venv)下でpytest実行による全体動作確認
+### エージェントモジュールの移行
+- [x] `context.py` → `refinire-agents/src/refinire/agents/context.py`
+- [x] `step.py` → `refinire-agents/src/refinire/agents/step.py`
+- [x] `flow.py` → `refinire-agents/src/refinire/agents/flow.py`
+- [x] `pipeline.py` → `refinire-agents/src/refinire/agents/pipeline.py`
+- [x] `llm_pipeline.py` → `refinire-agents/src/refinire/agents/llm_pipeline.py`
+- [x] `agents/` ディレクトリ全体の移行
+  - [x] `clarify_agent.py`
+  - [x] `extractor.py`
+  - [x] `gen_agent.py`
+  - [x] `notification.py`  
+  - [x] `router.py`
+  - [x] `validator.py`
 
-## AgentPipeline Deprecation Plan（v0.0.22〜v0.1.0）
+### refinire.agents の __init__.py 作成
+- [x] 全エージェント機能のエクスポート設定
+- [x] Flow/Step関連機能のエクスポート設定
+- [x] パイプライン機能のエクスポート設定
 
-### フェーズ 1: Deprecation Warning追加 (v0.0.22) ✅ 完了
-- [x] AgentPipelineクラスにdeprecation warningを追加
-- [x] Deprecation計画文書の作成 (docs/deprecation_plan.md)
-- [x] README.mdでFlow/Stepアーキテクチャを推奨として記載
-- [x] AgentPipelineクラスの文書にdeprecated注記を追加
+### pyproject.toml 設定
+- [x] パッケージメタデータ設定（name: "refinire-agents"）
+- [x] refinire-core への依存関係設定
+- [x] namespace package ビルド設定
 
-### フェーズ 2: Examples移行 (v0.0.23)
-- [x] genagent_simple_generation.py - 基本的な生成例の移行版
-- [x] genagent_with_evaluation.py - 評価機能付きの移行版
-- [x] genagent_with_tools.py - ツール使用例の移行版
-- [x] genagent_with_guardrails.py - ガードレール使用例の移行版
-- [x] genagent_with_history.py - 履歴管理例の移行版
-- [x] genagent_with_retry.py - リトライ機能例の移行版
-- [x] genagent_with_dynamic_prompt.py - 動的プロンプト例の移行版
-- [ ] 新しいFlow/Step使用例の充実
-- [ ] 移行ガイドの完成
+## Phase 4: 依存関係の解決 ✅ 完了
 
-### フェーズ 3: テスト移行 (v0.0.24) ✅ 完了
-- [x] AgentPipelineのテストをGenAgentベースに移行
-  - [x] test_pipeline.py → test_gen_agent_compatibility.py
-  - [x] test_pipeline_*.py系統の移行
-- [x] 後方互換性テストの追加
-- [x] GenAgentの完全なテストカバレッジ
+### import文の修正
+- [x] refinire-agents 内での refinire.core import修正
+```python
+# 修正前
+from .tracing import get_global_registry
 
-#### 完了したテストファイル:
-- ✅ test_gen_agent_compatibility.py (377行) - 8つの互換性テスト
-- ✅ test_gen_agent_comprehensive.py (306行) - 12の包括的テスト
-- ✅ 全テスト成功: 20+ tests passed, 適切なdeprecation warning動作確認
+# 修正後  
+from refinire.core.trace_registry import get_global_registry
+```
 
-### フェーズ 4: 完全削除 (v0.1.0)
-- [ ] AgentPipelineクラスの完全削除
-- [ ] 関連するimportとexportの削除
-- [ ] ドキュメントのクリーンアップ
-- [ ] pipeline_*系のexamplesファイルの削除
+### 相互依存の解決
+- [x] flow.py での trace_registry import修正
+- [x] pipeline.py での llm, message import修正
+- [x] エージェント内での相対import修正（..step → .step など）
+- [x] refinire-core内のtracing.pyでのmessage import修正
 
-## Flow/Step アーキテクチャ標準機能追加
+### namespace package の確認
+- [x] src/refinire/ に __init__.py が存在しないことを確認
+- [x] 両パッケージが同じnamespace下で動作することを確認
+- [x] 両パッケージをdevelopment modeでインストール完了
 
-### DAG自動並列処理機能
-- [ ] Flowクラスの並列処理拡張
-  - [ ] DAG構造で並列ステップを自動検出する機能
-  - [ ] `{"parallel": [StepA, StepB]}` 形式の並列定義サポート
-  - [ ] 並列ステップの依存関係解析
-  - [ ] 自動的な実行順序最適化
-- [ ] 並列実行エンジンの実装
-  - [ ] AsyncIOベースの並列実行機能
-  - [ ] ThreadPoolExecutorとの統合
-  - [ ] 並列実行の最大ワーカー数設定
-  - [ ] 並列ステップ間のコンテキスト分離・統合
-- [ ] DAG並列処理のユーティリティ
-  - [ ] 並列DAG構造のバリデーション
-  - [ ] 並列実行結果の自動マージ機能
-  - [ ] 並列ステップのエラーハンドリング
-- [ ] 並列DAGのテスト作成
-  - [ ] DAG構造解析のテスト
-  - [ ] 並列実行の統合テスト
-  - [ ] エラーハンドリングテスト（一部ステップ失敗時）
-  - [ ] パフォーマンステスト
-- [ ] 並列DAGのサンプル・ドキュメント
-  - [ ] examples/dag_parallel_example.py
-  - [ ] docs/dag_parallel_processing.mdの作成
-  - [ ] README.mdへのDAG並列処理機能追加
+## Phase 5: テストの修正 ✅ 部分完了
 
-### DAG並列処理の技術仕様
-- DAG定義から並列可能な部分を自動検出
-- `{"parallel": [step1, step2, step3]}` 形式での直感的な並列定義
-- 並列ステップ実行時の自動コンテキスト管理
-- 異なるLLMプロバイダーでの並列実行サポート
-- 実行時の動的な並列度調整
-- デバッグ・可視化機能（Flow.show()での並列表示）
+### テストファイルのimport修正（重要なファイルは修正済み）
+- [x] `tests/test_llm.py` の import修正 (`refinire.core`)
+- [x] `tests/test_anthropic.py` の import修正 (`refinire.core.anthropic`)  
+- [x] `tests/test_context.py` の import修正 (`refinire.agents.context`)
+- [x] `tests/test_flow.py` の import修正 (`refinire.agents.flow`)
+- [x] `tests/test_step.py` の import修正 (`refinire.agents.step`)
 
-## 実装済み機能
+### 残りのテストファイル（26ファイル中21ファイル）
+- [ ] `tests/test_anthropic_extra.py` - `refinire.core.anthropic`
+- [ ] `tests/test_clarify_agent.py` - `refinire.agents`
+- [ ] `tests/test_dag_parallel.py` - `refinire.agents`
+- [ ] `tests/test_extractor_agent.py` - `refinire.agents.extractor + context`
+- [ ] `tests/test_flow_constructor.py` - `refinire.agents.flow + step + context`
+- [ ] `tests/test_flow_identification.py` - `refinire.agents`
+- [ ] `tests/test_flow_show.py` - `refinire.agents.flow + step + context`
+- [ ] `tests/test_gemini.py` - `refinire.core.gemini`
+- [ ] `tests/test_gen_agent.py` - `refinire.agents`
+- [ ] `tests/test_gen_agent_modern.py` - `refinire.agents.gen_agent + context + llm_pipeline`
+- [ ] `tests/test_get_available_models.py` - `refinire.core.llm`
+- [ ] `tests/test_interactive_pipeline.py` - `refinire.agents`
+- [ ] `tests/test_llm_pipeline.py` - `refinire.agents.llm_pipeline`
+- [ ] `tests/test_llm_pipeline_tools.py` - `refinire.agents.llm_pipeline`
+- [ ] `tests/test_notification_agent.py` - `refinire.agents.notification + context`
+- [ ] `tests/test_ollama.py` - `refinire.core.ollama`
+- [ ] `tests/test_router_agent.py` - `refinire.agents.router + context + llm_pipeline`
+- [ ] `tests/test_trace_search.py` - `refinire.core` (TraceRegistry関連)
+- [ ] `tests/test_trace_span.py` - `refinire.agents` (Flow, Context)
+- [ ] `tests/test_tracing.py` - `refinire.core.tracing + agents.context + core.message`
+- [ ] `tests/test_tracing_integration.py` - `refinire.core.tracing + core.llm`
+- [ ] `tests/test_validator_agent.py` - `refinire.agents.validator + context`
 
-### Core クラス ✅ 完了
-- [x] GenAgent: AgentPipelineのStepインターフェース実装
-- [x] GenAgentの包括的テストスイート（99%カバレッジ）
-- [x] create_simple_gen_agent, create_evaluated_gen_agent ユーティリティ関数
+### テスト環境の調整
+- [x] 両パッケージをdevelopment modeでインストール
+- [x] namespace packageの動作確認完了
+- [ ] テスト実行環境の確認
+- [ ] CI/CDパイプラインの調整（必要に応じて）
 
-### Flow/Step システム ✅ 完了
-- [x] Flow: ワークフロー管理クラス
-- [x] Step: 基底ステップクラス
-- [x] Context: ステップ間の状態共有
-- [x] 包括的なFlow/Stepテストスイート
+### テスト実行確認計画
+- [ ] Core modules: `test_llm.py`, `test_anthropic.py`, `test_gemini.py`, `test_ollama.py`, `test_tracing.py`, `test_trace_search.py`
+- [ ] Agent modules: `test_context.py`, `test_flow.py`, `test_step.py`, `test_gen_agent.py`, `test_clarify_agent.py`
+- [ ] Integration tests: `test_tracing_integration.py`, `test_dag_parallel.py`
 
-### 移行サポート ✅ 完了
-- [x] Migration文書 (docs/deprecation_plan.md)
-- [x] README.mdでの新アーキテクチャ推奨
-- [x] Deprecation warningの実装
+## Phase 6: examples の修正
 
-## 技術的詳細
+### examplesファイルのimport修正
+- [ ] 全てのexampleファイルでのimport文修正
+```python
+# 修正前
+from refinire import get_llm, Flow, create_simple_gen_agent
 
-### GenAgent の主な機能
-- AgentPipelineをStepとして使用可能
-- Flow内での非同期実行サポート
-- コンテキスト共有による状態管理
-- 完全なエラーハンドリング
-- 評価機能の統合サポート
+# 修正後
+from refinire.core import get_llm
+from refinire.agents import Flow, create_simple_gen_agent
+```
 
-### 後方互換性
-- AgentPipelineは引き続き動作（v0.1.0まで）
-- Deprecation warningの表示
-- 既存コードの段階的移行サポート
+### 動作確認
+- [ ] 各exampleファイルの動作確認
+- [ ] エラーの修正とテスト
 
-## 次のステップ
+## Phase 7: ドキュメントの更新
 
-1. 残りのexample移行（フェーズ2完了）
-2. テスト移行計画の策定
-3. v0.0.23リリース準備
-4. v0.1.0での完全削除準備
+### インストール手順の更新
+- [ ] README.md の更新
+```bash
+# 基本機能のみ
+pip install refinire-core
 
-## 基本機能の実装
+# エージェント機能も含む
+pip install refinire-core refinire-agents
 
-### 基本アーキテクチャ
-- [x] Stepクラスの設計と実装
-- [x] Flowクラスの設計と実装
-- [x] Contextクラスの設計と実装
-- [x] Pipelineクラスの設計と実装
-- [x] LLMクラスの設計と実装
+# 全機能（将来的に統合パッケージも提供）
+pip install refinire-full
+```
 
-### LLMバックエンド
-- [x] OpenAI APIクライアントの実装
-- [x] Anthropic APIクライアントの実装
-- [x] Gemini APIクライアントの実装
-- [x] Ollama APIクライアントの実装
+### 使用例の更新
+- [ ] 全ドキュメントでのimport例の修正
+- [ ] API reference の更新
+- [ ] チュートリアルの更新
 
-### 基本エージェント
-- [x] GenAgentの実装
-- [x] ClarifyAgentの実装
-- [x] GenAgentLegacyの削除（不要な機能）
+### CLAUDE.md の更新
+- [ ] namespace package構造の説明追加
+- [ ] 新しいimportパターンの説明
 
-### パイプライン拡張
-- [x] LLMPipelineの実装
-- [x] InteractivePipelineの実装
-- [x] パイプライン統合テスト
+## Phase 8: 統合パッケージの作成（オプション）
 
-## 新規エージェント実装
+### refinire-full パッケージ
+- [ ] ユーザー利便性のための統合パッケージ作成
+- [ ] refinire-core + refinire-agents の依存関係設定
+- [ ] 後方互換性レイヤーの検討
 
-### agentsフォルダの作成
-- [x] `src/agents_sdk_models/agents/` フォルダ作成
-- [x] `agents/__init__.py` 作成
-- [x] 各エージェントの基底クラス設計
+### 後方互換性の提供
+- [ ] 既存ユーザー向けの移行ガイド作成
+- [ ] deprecation警告の実装（必要に応じて）
 
-### 高優先度エージェント実装
+## Phase 9: リリース準備
 
-#### RouterAgent
-- [x] RouterAgentクラスの設計
-- [x] ルーティングロジックの実装
-- [x] 分類器インターフェースの定義
-- [x] RouterAgentのテスト作成
-- [x] RouterAgentの使用例作成
+### バージョン管理
+- [ ] refinire-core v0.2.0 リリース準備
+- [ ] refinire-agents v0.2.0 リリース準備
+- [ ] 破壊的変更の文書化
 
-#### ValidatorAgent
-- [x] ValidatorAgentクラスの設計
-- [x] 検証ルールシステムの実装
-- [x] 標準検証ルールの実装
-- [x] ValidatorAgentのテスト作成
-- [x] ValidatorAgentの使用例作成
+### 品質保証
+- [ ] 全テストの通過確認
+- [ ] type checking (mypy) の通過確認
+- [ ] パッケージビルドの確認
+- [ ] インストールテストの実行
 
-#### ExtractorAgent
-- [x] ExtractorAgentクラスの設計
-- [x] パターンベース抽出の実装
-- [x] LLMベース抽出の実装
-- [x] 抽出ルールシステムの実装
-- [x] ExtractorAgentのテスト作成
-- [x] ExtractorAgentの使用例作成
+### リリース
+- [ ] PyPI へのアップロード
+- [ ] リリースノートの作成
+- [ ] ユーザーへの移行案内
 
-#### NotificationAgent
-- [x] NotificationAgentクラスの設計
-- [x] 通知チャネルシステムの実装
-- [x] 標準通知チャネルの実装（メール、Slack、Webhook）
-- [x] NotificationAgentのテスト作成
-- [x] NotificationAgentの使用例作成
+## 期待される利点
 
-### 中優先度エージェント実装
+### 開発者向け
+- [ ] 必要な機能のみのインストール可能
+- [ ] 明確な責任分離による保守性向上
+- [ ] 将来的な機能拡張の柔軟性確保
 
-#### ClassifierAgent
-- [ ] ClassifierAgentクラスの設計
-- [ ] 分類アルゴリズムの実装
-- [ ] ClassifierAgentのテスト作成
-- [ ] ClassifierAgentの使用例作成
+### エコシステム向け  
+- [ ] refinire.rag 等の独立パッケージ開発の促進
+- [ ] サードパーティ拡張の容易化
+- [ ] モジュラーアーキテクチャの実現
 
-#### TransformerAgent
-- [ ] TransformerAgentクラスの設計
-- [ ] データ変換システムの実装
-- [ ] TransformerAgentのテスト作成
-- [ ] TransformerAgentの使用例作成
+## 注意事項
 
-#### AggregatorAgent
-- [ ] AggregatorAgentクラスの設計
-- [ ] データ集約システムの実装
-- [ ] AggregatorAgentのテスト作成
-- [ ] AggregatorAgentの使用例作成
+### 破壊的変更
+- [ ] 既存ユーザーのimport文修正が必要
+- [ ] 適切な移行期間とサポートの提供
+- [ ] 明確なコミュニケーション
 
-#### SearchAgent
-- [ ] SearchAgentクラスの設計
-- [ ] 検索システムの実装
-- [ ] SearchAgentのテスト作成
-- [ ] SearchAgentの使用例作成
-
-## 統合とテスト
-
-### パッケージ統合
-- [ ] `__init__.py` でのエクスポート設定
-- [ ] 依存関係の整理
-- [ ] 型ヒントの完成
-
-### テストカバレッジ
-- [ ] 全エージェントの単体テスト
-- [ ] エージェント間連携テスト
-- [ ] エンドツーエンドテスト
-
-### ドキュメント
-- [ ] 各エージェントのAPIドキュメント
-- [ ] 使用例とチュートリアル
-- [ ] agents.mdの更新
-
-## 品質保証
-
-### コード品質
-- [ ] Linting (flake8, black)
-- [ ] 型チェック (mypy)
-- [ ] セキュリティチェック
-
-### パフォーマンス
-- [ ] ベンチマークテスト
-- [ ] メモリ使用量の最適化
-- [ ] 並行処理の最適化
-
-## リリース準備
-
-### パッケージング
-- [ ] pyproject.tomlの更新
-- [ ] バージョン管理
-- [ ] パッケージ配布準備
-
-### ドキュメント
-- [ ] README.mdの更新
-- [ ] CHANGELOG.mdの作成
-- [ ] API仕様書の完成
-
-## 完了項目
-
-### ✅ 基本機能実装完了
-- Stepクラス実装
-- Flowクラス実装
-- Contextクラス実装
-- Pipelineクラス実装
-- LLMクラス実装
-
-### ✅ LLMバックエンド完了
-- OpenAI APIクライアント
-- Anthropic APIクライアント
-- Gemini APIクライアント
-- Ollama APIクライアント
-
-### ✅ 基本エージェント完了
-- GenAgent実装
-- ClarifyAgent実装
-- GenAgentLegacy削除
-
-### ✅ パイプライン拡張完了
-- LLMPipeline実装
-- InteractivePipeline実装
-- パイプライン統合テスト
-
-### ✅ ドキュメント整備
-- agents.mdの体系的整理
-- ExtractorAgentの責務明確化
-
-### ✅ Flow可視化機能完了
-- Flow.show()メソッドの実装（Mermaid/テキスト形式）
-- RouterAgentの複数ルート表示対応
-- get_possible_routes()メソッド
-- 実行履歴表示機能
-- Flow.show()のテストスイート（11テストケース）
-- Flow.show()の使用例とデモ 
+### 技術的制約
+- [ ] namespace package の制約に関する理解
+- [ ] 依存関係の循環回避
+- [ ] パッケージングツールとの互換性

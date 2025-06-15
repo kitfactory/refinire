@@ -1,6 +1,6 @@
 ﻿import pytest
 import os
-from refinire.anthropic import ClaudeModel
+from refinire.core.anthropic import ClaudeModel
 
 class DummyOpenAIChatCompletionsModel:
     def __init__(self, model, openai_client):

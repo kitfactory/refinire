@@ -70,7 +70,7 @@ def get_llm(
 
 
     if model is None:
-        model = os.environ.get("LLM_MODEL", "gpt-4o-mini")
+        model = os.environ.get("REFINIRE_DEFAULT_LLM_MODEL", "gpt-4o-mini")
 
     def get_provider_canditate(model: str) -> ProviderType:
         if "gpt" in model:
