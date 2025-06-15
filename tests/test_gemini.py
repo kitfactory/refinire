@@ -1,6 +1,6 @@
 ﻿import pytest
 import os
-from refinire.gemini import GeminiModel
+from refinire.core.gemini import GeminiModel
 
 class DummyOpenAIChatCompletionsModel:
     def __init__(self, model, openai_client):
@@ -16,7 +16,7 @@ class DummyAsyncOpenAI:
 
 @pytest.fixture(autouse=True)
 def patch_parent(monkeypatch):
-    import refinire.gemini as gem
+    import refinire.core.gemini as gem
     # Stub AsyncOpenAI client
     monkeypatch.setattr(gem, "AsyncOpenAI", DummyAsyncOpenAI)
     # Stub _create_chat_completion to avoid super() call

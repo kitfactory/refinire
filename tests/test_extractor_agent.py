@@ -11,14 +11,14 @@ import os
 import json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from refinire.agents.extractor import (
+from src.refinire.agents.extractor import (
     ExtractorAgent, ExtractorConfig, ExtractionRule, ExtractionResult,
     RegexExtractionRule, EmailExtractionRule, PhoneExtractionRule, URLExtractionRule,
     DateExtractionRule, HTMLExtractionRule, JSONExtractionRule, LLMExtractionRule,
     CustomFunctionExtractionRule, SimpleHTMLParser,
     create_contact_extractor, create_html_extractor, create_json_extractor
 )
-from refinire.context import Context
+from refinire import Context
 
 
 class TestExtractionRules:

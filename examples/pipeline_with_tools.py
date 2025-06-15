@@ -3,7 +3,7 @@ Pipeline example with tools for enhanced generation
 ツールを使用した拡張生成のPipelineの例
 """
 
-from refinire import AgentPipeline
+from src.refinire import AgentPipeline
 from agents import function_tool
 
 @function_tool

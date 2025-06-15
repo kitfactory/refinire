@@ -1,6 +1,6 @@
 ﻿import pytest
 import os
-from refinire.core.anthropic import ClaudeModel
+from src.refinire.core.anthropic import ClaudeModel
 
 class DummyOpenAIChatCompletionsModel:
     def __init__(self, model, openai_client):
@@ -16,7 +16,7 @@ class DummyAsyncOpenAI:
 
 @pytest.fixture(autouse=True)
 def patch_parent(monkeypatch):
-    import refinire.anthropic as anth
+    import src.refinire.core.anthropic as anth
     # Stub AsyncOpenAI client
     monkeypatch.setattr(anth, "AsyncOpenAI", DummyAsyncOpenAI)
     # Stub _create_chat_completion to avoid super() call

@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with guardrails (Flow/Step archite
 """
 
 import asyncio
-from refinire import GenAgent, create_simple_flow
+from src.refinire import GenAgent, create_simple_flow
 from agents import Agent, input_guardrail, GuardrailFunctionOutput, InputGuardrailTripwireTriggered, Runner, RunContextWrapper
 from pydantic import BaseModel
 
@@ -151,7 +151,7 @@ async def main():
     # 方法3: マルチステップフローでのガードレール
     print("\n\n--- Guardrails in Multi-Step Flow ---")
     
-    from refinire import Flow
+    from src.refinire import Flow
     
     # Step 1: Content filter
     # ステップ1: コンテンツフィルター

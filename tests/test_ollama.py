@@ -1,7 +1,7 @@
 ﻿import pytest
 import os
-import refinire.ollama as oll
-from refinire.ollama import OllamaModel
+import refinire.core.ollama as oll
+from refinire.core.ollama import OllamaModel
 
 # Dummy AsyncOpenAI to verify base_url and api_key attributes
 class DummyAsyncOpenAI:

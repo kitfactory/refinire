@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with retry functionality (Flow/Ste
 """
 
 import asyncio
-from refinire import create_evaluated_gen_agent, create_simple_flow
+from src.refinire import create_evaluated_gen_agent, create_simple_flow
 
 async def main():
     """
@@ -87,7 +87,7 @@ async def main():
     # 方法2: 特定のコメント重要度フィルタリングによるリトライ
     print("\n\n--- Retry with Comment Importance Filtering ---")
     
-    from refinire import GenAgent
+    from src.refinire import GenAgent
     
     selective_retry_agent = GenAgent(
         name="selective_retry_generator",
@@ -163,7 +163,7 @@ async def main():
     # 方法3: リトライロジック付きマルチエージェントフロー
     print("\n\n--- Multi-Agent Flow with Retry Logic ---")
     
-    from refinire import Flow
+    from src.refinire import Flow
     
     # Agent 1: Content generator with retry
     # エージェント1: リトライ付きコンテンツ生成者

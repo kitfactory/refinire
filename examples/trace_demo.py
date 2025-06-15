@@ -10,7 +10,7 @@ This example demonstrates how Flow acts as a Trace and Step acts as a Span
 import asyncio
 import json
 from datetime import datetime
-from refinire import Flow, Context, FunctionStep
+from src.refinire import Flow, Context, FunctionStep
 
 
 def simple_task(name: str):

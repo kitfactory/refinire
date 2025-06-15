@@ -231,6 +231,17 @@ class Context(BaseModel):
         """
         return self.next_label is None
     
+    @property
+    def finished(self) -> bool:
+        """
+        Property to check if flow is finished
+        フローが完了しているかチェックするプロパティ
+        
+        Returns:
+            bool: True if finished / 完了している場合True
+        """
+        return self.is_finished()
+    
     def as_dict(self) -> Dict[str, Any]:
         """
         Convert to dictionary for LangChain LCEL compatibility
@@ -239,7 +250,7 @@ class Context(BaseModel):
         Returns:
             Dict[str, Any]: Dictionary representation / 辞書表現
         """
-        data = self.dict()
+        data = self.model_dump()
         # Convert messages to LangChain format
         # メッセージをLangChain形式に変換
         data["history"] = [

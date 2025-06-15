@@ -7,9 +7,12 @@ import asyncio
 from typing import List
 from pydantic import BaseModel
 
-from refinire import (
-    ClarifyAgent, Flow, DebugStep, create_simple_clarify_agent, 
+from src.refinire.agents import (
+    ClarifyAgent, create_simple_clarify_agent, 
     create_evaluated_clarify_agent, ClarificationResult
+)
+from src.refinire.flow import (
+    Flow, DebugStep
 )
 
 

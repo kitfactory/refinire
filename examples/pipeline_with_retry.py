@@ -3,7 +3,7 @@ Example: Retry generation based on evaluation comment importance
 例: 評価コメントの重要度に基づくリトライ例
 """
 
-from refinire import AgentPipeline
+from src.refinire import AgentPipeline
 
 
 def main():

@@ -4,11 +4,10 @@ import pytest
 from unittest.mock import Mock, patch, AsyncMock
 from typing import Optional
 
-from refinire.agents.gen_agent import (
+from src.refinire.agents.gen_agent import (
     GenAgent, create_simple_gen_agent, create_evaluated_gen_agent
 )
-from refinire.context import Context
-from refinire.llm_pipeline import LLMResult
+from refinire import Context, LLMResult
 
 try:
     from pydantic import BaseModel

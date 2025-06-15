@@ -15,10 +15,10 @@ except ImportError:
     pass
 import asyncio
 from agents.tracing import set_tracing_disabled, set_trace_processors, trace
-from refinire.llm import get_llm
+from src.refinire.llm import get_llm
 from agents.model_settings import ModelSettings
 from agents.models.interface import ModelTracing
-from refinire import AgentPipeline
+from src.refinire import AgentPipeline
 
 async def main() -> None:
     """

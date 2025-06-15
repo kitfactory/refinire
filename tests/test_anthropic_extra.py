@@ -1,7 +1,7 @@
 ﻿import pytest
 import os
-import refinire.anthropic as anth
-from refinire.anthropic import ClaudeModel
+import refinire.core.anthropic as anth
+from refinire.core.anthropic import ClaudeModel
 
 # Dummy AsyncOpenAI to verify base_url and api_key attributes
 class DummyAsyncOpenAI:

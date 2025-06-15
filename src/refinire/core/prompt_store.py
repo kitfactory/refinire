@@ -12,7 +12,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-from refinire.core.llm import get_llm
+from .llm import get_llm
 
 # Supported languages
 LanguageCode = Literal["ja", "en"]

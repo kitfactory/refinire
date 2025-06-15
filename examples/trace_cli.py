@@ -17,7 +17,7 @@ except ImportError:
 
 import argparse
 from agents.tracing import set_tracing_disabled, set_trace_processors, trace, custom_span
-from refinire.processor import DialogProcessor
+from src.refinire.core.processor import DialogProcessor
 
 
 def parse_metadata(items: list[str]) -> dict[str, str]:

@@ -8,7 +8,7 @@ import os
 from typing import List
 from pydantic import BaseModel
 from agents import Agent, Runner
-from refinire import GeminiModel
+from src.refinire import GeminiModel
 
 class WeatherInfo(BaseModel):
     """

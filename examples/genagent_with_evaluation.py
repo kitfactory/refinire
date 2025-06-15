@@ -7,7 +7,7 @@ This example demonstrates the recommended way to replace AgentPipeline with eval
 """
 
 import asyncio
-from refinire import create_evaluated_gen_agent, create_simple_flow
+from src.refinire import create_evaluated_gen_agent, create_simple_flow
 
 async def main():
     """
@@ -78,7 +78,7 @@ async def main():
     # 方法2: 評価機能付きGenAgentの手動作成
     print("\n\n=== Method 2: Manual GenAgent creation with evaluation ===")
     
-    from refinire import GenAgent, Flow
+    from src.refinire import GenAgent, Flow
     
     # Create GenAgent manually with evaluation
     # 評価機能付きGenAgentを手動で作成

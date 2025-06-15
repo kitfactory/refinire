@@ -3,7 +3,7 @@ Simple generation example using Pipeline without evaluation
 評価なしのPipelineを使用したシンプルな生成の例
 """
 
-from refinire import AgentPipeline
+from src.refinire import AgentPipeline
 
 def main():
     # Initialize pipeline with generation template only

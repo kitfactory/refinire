@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with dynamic prompt functionality 
 """
 
 import asyncio
-from refinire import GenAgent, create_simple_flow
+from src.refinire import GenAgent, create_simple_flow
 from datetime import datetime
 import re
 
@@ -196,7 +196,7 @@ async def main():
     # 方法4: 異なる動的プロンプトを持つマルチエージェントフロー
     print("\n\n--- Multi-Agent Flow with Dynamic Prompts ---")
     
-    from refinire import Flow
+    from src.refinire import Flow
     
     def analyzer_prompt(user_input: str) -> str:
         return f"[ANALYSIS] Analyze the following request: {user_input}"

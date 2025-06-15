@@ -7,30 +7,59 @@ name = "refinire"
 version = "0.2.0"
 description = "Refinire AI agent platform - Unified LLM interface and composable workflow orchestration"
 readme = "README.md"
-requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Kit Factory", email = "kit@kitfactory.dev"}
+]
+keywords = ["ai", "agents", "llm", "workflow", "orchestration"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.10"
 dependencies = [
-    "refinire-core>=0.2.0",
-    "refinire-agents>=0.2.0",
+    "openai-agents>=0.0.17",
+    "pydantic>=2.0.0",
+    "httpx>=0.24.0",
     "oneenv==0.2.0",
 ]
 
 [project.optional-dependencies]
-# Core extensions
-rag = [
-    "refinire-rag>=0.1.0",
+# Provider-specific dependencies
+anthropic = [
+    "anthropic>=0.34.0",
 ]
-database = [
-    "refinire-database>=0.1.0",
+google = [
+    "google-generativeai>=0.3.0",
 ]
-monitoring = [
-    "refinire-monitoring>=0.1.0",
+ollama = [
+    "ollama>=0.1.0",
+]
+
+# Development dependencies
+dev = [
+    "mkdocs-material>=9.6.14",
+    "mkdocstrings>=0.29.1",
+    "mkdocstrings-python>=1.16.10",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
+    "pytest-cov>=6.1.1",
+    "mypy>=1.10.0",
+    "colorama>=0.4.6",
 ]
 
 # All features
 all = [
-    "refinire-rag>=0.1.0",
-    "refinire-database>=0.1.0", 
-    "refinire-monitoring>=0.1.0",
+    "anthropic>=0.34.0",
+    "google-generativeai>=0.3.0",
+    "ollama>=0.1.0",
 ]
 [project.urls]
 Homepage = "https://github.com/kitfactory/refinire"
@@ -46,17 +75,6 @@ development = "refinire.templates:development_template"
 [tool.hatch.build.targets.wheel]
 packages = ["src/refinire"]
 
-[dependency-groups]
-dev = [
-    "mkdocs-material>=9.6.14",
-    "mkdocstrings>=0.29.1",
-    "mkdocstrings-python>=1.16.10",
-    "pytest>=8.3.5",
-    "pytest-asyncio>=0.26.0",
-    "pytest-cov>=6.1.1",
-    "mypy>=1.10.0",
-    "colorama>=0.4.6",
-]
 
 [tool.mypy]
 strict = true

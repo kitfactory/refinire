@@ -3,7 +3,7 @@ AgentPipeline example with conversation history
 会話履歴（history）を活用したAgentPipelineの例
 """
 
-from refinire import AgentPipeline
+from src.refinire import AgentPipeline
 
 def main():
     # 直近2件の履歴をプロンプトに含める

@@ -7,7 +7,7 @@ import asyncio
 import sys
 from openai.types.responses import ResponseTextDeltaEvent
 from agents import Agent, Runner
-from refinire import OllamaModel
+from src.refinire import OllamaModel
 
 async def main():
     """

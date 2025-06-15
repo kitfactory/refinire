@@ -1,8 +1,8 @@
 ﻿import io
 from agents.tracing import set_tracing_disabled, set_trace_processors, trace, custom_span
-from refinire.tracing import ConsoleTracingProcessor
+from refinire.core.tracing import ConsoleTracingProcessor
 import pytest
-from refinire.llm import get_llm
+from refinire import get_llm
 
 # English: Test integration of set_tracing_disabled and custom tracing processor.
 # 日本語: set_tracing_disabledと独自TracingProcessorを組み合わせた統合動作をテストします。

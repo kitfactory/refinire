@@ -1,0 +1,172 @@
+"""
+Refinire - Unified AI Agent Development Platform
+
+Refinire provides a comprehensive platform for building AI agents with three core pillars:
+
+1. **Unified LLM Interface** - Single API across providers (OpenAI, Anthropic, Google, Ollama)
+2. **Autonomous Quality Assurance** - Built-in evaluation and improvement
+3. **Composable Flow Architecture** - Flexible workflow orchestration
+
+Key Features:
+- Multi-provider LLM support with unified interface
+- Workflow orchestration with Flow and Step abstractions  
+- Specialized agents for common tasks (generation, extraction, validation, etc.)
+- Modern LLM pipeline with PromptStore integration
+- Built-in tracing and observability
+- Interactive multi-turn conversation support
+"""
+
+__version__ = "0.2.0"
+
+# Core LLM functionality - most commonly used
+from .core import (
+    get_llm,
+    ProviderType, 
+    get_available_models,
+    get_available_models_async,
+    PromptStore,
+    StoredPrompt,
+    PromptReference,
+    detect_system_language,
+    get_default_storage_dir,
+    enable_console_tracing,
+    disable_tracing,
+    TraceRegistry,
+    TraceMetadata,
+    get_global_registry,
+    set_global_registry,
+    ClaudeModel,
+    GeminiModel,
+    OllamaModel,
+    get_message,
+    DEFAULT_LANGUAGE
+)
+
+# Workflow orchestration
+from .flow import (
+    Flow,
+    FlowExecutionError,
+    Step,
+    FunctionStep,
+    ConditionStep,
+    ParallelStep,
+    UserInputStep,
+    AgentPipelineStep,
+    DebugStep,
+    ForkStep,
+    JoinStep,
+    Context,
+    Message,
+    create_simple_flow,
+    create_conditional_flow,
+    create_simple_condition,
+    create_lambda_step
+)
+
+# Modern pipeline functionality
+from .pipeline import (
+    LLMPipeline,
+    LLMResult,
+    InteractivePipeline,
+    InteractionResult,
+    InteractionQuestion,
+    create_simple_llm_pipeline,
+    create_evaluated_llm_pipeline,
+    create_tool_enabled_llm_pipeline,
+    create_simple_interactive_pipeline,
+    create_evaluated_interactive_pipeline
+)
+
+# Specialized agents
+from .agents import (
+    GenAgent,
+    ClarifyAgent,
+    ClarificationResult,
+    ClarificationQuestion,
+    ExtractorAgent,
+    ValidatorAgent,
+    RouterAgent,
+    NotificationAgent,
+    create_simple_gen_agent,
+    create_evaluated_gen_agent,
+    create_simple_clarify_agent,
+    create_evaluated_clarify_agent
+)
+
+# Environment variable templates
+from .templates import core_template
+
+# Most commonly used imports for quick access
+__all__ = [
+    # Core LLM functionality
+    "get_llm",
+    "ProviderType",
+    "get_available_models", 
+    "get_available_models_async",
+    "PromptStore",
+    "StoredPrompt",
+    "PromptReference",
+    "detect_system_language",
+    "get_default_storage_dir",
+    "ClaudeModel",
+    "GeminiModel", 
+    "OllamaModel",
+    "get_message",
+    "DEFAULT_LANGUAGE",
+    
+    # Workflow orchestration
+    "Flow",
+    "FlowExecutionError", 
+    "Step",
+    "FunctionStep",
+    "ConditionStep",
+    "ParallelStep",
+    "UserInputStep",
+    "AgentPipelineStep",
+    "DebugStep",
+    "ForkStep",
+    "JoinStep",
+    "Context",
+    "Message",
+    "create_simple_flow",
+    "create_conditional_flow",
+    "create_simple_condition",
+    "create_lambda_step",
+    
+    # Pipeline functionality
+    "LLMPipeline",
+    "LLMResult",
+    "InteractivePipeline", 
+    "InteractionResult",
+    "InteractionQuestion",
+    "create_simple_llm_pipeline",
+    "create_evaluated_llm_pipeline",
+    "create_tool_enabled_llm_pipeline",
+    "create_simple_interactive_pipeline",
+    "create_evaluated_interactive_pipeline",
+    
+    # Specialized agents
+    "GenAgent",
+    "ClarifyAgent",
+    "ClarificationResult",
+    "ClarificationQuestion",
+    "ExtractorAgent", 
+    "ValidatorAgent",
+    "RouterAgent",
+    "NotificationAgent",
+    "create_simple_gen_agent",
+    "create_evaluated_gen_agent",
+    "create_simple_clarify_agent",
+    "create_evaluated_clarify_agent",
+    
+    # Tracing
+    "enable_console_tracing",
+    "disable_tracing", 
+    "TraceRegistry",
+    "TraceMetadata",
+    "get_global_registry",
+    "set_global_registry",
+    
+    # Environment templates
+    "core_template"
+]

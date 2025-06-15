@@ -10,7 +10,7 @@ import asyncio
 from typing import List
 from pydantic import BaseModel
 
-from refinire import (
+from src.refinire import (
     GenAgent, ClarifyAgent, LLMPipeline, Context,
     create_simple_gen_agent, create_simple_clarify_agent,
     create_simple_llm_pipeline, create_evaluated_llm_pipeline,

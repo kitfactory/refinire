@@ -13,13 +13,13 @@ import json
 from unittest.mock import Mock, patch, MagicMock
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from refinire.agents.notification import (
+from src.refinire.agents.notification import (
     NotificationAgent, NotificationConfig, NotificationChannel, NotificationResult,
     LogChannel, EmailChannel, WebhookChannel, SlackChannel, TeamsChannel, FileChannel,
     create_log_notifier, create_file_notifier, create_webhook_notifier,
     create_slack_notifier, create_teams_notifier, create_multi_channel_notifier
 )
-from refinire.context import Context
+from refinire import Context
 
 
 class TestNotificationResult:
@@ -80,7 +80,7 @@ class TestLogChannel:
         channel = LogChannel("test_log", "INFO")
         ctx = Context()
         
-        with patch('refinire.agents.notification.logger') as mock_logger:
+        with patch('src.refinire.agents.notification.logger') as mock_logger:
             result = await channel.send("Test message", "Test subject", ctx)
             
             assert result == True
@@ -92,7 +92,7 @@ class TestLogChannel:
         channel = LogChannel("test_log", "WARNING")
         ctx = Context()
         
-        with patch('refinire.agents.notification.logger') as mock_logger:
+        with patch('src.refinire.agents.notification.logger') as mock_logger:
             result = await channel.send("Test message", None, ctx)
             
             assert result == True
@@ -394,7 +394,7 @@ class TestNotificationAgent:
         agent = NotificationAgent(log_config)
         ctx = Context()
         
-        with patch('refinire.agents.notification.logger') as mock_logger:
+        with patch('src.refinire.agents.notification.logger') as mock_logger:
             result_ctx = await agent.run("Test notification", ctx)
             
             assert result_ctx.shared_state["log_notifier_status"] == "success"
@@ -465,7 +465,7 @@ class TestNotificationAgent:
             agent = NotificationAgent(multi_config)
             ctx = Context()
             
-            with patch('refinire.agents.notification.logger') as mock_logger:
+            with patch('src.refinire.agents.notification.logger') as mock_logger:
                 result_ctx = await agent.run("Test multi notification", ctx)
                 
                 assert result_ctx.shared_state["multi_notifier_status"] == "success"
@@ -493,7 +493,7 @@ class TestNotificationAgent:
         # Set custom subject
         agent.set_subject("Custom Subject", ctx)
         
-        with patch('refinire.agents.notification.logger') as mock_logger:
+        with patch('src.refinire.agents.notification.logger') as mock_logger:
             result_ctx = await agent.run("Test notification", ctx)
             
             assert result_ctx.shared_state["log_notifier_status"] == "success"
@@ -520,7 +520,7 @@ class TestNotificationAgent:
         agent = NotificationAgent(config)
         ctx = Context()
         
-        with patch('refinire.agents.notification.logger') as mock_logger:
+        with patch('src.refinire.agents.notification.logger') as mock_logger:
             result_ctx = await agent.run("Test notification", ctx)
             
             # Should have partial success due to fail_fast
@@ -654,7 +654,7 @@ class TestNotificationUtilities:
         log_notifier = create_log_notifier("log_test", "INFO")
         ctx = Context()
         
-        with patch('refinire.agents.notification.logger') as mock_logger:
+        with patch('src.refinire.agents.notification.logger') as mock_logger:
             result_ctx = await log_notifier.run("Test log message", ctx)
             assert result_ctx.shared_state["log_test_status"] == "success"
             mock_logger.info.assert_called()

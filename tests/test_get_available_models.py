@@ -1,7 +1,7 @@
 ﻿import pytest
 import asyncio
 from unittest.mock import patch, AsyncMock, MagicMock
-from refinire.llm import get_available_models, get_available_models_async
+from refinire import get_available_models, get_available_models_async
 
 
 class TestGetAvailableModels:

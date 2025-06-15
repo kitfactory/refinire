@@ -19,7 +19,7 @@ except ImportError as e:
     raise ImportError(f"Required dependencies not found: {e}. Please install openai and pydantic.")
 
 try:
-    from refinire.core.prompt_store import PromptReference
+    from ..core.prompt_store import PromptReference
 except ImportError:
     PromptReference = None
 

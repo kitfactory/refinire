@@ -7,7 +7,7 @@ import asyncio
 import os
 from agents.agent import Agent
 from agents.run import Runner
-from refinire import GeminiModel
+from src.refinire.core import GeminiModel
 
 async def main():
     # Get API key from environment variable

@@ -4,7 +4,7 @@ Example of using PromptStore for multilingual prompt management
 """
 
 from pathlib import Path
-from refinire.core import PromptStore, detect_system_language, get_default_storage_dir
+from src.refinire.core import PromptStore, detect_system_language, get_default_storage_dir
 
 
 def main():

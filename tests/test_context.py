@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from datetime import datetime
 from typing import Dict, Any
 
-from refinire.agents.context import Context
+from src.refinire.flow.context import Context
 
 
 class TestContext:

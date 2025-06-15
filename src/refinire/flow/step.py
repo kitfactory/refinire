@@ -470,7 +470,7 @@ class DebugStep(Step):
         print(f"   Next Label: {ctx.next_label}")
         
         if self.print_context:
-            print(f"   Context: {ctx.dict()}")
+            print(f"   Context: {ctx.model_dump()}")
         
         # Add debug message to system messages
         # デバッグメッセージをシステムメッセージに追加
@@ -711,9 +711,9 @@ class ParallelStep(Step):
         # 実行パスを更新
         main_ctx.span_history.extend(result_ctx.span_history)
         
-        # Store step-specific results
-        # ステップ固有結果を保存
-        main_ctx.shared_state[f"{step_name}_result"] = {
+        # Store step-specific results metadata (avoid overwriting user data)
+        # ステップ固有結果メタデータを保存（ユーザーデータの上書きを避ける）
+        main_ctx.shared_state[f"__{step_name}_metadata__"] = {
             "status": "completed",
             "output": result_ctx.shared_state,
             "messages": result_ctx.messages

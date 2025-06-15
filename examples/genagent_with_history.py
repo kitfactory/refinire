@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with conversation history (Flow/St
 """
 
 import asyncio
-from refinire import GenAgent, create_simple_flow
+from src.refinire import GenAgent, create_simple_flow
 
 async def main():
     """
@@ -65,7 +65,7 @@ async def main():
     # 方法2: コンテキストを共有する複数エージェントのフロー
     print("\n\n--- Multi-Agent Flow with Shared Context ---")
     
-    from refinire import Flow
+    from src.refinire import Flow
     
     # Agent 1: Information gatherer
     # エージェント1: 情報収集者

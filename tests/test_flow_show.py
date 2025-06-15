@@ -10,10 +10,8 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from refinire.flow import Flow
-from refinire.step import UserInputStep, ConditionStep, FunctionStep
-from refinire.context import Context
-from refinire.agents.router import RouterAgent, RouterConfig
+from refinire import Flow, UserInputStep, ConditionStep, FunctionStep, Context, RouterAgent
+from src.refinire.agents.router import RouterConfig
 
 
 class TestFlowShow:

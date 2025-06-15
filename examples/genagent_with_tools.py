@@ -7,7 +7,7 @@ This example demonstrates how to use GenAgent with tools (Flow/Step architecture
 """
 
 import asyncio
-from refinire import GenAgent, create_simple_flow
+from src.refinire import GenAgent, create_simple_flow
 from agents import function_tool
 
 @function_tool
@@ -115,7 +115,7 @@ async def main():
     # 方法2: 異なる専門ツールを持つマルチエージェントフロー
     print("\n\n=== Multi-Agent Flow with Specialized Tools ===")
     
-    from refinire import Flow
+    from src.refinire import Flow
     
     # Weather specialist agent
     # 天気専門エージェント

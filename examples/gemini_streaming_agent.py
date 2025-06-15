@@ -9,7 +9,7 @@ import sys
 from openai.types.responses import ResponseTextDeltaEvent
 from agents.agent import Agent
 from agents.run import Runner
-from refinire import GeminiModel
+from src.refinire import GeminiModel
 
 async def main():
     """

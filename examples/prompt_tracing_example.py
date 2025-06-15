@@ -5,8 +5,8 @@ Example of using PromptStore with tracing for agent instructions
 
 from pathlib import Path
 import tempfile
-from refinire.core import PromptStore, PromptReference
-from refinire.llm_pipeline import LLMPipeline
+from src.refinire.core import PromptStore, PromptReference
+from src.refinire.pipeline import LLMPipeline
 
 
 def main():

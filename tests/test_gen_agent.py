@@ -4,29 +4,30 @@ from unittest.mock import MagicMock, patch
 from refinire import GenAgent, Context, create_simple_gen_agent, create_evaluated_gen_agent
 
 
-# モック Agent と Runner を適用するフィクスチャ
+# モック LLMPipeline を適用するフィクスチャ
 @pytest.fixture(autouse=True)
-def patch_agent_and_runner(monkeypatch):
-    # Agent と Runner をダミーに置き換える
-    class DummyAgent:
-        def __init__(self, name, model=None, tools=None, instructions=None, input_guardrails=None, output_guardrails=None):
-            self.name = name
-            self.model = model
-            self.tools = tools
-            self.instructions = instructions
-            self.input_guardrails = input_guardrails
-            self.output_guardrails = output_guardrails
+def patch_llm_pipeline(monkeypatch):
+    # LLMPipeline をダミーに置き換える
+    class DummyLLMResult:
+        def __init__(self, text, score=85.0):
+            self.final_output = text
+            self.evaluation_score = score
+            self.raw_content = text
+            self.structured_output = None
+            self.evaluation_result = None
     
-    class DummyRunner:
-        def run_sync(self, agent, prompt):
-            # シンプルなレスポンスを返す
-            class DummyResult:
-                def __init__(self, text):
-                    self.final_output = text
-            return DummyResult(f"Generated response for: {prompt[:50]}...")
+    class DummyLLMPipeline:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+        
+        async def run_async(self, prompt, **kwargs):
+            return DummyLLMResult(f"Generated response for: {prompt[:50]}...")
+        
+        def run(self, prompt, **kwargs):
+            return DummyLLMResult(f"Generated response for: {prompt[:50]}...")
     
-    monkeypatch.setattr("refinire.pipeline.Agent", DummyAgent)
-    monkeypatch.setattr("refinire.pipeline.Runner", lambda: DummyRunner())
+    monkeypatch.setattr("refinire.pipeline.llm_pipeline.LLMPipeline", DummyLLMPipeline)
 
 
 class TestGenAgent:

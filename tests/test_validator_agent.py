@@ -10,12 +10,12 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from refinire.agents.validator import (
+from src.refinire.agents.validator import (
     ValidatorAgent, ValidatorConfig, ValidationRule, ValidationResult,
     RequiredRule, EmailFormatRule, LengthRule, RangeRule, RegexRule, CustomFunctionRule,
     create_email_validator, create_required_validator, create_length_validator, create_custom_validator
 )
-from refinire.context import Context
+from refinire import Context
 
 
 class TestValidationRules:

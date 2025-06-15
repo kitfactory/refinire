@@ -16,15 +16,15 @@ from typing import Any
 # 例のための環境設定
 os.environ.setdefault("OPENAI_API_KEY", "your-api-key-here")
 
-from refinire.agents.router import (
+from src.refinire.agents.router import (
     RouterAgent,
     RouterConfig,
     RuleBasedClassifier,
     create_intent_router,
     create_content_type_router
 )
-from refinire.context import Context
-from refinire.llm_pipeline import create_simple_llm_pipeline
+from src.refinire.context import Context
+from src.refinire.pipeline.llm_pipeline import create_simple_llm_pipeline
 
 
 def example_1_basic_llm_router():

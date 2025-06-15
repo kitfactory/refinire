@@ -7,7 +7,7 @@ English: Provides ConsoleTracingProcessor for color-coded output of span data an
 from agents.tracing import TracingProcessor, set_trace_processors
 from agents.tracing.span_data import GenerationSpanData, ResponseSpanData
 from agents import set_tracing_disabled
-from refinire.message import get_message, DEFAULT_LANGUAGE  # Import for localized trace labels
+from .message import get_message, DEFAULT_LANGUAGE  # Import for localized trace labels
 import sys
 
 

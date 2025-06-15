@@ -5,11 +5,12 @@ from datetime import datetime
 import json
 from io import StringIO
 
-from refinire.tracing import (
-    ConsoleTracingProcessor, enable_console_tracing, disable_tracing,
-    _merge_msgs, extract_output_texts
+from refinire import (
+    enable_console_tracing, disable_tracing, Context
 )
-from refinire.context import Context
+from refinire.core.tracing import (
+    ConsoleTracingProcessor, _merge_msgs, extract_output_texts
+)
 
 
 class TestConsoleTracingProcessor:
@@ -70,8 +71,8 @@ class TestTracingFunctions:
         Test enable_console_tracing function
         enable_console_tracing関数をテスト
         """
-        with patch('refinire.tracing.set_tracing_disabled') as mock_set_disabled:
-            with patch('refinire.tracing.set_trace_processors') as mock_set_processors:
+        with patch('refinire.core.tracing.set_tracing_disabled') as mock_set_disabled:
+            with patch('refinire.core.tracing.set_trace_processors') as mock_set_processors:
                 enable_console_tracing()
                 
                 # Check that tracing was enabled
@@ -90,7 +91,7 @@ class TestTracingFunctions:
         Test disable_tracing function
         disable_tracing関数をテスト
         """
-        with patch('refinire.tracing.set_tracing_disabled') as mock_set_disabled:
+        with patch('refinire.core.tracing.set_tracing_disabled') as mock_set_disabled:
             disable_tracing()
             
             # Check that tracing was disabled
@@ -208,8 +209,8 @@ class TestTracingIntegration:
         Test enabling and disabling tracing
         トレーシングの有効化・無効化サイクルをテスト
         """
-        with patch('refinire.tracing.set_tracing_disabled') as mock_set_disabled:
-            with patch('refinire.tracing.set_trace_processors') as mock_set_processors:
+        with patch('refinire.core.tracing.set_tracing_disabled') as mock_set_disabled:
+            with patch('refinire.core.tracing.set_trace_processors') as mock_set_processors:
                 # Enable tracing
                 # トレーシングを有効化
                 enable_console_tracing()
@@ -263,7 +264,7 @@ class TestMessageLocalization:
         Test that trace labels are localized
         トレースラベルがローカライズされることをテスト
         """
-        from refinire.message import get_message
+        from refinire.core.message import get_message
         
         # Test English labels
         # 英語ラベルをテスト
