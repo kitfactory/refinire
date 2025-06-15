@@ -136,7 +136,7 @@ from .notification import (
 )
 
 # Version information
-__version__ = "0.2.0"
+__version__ = "0.2.2"
 
 # Public API
 __all__ = [
