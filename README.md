@@ -24,16 +24,16 @@ pip install refinire
 ```
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
-# Simple generation pipeline
-pipeline = LLMPipeline(
+# Simple AI agent
+agent = RefinireAgent(
     name="assistant",
     generation_instructions="You are a helpful assistant.",
     model="gpt-4o-mini"
 )
 
-result = pipeline.run("Hello!")
+result = agent.run("Hello!")
 print(result.content)
 ```
 
@@ -41,13 +41,13 @@ print(result.content)
 
 Refinire provides key components to support AI agent development.
 
-## LLMPipeline - Integrated Generation and Evaluation
+## RefinireAgent - Integrated Generation and Evaluation
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
-# Pipeline with automatic evaluation
-pipeline = LLMPipeline(
+# Agent with automatic evaluation
+agent = RefinireAgent(
     name="quality_writer",
     generation_instructions="Generate high-quality content",
     evaluation_instructions="Rate quality from 0-100",
@@ -56,7 +56,7 @@ pipeline = LLMPipeline(
     model="gpt-4o-mini"
 )
 
-result = pipeline.run("Write an article about AI")
+result = agent.run("Write an article about AI")
 print(f"Quality Score: {result.evaluation_score}")
 print(f"Content: {result.content}")
 ```
@@ -73,10 +73,10 @@ from refinire import Flow, FunctionStep, ConditionStep, ParallelStep
 flow = Flow({
     "start": FunctionStep("analyze", analyze_request),
     "route": ConditionStep("route", route_by_complexity, "simple", "complex"),
-    "simple": LLMPipeline(name="simple", generation_instructions="Quick response"),
+    "simple": RefinireAgent(name="simple", generation_instructions="Quick response"),
     "complex": ParallelStep("research", [
-        LLMPipeline(name="expert1", generation_instructions="Deep analysis"),
-        LLMPipeline(name="expert2", generation_instructions="Alternative perspective")
+        RefinireAgent(name="expert1", generation_instructions="Deep analysis"),
+        RefinireAgent(name="expert2", generation_instructions="Alternative perspective")
     ]),
     "aggregate": FunctionStep("combine", combine_results)
 })
@@ -104,13 +104,13 @@ response = llm.complete("Explain the concept of refinement")
 
 ## 2. Autonomous Quality Assurance
 
-LLMPipeline's built-in evaluation ensures output quality:
+RefinireAgent's built-in evaluation ensures output quality:
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
-# Pipeline with evaluation loop
-pipeline = LLMPipeline(
+# Agent with evaluation loop
+agent = RefinireAgent(
     name="quality_assistant",
     generation_instructions="Generate helpful responses",
     evaluation_instructions="Rate accuracy and usefulness from 0-100",
@@ -119,7 +119,7 @@ pipeline = LLMPipeline(
     model="gpt-4o-mini"
 )
 
-result = pipeline.run("Explain quantum computing")
+result = agent.run("Explain quantum computing")
 print(f"Evaluation Score: {result.evaluation_score}")
 print(f"Content: {result.content}")
 ```
@@ -130,10 +130,10 @@ If evaluation falls below threshold, content is automatically regenerated for co
 
 ## 3. Tool Integration - Automated Function Calling
 
-LLMPipeline automatically executes function tools:
+RefinireAgent automatically executes function tools:
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
 def calculate(expression: str) -> float:
     """Calculate mathematical expressions"""
@@ -143,17 +143,17 @@ def get_weather(city: str) -> str:
     """Get weather for a city"""
     return f"Weather in {city}: Sunny, 22°C"
 
-# Pipeline with tools
-pipeline = LLMPipeline(
+# Agent with tools
+agent = RefinireAgent(
     name="tool_assistant",
     generation_instructions="Answer questions using tools",
     model="gpt-4o-mini"
 )
 
-pipeline.add_function_tool(calculate)
-pipeline.add_function_tool(get_weather)
+agent.add_function_tool(calculate)
+agent.add_function_tool(get_weather)
 
-result = pipeline.run("What's the weather in Tokyo? Also, what's 15 * 23?")
+result = agent.run("What's the weather in Tokyo? Also, what's 15 * 23?")
 print(result.content)  # Automatically answers both questions
 ```
 
@@ -311,20 +311,20 @@ print(f"Improvement opportunities: {len(improvement_candidates)}")
 pip install refinire
 ```
 
-### Your First Pipeline (30 seconds)
+### Your First Agent (30 seconds)
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
 # Create
-pipeline = LLMPipeline(
+agent = RefinireAgent(
     name="hello_world",
     generation_instructions="You are a friendly assistant.",
     model="gpt-4o-mini"
 )
 
 # Run
-result = pipeline.run("Hello!")
+result = agent.run("Hello!")
 print(result.content)
 ```
 
@@ -357,34 +357,34 @@ for provider, model in providers:
 
 ```python
 from pydantic import BaseModel
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
 class WeatherReport(BaseModel):
     location: str
     temperature: float
     condition: str
 
-pipeline = LLMPipeline(
+agent = RefinireAgent(
     name="weather_reporter",
     generation_instructions="Generate weather reports",
     output_model=WeatherReport,
     model="gpt-4o-mini"
 )
 
-result = pipeline.run("Weather in Tokyo")
+result = agent.run("Weather in Tokyo")
 weather = result.content  # Typed WeatherReport object
 ```
 
 ### Guardrails and Safety
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
 def content_filter(content: str) -> bool:
     """Filter inappropriate content"""
     return "inappropriate" not in content.lower()
 
-pipeline = LLMPipeline(
+agent = RefinireAgent(
     name="safe_assistant",
     generation_instructions="Be helpful and appropriate",
     output_guardrails=[content_filter],
@@ -400,13 +400,13 @@ def web_search(query: str) -> str:
     # Your search implementation
     return f"Search results for: {query}"
 
-pipeline = LLMPipeline(
+agent = RefinireAgent(
     name="research_assistant",
     generation_instructions="Help with research using web search",
     model="gpt-4o-mini"
 )
 
-pipeline.add_function_tool(web_search)
+agent.add_function_tool(web_search)
 ```
 
 ---

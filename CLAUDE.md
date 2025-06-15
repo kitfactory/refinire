@@ -73,9 +73,8 @@ mkdocs build
   - `flow.py` - Workflow orchestration engine for complex multi-step processes  
   - `step.py` - Individual workflow step implementations (Function, Condition, Parallel, etc.)
   - `context.py` - Shared state management between steps
-- **pipeline/** - LLM pipeline functionality
-  - `llm_pipeline.py` - Modern LLM pipeline with evaluation and tool support
-  - `pipeline.py` - Legacy AgentPipeline (deprecated)
+- **pipeline/** - AI agent functionality
+  - `llm_pipeline.py` - RefinireAgent with evaluation and tool support
 - **Specialized agents**
   - `gen_agent.py` - General-purpose generation agents
   - `clarify_agent.py` - Requirement clarification workflows  

@@ -3,12 +3,12 @@ Refinire Agents - Comprehensive AI agent and workflow framework
 
 This module provides the complete agent framework including:
 - Workflow orchestration (Flow, Step, Context)
-- Pipeline functionality (LLMPipeline, InteractivePipeline)
+- Agent functionality (RefinireAgent, InteractiveAgent)
 - Specialized agent implementations for specific tasks
 
 Components are organized into:
 - Flow: Workflow orchestration engine and step implementations
-- Pipeline: LLM pipeline and execution frameworks
+- Pipeline: Agent and execution frameworks
 - Specialized Agents: Task-specific agent implementations
 """
 
@@ -21,7 +21,6 @@ from .flow import (
     ConditionStep,
     ParallelStep,
     UserInputStep,
-    AgentPipelineStep,
     DebugStep,
     ForkStep,
     JoinStep,
@@ -34,21 +33,24 @@ from .flow import (
 )
 
 from .pipeline import (
-    LLMPipeline,
+    RefinireAgent,
     LLMResult,
-    InteractivePipeline,
+    InteractiveAgent,
     InteractionResult,
     InteractionQuestion,
+    create_simple_agent,
+    create_evaluated_agent,
+    create_tool_enabled_agent,
+    create_simple_interactive_agent,
+    create_evaluated_interactive_agent,
+    # Backward compatibility aliases
+    LLMPipeline,
+    InteractivePipeline,
     create_simple_llm_pipeline,
     create_evaluated_llm_pipeline,
     create_tool_enabled_llm_pipeline,
     create_simple_interactive_pipeline,
-    create_evaluated_interactive_pipeline,
-    # Legacy pipeline (deprecated)
-    AgentPipeline,
-    EvaluationResult,
-    Comment,
-    CommentImportance
+    create_evaluated_interactive_pipeline
 )
 
 # Import implemented agents
@@ -146,7 +148,6 @@ __all__ = [
     "ConditionStep",
     "ParallelStep",
     "UserInputStep",
-    "AgentPipelineStep",
     "DebugStep",
     "ForkStep",
     "JoinStep",
@@ -157,21 +158,25 @@ __all__ = [
     "create_simple_condition",
     "create_lambda_step",
     
-    # Pipeline functionality
-    "LLMPipeline",
+    # Agent functionality
+    "RefinireAgent",
     "LLMResult",
-    "InteractivePipeline",
+    "InteractiveAgent",
     "InteractionResult",
     "InteractionQuestion",
+    "create_simple_agent",
+    "create_evaluated_agent",
+    "create_tool_enabled_agent",
+    "create_simple_interactive_agent",
+    "create_evaluated_interactive_agent",
+    # Backward compatibility aliases
+    "LLMPipeline",
+    "InteractivePipeline",
     "create_simple_llm_pipeline",
     "create_evaluated_llm_pipeline",
     "create_tool_enabled_llm_pipeline",
     "create_simple_interactive_pipeline",
     "create_evaluated_interactive_pipeline",
-    "AgentPipeline",
-    "EvaluationResult",
-    "Comment",
-    "CommentImportance",
     
     # Generation Agents
     "GenAgent",

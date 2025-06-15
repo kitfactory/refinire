@@ -11,7 +11,7 @@ Key Features:
 - Multi-provider LLM support with unified interface
 - Workflow orchestration with Flow and Step abstractions  
 - Specialized agents for common tasks (generation, extraction, validation, etc.)
-- Modern LLM pipeline with PromptStore integration
+- Modern AI agents with PromptStore integration
 - Built-in tracing and observability
 - Interactive multi-turn conversation support
 """
@@ -52,7 +52,6 @@ from .agents.flow import (
     ConditionStep,
     ParallelStep,
     UserInputStep,
-    AgentPipelineStep,
     DebugStep,
     ForkStep,
     JoinStep,
@@ -64,13 +63,21 @@ from .agents.flow import (
     create_lambda_step
 )
 
-# Modern pipeline functionality
+# Modern agent functionality
 from .agents.pipeline import (
-    LLMPipeline,
+    RefinireAgent,
     LLMResult,
-    InteractivePipeline,
+    InteractiveAgent,
     InteractionResult,
     InteractionQuestion,
+    create_simple_agent,
+    create_evaluated_agent,
+    create_tool_enabled_agent,
+    create_simple_interactive_agent,
+    create_evaluated_interactive_agent,
+    # Backward compatibility aliases
+    LLMPipeline,
+    InteractivePipeline,
     create_simple_llm_pipeline,
     create_evaluated_llm_pipeline,
     create_tool_enabled_llm_pipeline,
@@ -124,7 +131,6 @@ __all__ = [
     "ConditionStep",
     "ParallelStep",
     "UserInputStep",
-    "AgentPipelineStep",
     "DebugStep",
     "ForkStep",
     "JoinStep",
@@ -135,12 +141,20 @@ __all__ = [
     "create_simple_condition",
     "create_lambda_step",
     
-    # Pipeline functionality
-    "LLMPipeline",
+    # Agent functionality
+    "RefinireAgent",
     "LLMResult",
-    "InteractivePipeline", 
+    "InteractiveAgent", 
     "InteractionResult",
     "InteractionQuestion",
+    "create_simple_agent",
+    "create_evaluated_agent",
+    "create_tool_enabled_agent",
+    "create_simple_interactive_agent",
+    "create_evaluated_interactive_agent",
+    # Backward compatibility aliases
+    "LLMPipeline",
+    "InteractivePipeline",
     "create_simple_llm_pipeline",
     "create_evaluated_llm_pipeline",
     "create_tool_enabled_llm_pipeline",

@@ -1,20 +1,30 @@
 """
-Refinire Pipeline - LLM pipeline and execution frameworks
+Refinire Agent - AI agent framework with evaluation and tool support
 
-This module provides pipeline functionality for the Refinire AI agent platform:
-- Modern LLM pipeline with PromptStore integration
-- Legacy AgentPipeline (deprecated)
-- Interactive pipeline for multi-turn conversations
+This module provides AI agent functionality for the Refinire platform:
+- RefinireAgent with built-in evaluation and tool support
+- InteractiveAgent for multi-turn conversations
+- Factory functions for common configurations
 """
 
-# Modern LLM Pipeline (recommended)
+# Refinire Agent (recommended)
 from .llm_pipeline import (
-    LLMPipeline,
+    RefinireAgent,
     LLMResult,
     EvaluationResult as LLMEvaluationResult,
-    InteractivePipeline,
+    InteractiveAgent,
     InteractionResult,
     InteractionQuestion,
+    create_simple_agent,
+    create_evaluated_agent,
+    create_tool_enabled_agent,
+    create_web_search_agent,
+    create_calculator_agent,
+    create_simple_interactive_agent,
+    create_evaluated_interactive_agent,
+    # Backward compatibility aliases
+    LLMPipeline,
+    InteractivePipeline,
     create_simple_llm_pipeline,
     create_evaluated_llm_pipeline,
     create_tool_enabled_llm_pipeline,
@@ -24,28 +34,33 @@ from .llm_pipeline import (
     create_evaluated_interactive_pipeline
 )
 
-# Legacy AgentPipeline (deprecated)
-from .pipeline import AgentPipeline, EvaluationResult, Comment, CommentImportance
+# Legacy AgentPipeline (deprecated - removed)
+# from .pipeline import AgentPipeline, EvaluationResult, Comment, CommentImportance
 
 __all__ = [
-    # Modern LLM Pipeline (recommended)
-    "LLMPipeline",
+    # Refinire Agent (recommended)
+    "RefinireAgent",
     "LLMResult", 
     "LLMEvaluationResult",
-    "InteractivePipeline",
+    "InteractiveAgent",
     "InteractionResult",
     "InteractionQuestion",
+    "create_simple_agent",
+    "create_evaluated_agent",
+    "create_tool_enabled_agent",
+    "create_web_search_agent",
+    "create_calculator_agent",
+    "create_simple_interactive_agent",
+    "create_evaluated_interactive_agent",
+    
+    # Backward compatibility aliases
+    "LLMPipeline",
+    "InteractivePipeline",
     "create_simple_llm_pipeline",
     "create_evaluated_llm_pipeline",
     "create_tool_enabled_llm_pipeline",
     "create_web_search_pipeline",
     "create_calculator_pipeline",
     "create_simple_interactive_pipeline",
-    "create_evaluated_interactive_pipeline",
-    
-    # Legacy AgentPipeline (deprecated)
-    "AgentPipeline",
-    "EvaluationResult",
-    "Comment",
-    "CommentImportance"
+    "create_evaluated_interactive_pipeline"
 ]

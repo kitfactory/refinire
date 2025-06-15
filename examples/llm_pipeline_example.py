@@ -1,6 +1,6 @@
 ﻿"""
-LLMPipeline and GenAgentV2 Example - Modern replacement for deprecated AgentPipeline
-LLMPipelineとGenAgentV2の例 - 非推奨のAgentPipelineに代わるモダンな実装
+RefinireAgent and GenAgentV2 Example - Modern AI agent development
+RefinireAgentとGenAgentV2の例 - モダンなAIエージェント開発
 """
 
 import asyncio
@@ -8,11 +8,11 @@ from typing import Optional
 from pydantic import BaseModel
 
 from src.refinire import (
-    LLMPipeline, GenAgentV2, Flow, Context,
-    create_simple_llm_pipeline, create_evaluated_llm_pipeline,
+    RefinireAgent, GenAgentV2, Flow, Context,
+    create_simple_agent, create_evaluated_agent,
     create_simple_gen_agent_v2, create_evaluated_gen_agent_v2,
-    create_tool_enabled_llm_pipeline, create_calculator_pipeline,
-    create_web_search_pipeline
+    create_tool_enabled_agent, create_calculator_agent,
+    create_web_search_agent
 )
 
 
@@ -34,17 +34,17 @@ class TaskPlan(BaseModel):
     success_criteria: str
 
 
-def example_basic_llm_pipeline():
+def example_basic_refinire_agent():
     """
-    Basic LLMPipeline usage example
-    基本的なLLMPipelineの使用例
+    Basic RefinireAgent usage example
+    基本的なRefinireAgentの使用例
     """
-    print("🔧 Basic LLMPipeline Example")
+    print("🔧 Basic RefinireAgent Example")
     print("=" * 50)
     
-    # Create simple pipeline
-    # シンプルなパイプラインを作成
-    pipeline = create_simple_llm_pipeline(
+    # Create simple agent
+    # シンプルなエージェントを作成
+    agent = create_simple_agent(
         name="task_helper",
         instructions="You are a helpful task planning assistant. Analyze user requests and provide structured guidance.",
         model="gpt-4o-mini"

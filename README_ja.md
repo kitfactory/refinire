@@ -16,16 +16,16 @@
 ```
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
-# シンプルな生成パイプライン
-pipeline = LLMPipeline(
+# シンプルなAIエージェント
+agent = RefinireAgent(
     name="assistant",
     generation_instructions="親切なアシスタントです",
     model="gpt-4o-mini"
 )
 
-result = pipeline.run("こんにちは")
+result = agent.run("こんにちは")
 print(result.content)
 ```
 
@@ -33,13 +33,13 @@ print(result.content)
 
 Refinire は、AI エージェント開発を支える主要コンポーネントを提供します。
 
-## LLMPipeline - 生成と評価の統合
+## RefinireAgent - 生成と評価の統合
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
-# 自動評価付きパイプライン
-pipeline = LLMPipeline(
+# 自動評価付きエージェント
+agent = RefinireAgent(
     name="quality_writer",
     generation_instructions="高品質なコンテンツを生成してください",
     evaluation_instructions="品質を0-100で評価してください",
@@ -48,7 +48,7 @@ pipeline = LLMPipeline(
     model="gpt-4o-mini"
 )
 
-result = pipeline.run("AIについての記事を書いて")
+result = agent.run("AIについての記事を書いて")
 print(f"品質スコア: {result.evaluation_score}点")
 print(f"生成内容: {result.content}")
 ```
@@ -62,10 +62,10 @@ from refinire import Flow, FunctionStep, ConditionStep, ParallelStep
 flow = Flow({
     "analyze": FunctionStep("analyze", analyze_input),
     "route": ConditionStep("route", check_complexity, "simple", "complex"),
-    "simple": LLMPipeline(name="simple", generation_instructions="簡潔に回答"),
+    "simple": RefinireAgent(name="simple", generation_instructions="簡潔に回答"),
     "complex": ParallelStep("experts", [
-        LLMPipeline(name="expert1", generation_instructions="詳細な分析"),
-        LLMPipeline(name="expert2", generation_instructions="別の視点から分析")
+        RefinireAgent(name="expert1", generation_instructions="詳細な分析"),
+        RefinireAgent(name="expert2", generation_instructions="別の視点から分析")
     ]),
     "combine": FunctionStep("combine", aggregate_results)
 })
@@ -90,13 +90,13 @@ llm = get_llm("llama3.1:8b")      # Ollama
 **📖 詳細:** [統一LLMインターフェース](docs/unified-llm-interface.md)
 
 ## 2. Autonomous Quality Assurance
-LLMPipelineに組み込まれた自動評価機能により、出力品質を保証します。
+RefinireAgentに組み込まれた自動評価機能により、出力品質を保証します。
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
-# 評価ループ付きパイプライン
-pipeline = LLMPipeline(
+# 評価ループ付きエージェント
+agent = RefinireAgent(
     name="quality_assistant",
     generation_instructions="役立つ回答を生成してください",
     evaluation_instructions="正確性と有用性を0-100で評価してください",
@@ -105,7 +105,7 @@ pipeline = LLMPipeline(
     model="gpt-4o-mini"
 )
 
-result = pipeline.run("量子コンピューティングを説明して")
+result = agent.run("量子コンピューティングを説明して")
 print(f"評価スコア: {result.evaluation_score}点")
 print(f"生成内容: {result.content}")
 ```
@@ -115,10 +115,10 @@ print(f"生成内容: {result.content}")
 **📖 詳細:** [自律品質保証](docs/autonomous-quality-assurance.md)
 
 ## 3. Tool Integration - 関数呼び出しの自動化
-LLMPipelineは関数ツールを自動的に実行します。
+RefinireAgentは関数ツールを自動的に実行します。
 
 ```python
-from refinire import LLMPipeline
+from refinire import RefinireAgent
 
 def calculate(expression: str) -> float:
     """数式を計算する"""
@@ -128,17 +128,17 @@ def get_weather(city: str) -> str:
     """都市の天気を取得"""
     return f"{city}の天気: 晴れ、22℃"
 
-# ツール付きパイプライン
-pipeline = LLMPipeline(
+# ツール付きエージェント
+agent = RefinireAgent(
     name="tool_assistant",
     generation_instructions="ツールを使って質問に答えてください",
     model="gpt-4o-mini"
 )
 
-pipeline.add_function_tool(calculate)
-pipeline.add_function_tool(get_weather)
+agent.add_function_tool(calculate)
+agent.add_function_tool(get_weather)
 
-result = pipeline.run("東京の天気は？あと、15 * 23は？")
+result = agent.run("東京の天気は？あと、15 * 23は？")
 print(result.content)  # 両方の質問に自動的に答えます
 ```
 

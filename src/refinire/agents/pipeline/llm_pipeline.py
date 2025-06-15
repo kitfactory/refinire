@@ -1,6 +1,6 @@
-﻿"""LLM Pipeline - A replacement for deprecated AgentPipeline using OpenAI Python SDK directly.
+﻿"""Refinire Agent - A powerful AI agent with built-in evaluation and tool support.
 
-LLMパイプライン - 非推奨のAgentPipelineに代わって、OpenAI Python SDKを直接使用する新しい実装。
+Refinireエージェント - 組み込み評価とツールサポートを備えた強力なAIエージェント。
 """
 
 from __future__ import annotations
@@ -62,13 +62,13 @@ class EvaluationResult:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-class LLMPipeline:
+class RefinireAgent:
     """
-    Modern LLM Pipeline using OpenAI Python SDK directly
-    OpenAI Python SDKを直接使用するモダンなLLMパイプライン
+    Refinire Agent - AI agent with automatic evaluation and tool integration
+    Refinireエージェント - 自動評価とツール統合を備えたAIエージェント
     
-    This class replaces the deprecated AgentPipeline with a cleaner, more maintainable implementation.
-    このクラスは非推奨のAgentPipelineを、よりクリーンで保守しやすい実装で置き換えます。
+    A powerful AI agent that combines generation, evaluation, and tool calling in a single interface.
+    生成、評価、ツール呼び出しを単一のインターフェースで統合した強力なAIエージェント。
     """
     
     def __init__(
@@ -95,11 +95,11 @@ class LLMPipeline:
         mcp_servers: Optional[List[str]] = None
     ) -> None:
         """
-        Initialize LLM Pipeline
-        LLMパイプラインを初期化する
+        Initialize Refinire Agent
+        Refinireエージェントを初期化する
         
         Args:
-            name: Pipeline name / パイプライン名
+            name: Agent name / エージェント名
             generation_instructions: Instructions for generation / 生成用指示
             evaluation_instructions: Instructions for evaluation / 評価用指示
             model: OpenAI model name / OpenAIモデル名
@@ -170,8 +170,8 @@ class LLMPipeline:
     
     def run(self, user_input: str) -> LLMResult:
         """
-        Run the pipeline synchronously
-        パイプラインを同期的に実行する
+        Run the agent synchronously
+        エージェントを同期的に実行する
         
         Args:
             user_input: User input / ユーザー入力
@@ -268,8 +268,8 @@ class LLMPipeline:
     
     async def run_async(self, user_input: str) -> LLMResult:
         """
-        Run the pipeline asynchronously
-        パイプラインを非同期的に実行する
+        Run the agent asynchronously
+        エージェントを非同期的に実行する
         
         Args:
             user_input: User input / ユーザー入力
@@ -625,7 +625,7 @@ Return your response as JSON with 'score' and 'feedback' fields.
             raise ValueError("Threshold must be between 0 and 100")
     
     def __str__(self) -> str:
-        return f"LLMPipeline(name={self.name}, model={self.model})"
+        return f"RefinireAgent(name={self.name}, model={self.model})"
     
     def __repr__(self) -> str:
         return self.__str__()
@@ -634,17 +634,17 @@ Return your response as JSON with 'score' and 'feedback' fields.
 # Utility functions for common configurations
 # 共通設定用のユーティリティ関数
 
-def create_simple_llm_pipeline(
+def create_simple_agent(
     name: str,
     instructions: str,
     model: str = "gpt-4o-mini",
     **kwargs
-) -> LLMPipeline:
+) -> RefinireAgent:
     """
-    Create a simple LLM pipeline
-    シンプルなLLMパイプラインを作成
+    Create a simple Refinire agent
+    シンプルなRefinireエージェントを作成
     """
-    return LLMPipeline(
+    return RefinireAgent(
         name=name,
         generation_instructions=instructions,
         model=model,
@@ -652,7 +652,7 @@ def create_simple_llm_pipeline(
     )
 
 
-def create_evaluated_llm_pipeline(
+def create_evaluated_agent(
     name: str,
     generation_instructions: str,
     evaluation_instructions: str,
@@ -660,12 +660,12 @@ def create_evaluated_llm_pipeline(
     evaluation_model: Optional[str] = None,
     threshold: float = 85.0,
     **kwargs
-) -> LLMPipeline:
+) -> RefinireAgent:
     """
-    Create an LLM pipeline with evaluation
-    評価機能付きLLMパイプラインを作成
+    Create a Refinire agent with evaluation
+    評価機能付きRefinireエージェントを作成
     """
-    return LLMPipeline(
+    return RefinireAgent(
         name=name,
         generation_instructions=generation_instructions,
         evaluation_instructions=evaluation_instructions,
@@ -676,26 +676,26 @@ def create_evaluated_llm_pipeline(
     )
 
 
-def create_tool_enabled_llm_pipeline(
+def create_tool_enabled_agent(
     name: str,
     instructions: str,
     tools: Optional[List[callable]] = None,
     model: str = "gpt-4o-mini",
     **kwargs
-) -> LLMPipeline:
+) -> RefinireAgent:
     """
-    Create an LLM pipeline with automatic tool registration
-    自動tool登録機能付きLLMパイプラインを作成
+    Create a Refinire agent with automatic tool registration
+    自動tool登録機能付きRefinireエージェントを作成
     
     Args:
-        name: Pipeline name / パイプライン名
+        name: Agent name / エージェント名
         instructions: System instructions / システム指示
         tools: List of Python functions to register as tools / tool登録するPython関数のリスト
         model: LLM model name / LLMモデル名
-        **kwargs: Additional arguments for LLMPipeline / LLMPipeline用追加引数
+        **kwargs: Additional arguments for RefinireAgent / RefinireAgent用追加引数
     
     Returns:
-        LLMPipeline: Configured pipeline with tools / tool設定済みパイプライン
+        RefinireAgent: Configured agent with tools / tool設定済みエージェント
     
     Example:
         >>> def get_weather(city: str) -> str:
@@ -706,14 +706,14 @@ def create_tool_enabled_llm_pipeline(
         ...     '''Calculate mathematical expression'''
         ...     return eval(expression)
         ...
-        >>> pipeline = create_tool_enabled_llm_pipeline(
+        >>> agent = create_tool_enabled_agent(
         ...     name="assistant",
         ...     instructions="You are a helpful assistant with access to tools.",
         ...     tools=[get_weather, calculate]
         ... )
-        >>> result = pipeline.run("What's the weather in Tokyo and what's 2+2?")
+        >>> result = agent.run("What's the weather in Tokyo and what's 2+2?")
     """
-    pipeline = LLMPipeline(
+    agent = RefinireAgent(
         name=name,
         generation_instructions=instructions,
         model=model,
@@ -725,20 +725,20 @@ def create_tool_enabled_llm_pipeline(
     # 提供されたすべてのtoolを登録
     if tools:
         for tool_func in tools:
-            pipeline.add_function_tool(tool_func)
+            agent.add_function_tool(tool_func)
     
-    return pipeline
+    return agent
 
 
-def create_web_search_pipeline(
+def create_web_search_agent(
     name: str,
     instructions: str = "You are a helpful assistant with access to web search. Use web search when you need current information.",
     model: str = "gpt-4o-mini",
     **kwargs
-) -> LLMPipeline:
+) -> RefinireAgent:
     """
-    Create an LLM pipeline with web search capability
-    Web検索機能付きLLMパイプラインを作成
+    Create a Refinire agent with web search capability
+    Web検索機能付きRefinireエージェントを作成
     
     Note: This is a template - actual web search implementation would require
           integration with search APIs like Google Search API, Bing API, etc.
@@ -751,7 +751,7 @@ def create_web_search_pipeline(
         # Real implementation would use actual search APIs
         return f"Web search results for '{query}': [This is a placeholder. Integrate with actual search API.]"
     
-    return create_tool_enabled_llm_pipeline(
+    return create_tool_enabled_agent(
         name=name,
         instructions=instructions,
         tools=[web_search],
@@ -760,15 +760,15 @@ def create_web_search_pipeline(
     )
 
 
-def create_calculator_pipeline(
+def create_calculator_agent(
     name: str,
     instructions: str = "You are a helpful assistant with calculation capabilities. Use the calculator for mathematical computations.",
     model: str = "gpt-4o-mini",
     **kwargs
-) -> LLMPipeline:
+) -> RefinireAgent:
     """
-    Create an LLM pipeline with calculation capability
-    計算機能付きLLMパイプラインを作成
+    Create a Refinire agent with calculation capability
+    計算機能付きRefinireエージェントを作成
     """
     def calculate(expression: str) -> float:
         """Calculate mathematical expression safely"""
@@ -807,7 +807,7 @@ def create_calculator_pipeline(
         except Exception as e:
             return f"Error calculating '{expression}': {str(e)}"
     
-    return create_tool_enabled_llm_pipeline(
+    return create_tool_enabled_agent(
         name=name,
         instructions=instructions,
         tools=[calculate],
@@ -866,20 +866,20 @@ class InteractionResult:
     metadata: Dict[str, Any] = field(default_factory=dict)  # Additional metadata / 追加メタデータ
 
 
-class InteractivePipeline(LLMPipeline):
+class InteractiveAgent(RefinireAgent):
     """
-    Interactive Pipeline for multi-turn conversations using LLMPipeline
-    LLMPipelineを使用した複数ターン会話のための対話的パイプライン
+    Interactive Agent for multi-turn conversations using RefinireAgent
+    RefinireAgentを使用した複数ターン会話のための対話的エージェント
     
-    This class extends LLMPipeline to handle:
-    このクラスはLLMPipelineを拡張して以下を処理します：
+    This class extends RefinireAgent to handle:
+    このクラスはRefinireAgentを拡張して以下を処理します：
     - Multi-turn interactive conversations / 複数ターンの対話的会話
     - Completion condition checking / 完了条件のチェック
     - Turn management / ターン管理
     - Conversation history tracking / 会話履歴の追跡
     
-    The pipeline uses a completion check function to determine when the interaction is finished.
-    パイプラインは完了チェック関数を使用して対話の終了時期を判定します。
+    The agent uses a completion check function to determine when the interaction is finished.
+    エージェントは完了チェック関数を使用して対話の終了時期を判定します。
     """
     
     def __init__(
@@ -893,20 +893,20 @@ class InteractivePipeline(LLMPipeline):
         **kwargs
     ) -> None:
         """
-        Initialize the InteractivePipeline
-        InteractivePipelineを初期化する
+        Initialize the InteractiveAgent
+        InteractiveAgentを初期化する
         
         Args:
-            name: Pipeline name / パイプライン名
+            name: Agent name / エージェント名
             generation_instructions: System prompt for generation / 生成用システムプロンプト
             completion_check: Function to check if interaction is complete / 対話完了チェック関数
             max_turns: Maximum number of interaction turns / 最大対話ターン数
             evaluation_instructions: System prompt for evaluation / 評価用システムプロンプト
             question_format: Optional function to format questions / 質問フォーマット関数（任意）
-            **kwargs: Additional arguments for LLMPipeline / LLMPipeline用追加引数
+            **kwargs: Additional arguments for RefinireAgent / RefinireAgent用追加引数
         """
-        # Initialize base LLMPipeline
-        # ベースのLLMPipelineを初期化
+        # Initialize base RefinireAgent
+        # ベースのRefinireAgentを初期化
         super().__init__(
             name=name,
             generation_instructions=generation_instructions,
@@ -987,8 +987,8 @@ class InteractivePipeline(LLMPipeline):
             context_prompt = self._build_interaction_context()
             full_input = f"{context_prompt}\n\nCurrent user input: {user_input}"
             
-            # Run the LLMPipeline
-            # LLMPipelineを実行
+            # Run the RefinireAgent
+            # RefinireAgentを実行
             llm_result = super().run(full_input)
             
             # Store interaction in history
@@ -1217,20 +1217,20 @@ class InteractivePipeline(LLMPipeline):
         return self._final_result if self._is_complete else None
 
 
-def create_simple_interactive_pipeline(
+def create_simple_interactive_agent(
     name: str,
     instructions: str,
     completion_check: Callable[[Any], bool],
     max_turns: int = 20,
     model: str = "gpt-4o-mini",
     **kwargs
-) -> InteractivePipeline:
+) -> InteractiveAgent:
     """
-    Create a simple InteractivePipeline with basic configuration
-    基本設定でシンプルなInteractivePipelineを作成する
+    Create a simple InteractiveAgent with basic configuration
+    基本設定でシンプルなInteractiveAgentを作成する
     
     Args:
-        name: Pipeline name / パイプライン名
+        name: Agent name / エージェント名
         instructions: Generation instructions / 生成指示
         completion_check: Function to check completion / 完了チェック関数
         max_turns: Maximum interaction turns / 最大対話ターン数
@@ -1238,9 +1238,9 @@ def create_simple_interactive_pipeline(
         **kwargs: Additional arguments / 追加引数
         
     Returns:
-        InteractivePipeline: Configured pipeline / 設定済みパイプライン
+        InteractiveAgent: Configured agent / 設定済みエージェント
     """
-    return InteractivePipeline(
+    return InteractiveAgent(
         name=name,
         generation_instructions=instructions,
         completion_check=completion_check,
@@ -1250,7 +1250,7 @@ def create_simple_interactive_pipeline(
     )
 
 
-def create_evaluated_interactive_pipeline(
+def create_evaluated_interactive_agent(
     name: str,
     generation_instructions: str,
     evaluation_instructions: str,
@@ -1260,13 +1260,13 @@ def create_evaluated_interactive_pipeline(
     evaluation_model: Optional[str] = None,
     threshold: float = 85.0,
     **kwargs
-) -> InteractivePipeline:
+) -> InteractiveAgent:
     """
-    Create an InteractivePipeline with evaluation capabilities
-    評価機能付きInteractivePipelineを作成する
+    Create an InteractiveAgent with evaluation capabilities
+    評価機能付きInteractiveAgentを作成する
     
     Args:
-        name: Pipeline name / パイプライン名
+        name: Agent name / エージェント名
         generation_instructions: Generation instructions / 生成指示
         evaluation_instructions: Evaluation instructions / 評価指示
         completion_check: Function to check completion / 完了チェック関数
@@ -1277,9 +1277,9 @@ def create_evaluated_interactive_pipeline(
         **kwargs: Additional arguments / 追加引数
         
     Returns:
-        InteractivePipeline: Configured pipeline / 設定済みパイプライン
+        InteractiveAgent: Configured agent / 設定済みエージェント
     """
-    return InteractivePipeline(
+    return InteractiveAgent(
         name=name,
         generation_instructions=generation_instructions,
         evaluation_instructions=evaluation_instructions,
@@ -1292,5 +1292,20 @@ def create_evaluated_interactive_pipeline(
     )
 
 
-# Utility functions for LLMPipeline (existing)
-# LLMPipeline用ユーティリティ関数（既存） 
+# Backward compatibility aliases
+# 後方互換性エイリアス
+LLMPipeline = RefinireAgent  # For backward compatibility / 後方互換性のため
+InteractivePipeline = InteractiveAgent  # For backward compatibility / 後方互換性のため
+
+# Factory function aliases for backward compatibility
+# 後方互換性のためのファクトリ関数エイリアス
+create_simple_llm_pipeline = create_simple_agent
+create_evaluated_llm_pipeline = create_evaluated_agent  
+create_tool_enabled_llm_pipeline = create_tool_enabled_agent
+create_web_search_pipeline = create_web_search_agent
+create_calculator_pipeline = create_calculator_agent
+create_simple_interactive_pipeline = create_simple_interactive_agent
+create_evaluated_interactive_pipeline = create_evaluated_interactive_agent
+
+# Utility functions for RefinireAgent (existing)
+# RefinireAgent用ユーティリティ関数（既存） 
