@@ -1,100 +1,96 @@
-# Refinire ✨ - The Art of AI Agent Development
+# Refinire ✨ - Refined Simplicity for Agentic AI
 
 [![PyPI Downloads](https://static.pepy.tech/badge/refinire)](https://pepy.tech/projects/refinire)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.17](https://img.shields.io/badge/OpenAI-Agents_0.0.17-green.svg)](https://github.com/openai/openai-agents-python)
 [![Coverage](https://img.shields.io/badge/coverage-72%25-brightgreen.svg)]
 
-**Elegant AI agent development platform that transforms complexity into simplicity.**
+**Transform ideas into working AI agents—intuitive agent framework**
 
 ---
 
-## The Philosophy of Refinement
+## Why Refinire?
 
-In the world of AI development, complexity has become the norm. Countless lines of configuration, provider-specific implementations, manual quality management—all standing between you and your vision.
+- **Simple installation** — Just `pip install refinire`
+- **Simplify LLM-specific configuration** — No complex setup required
+- **Unified API across providers** — OpenAI / Anthropic / Google / Ollama  
+- **Built-in evaluation & regeneration loops** — Quality assurance out of the box
+- **One-line parallel processing** — Complex async operations with just `{"parallel": [...]}`
 
-**Refinire changes that.**
+## 30-Second Quick Start
 
-We believe in the power of simplicity. Not the simplicity that sacrifices capability, but the kind that emerges when complexity is distilled to its essence.
-
-## What You'll Experience
-
-### Development Time: From Days to Minutes
+```bash
+pip install refinire
+```
 
 ```python
-# Traditional approach: 50-100 lines of configuration
-# Refinire approach: The essence
-from refinire import create_simple_gen_agent, Context
-import asyncio
+from refinire import LLMPipeline
 
-agent = create_simple_gen_agent(
+# Simple generation pipeline
+pipeline = LLMPipeline(
     name="assistant",
-    instructions="You are a helpful assistant.",
+    generation_instructions="You are a helpful assistant.",
     model="gpt-4o-mini"
 )
 
-result = asyncio.run(agent.run("Hello, world!", Context()))
-print(result.shared_state["assistant_result"])
+result = pipeline.run("Hello!")
+print(result.content)
 ```
 
-**Two lines. One complete AI agent.**
+## The Core Components
 
-### Provider Boundaries: Dissolved
+Refinire provides key components to support AI agent development.
 
-```python
-# The same elegant interface, regardless of provider
-llm = get_llm("gpt-4o-mini")      # OpenAI
-llm = get_llm("claude-3-sonnet")  # Anthropic  
-llm = get_llm("gemini-pro")       # Google
-llm = get_llm("llama3.1:8b")      # Ollama
-```
-
-**Switch providers with a single line change. The abstraction remains beautiful.**
-
-### Quality Management: Autonomous
+## LLMPipeline - Integrated Generation and Evaluation
 
 ```python
-# Quality emerges naturally
-agent = create_evaluated_gen_agent(
-    name="quality_assistant",
-    generation_instructions="Generate helpful responses",
-    evaluation_instructions="Evaluate for accuracy and helpfulness",
-    threshold=85.0,
+from refinire import LLMPipeline
+
+# Pipeline with automatic evaluation
+pipeline = LLMPipeline(
+    name="quality_writer",
+    generation_instructions="Generate high-quality content",
+    evaluation_instructions="Rate quality from 0-100",
+    threshold=85.0,  # Automatically regenerate if score < 85
+    max_retries=3,
     model="gpt-4o-mini"
 )
 
-# Automatic evaluation, improvement, and refinement
-result = asyncio.run(agent.run("Explain quantum computing", Context()))
+result = pipeline.run("Write an article about AI")
+print(f"Quality Score: {result.evaluation_score}")
+print(f"Content: {result.content}")
 ```
 
-**Set the standard once. Quality maintains itself.**
+
+## Flow Architecture: Orchestrate Complex Workflows
+
+### Simple Yet Powerful
+
+```python
+from refinire import Flow, FunctionStep, ConditionStep, ParallelStep
+
+# Define your workflow as a composable flow
+flow = Flow({
+    "start": FunctionStep("analyze", analyze_request),
+    "route": ConditionStep("route", route_by_complexity, "simple", "complex"),
+    "simple": LLMPipeline(name="simple", generation_instructions="Quick response"),
+    "complex": ParallelStep("research", [
+        LLMPipeline(name="expert1", generation_instructions="Deep analysis"),
+        LLMPipeline(name="expert2", generation_instructions="Alternative perspective")
+    ]),
+    "aggregate": FunctionStep("combine", combine_results)
+})
+
+result = await flow.run("Complex user request")
+```
+
+**Compose steps like building blocks. Each step can be a function, condition, parallel execution, or LLM pipeline.**
 
 ---
 
-## The Art of Simplicity
+## 1. Unified LLM Interface
 
-| Aspect | Traditional Approach | Refinire |
-|--------|---------------------|----------|
-| **Setup Time** | Hours to days | Minutes |
-| **Configuration Lines** | 50-100+ | 2-3 |
-| **Provider Migration** | Complete rewrite | Single line change |
-| **Quality Management** | Manual, ongoing | Autonomous |
-| **Parallel Processing** | Complex async code | Simple DAG definition |
-| **Debugging Complexity** | Opaque, difficult | Transparent, intuitive |
-
-### Real-World Impact
-
-**Time to First AI Agent**: 5 minutes instead of 5 hours  
-**Provider Migration Effort**: 99% reduction  
-**Quality Assurance Overhead**: Eliminated through automation  
-**Parallel Processing Performance**: 3.9x speedup with zero complexity  
-**Learning Curve**: Gentle slope instead of steep cliff  
-
----
-
-## Elegant Architecture
-
-### Unified LLM Interface
+Handle multiple LLM providers with a unified interface:
 
 ```python
 from refinire import get_llm
@@ -104,76 +100,96 @@ llm = get_llm("gpt-4o-mini")
 response = llm.complete("Explain the concept of refinement")
 ```
 
-### Intelligent Tool Integration
+**📖 Details:** [Unified LLM Interface](docs/unified-llm-interface.md)
+
+## 2. Autonomous Quality Assurance
+
+LLMPipeline's built-in evaluation ensures output quality:
 
 ```python
-from refinire import create_tool_enabled_llm_pipeline
+from refinire import LLMPipeline
 
-def get_weather(city: str) -> str:
-    """Get current weather for a city"""
-    return f"Weather in {city}: Sunny, 22°C"
-
-def calculate(expression: str) -> float:
-    """Perform mathematical calculations"""
-    return eval(expression)
-
-# Tools integrate seamlessly
-pipeline = create_tool_enabled_llm_pipeline(
-    name="smart_assistant",
-    instructions="You are a helpful assistant with access to tools.",
-    tools=[get_weather, calculate],
+# Pipeline with evaluation loop
+pipeline = LLMPipeline(
+    name="quality_assistant",
+    generation_instructions="Generate helpful responses",
+    evaluation_instructions="Rate accuracy and usefulness from 0-100",
+    threshold=85.0,
+    max_retries=3,
     model="gpt-4o-mini"
 )
 
-# The LLM decides when and how to use tools
-result = pipeline.run("What's the weather in Tokyo and what's 15 * 23?")
+result = pipeline.run("Explain quantum computing")
+print(f"Evaluation Score: {result.evaluation_score}")
+print(f"Content: {result.content}")
 ```
 
-### Transparent Operations
+If evaluation falls below threshold, content is automatically regenerated for consistent high quality.
+
+**📖 Details:** [Autonomous Quality Assurance](docs/autonomous-quality-assurance.md)
+
+## 3. Tool Integration - Automated Function Calling
+
+LLMPipeline automatically executes function tools:
 
 ```python
-from refinire import get_global_registry
+from refinire import LLMPipeline
 
-# See into the mind of your AI
-registry = get_global_registry()
-traces = registry.search_by_flow_name("customer_support")
+def calculate(expression: str) -> float:
+    """Calculate mathematical expressions"""
+    return eval(expression)
 
-for trace in traces:
-    print(f"Agent: {trace.agent_name}")
-    print(f"Duration: {trace.duration}ms") 
-    print(f"Quality: {trace.quality_score}")
+def get_weather(city: str) -> str:
+    """Get weather for a city"""
+    return f"Weather in {city}: Sunny, 22°C"
+
+# Pipeline with tools
+pipeline = LLMPipeline(
+    name="tool_assistant",
+    generation_instructions="Answer questions using tools",
+    model="gpt-4o-mini"
+)
+
+pipeline.add_function_tool(calculate)
+pipeline.add_function_tool(get_weather)
+
+result = pipeline.run("What's the weather in Tokyo? Also, what's 15 * 23?")
+print(result.content)  # Automatically answers both questions
 ```
 
-**Your AI agents become transparent, understandable, improvable.**
+**📖 Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
 
----
+## 4. Automatic Parallel Processing: 3.9x Performance Boost
 
-## Flow Architecture: Composable Intelligence
-
-### Simple Sequential Flow
+Dramatically improve performance with parallel execution:
 
 ```python
-from refinire import Flow, create_simple_flow
+from refinire import Flow, FunctionStep
+import asyncio
 
-# Define your process
-def analyze_request(user_input, ctx):
-    ctx.shared_state["analysis"] = f"Analyzed: {user_input}"
-    return ctx
+# Define parallel processing with DAG structure
+flow = Flow(start="preprocess", steps={
+    "preprocess": FunctionStep("preprocess", preprocess_text),
+    "parallel_analysis": {
+        "parallel": [
+            FunctionStep("sentiment", analyze_sentiment),
+            FunctionStep("keywords", extract_keywords), 
+            FunctionStep("topic", classify_topic),
+            FunctionStep("readability", calculate_readability)
+        ],
+        "next_step": "aggregate",
+        "max_workers": 4
+    },
+    "aggregate": FunctionStep("aggregate", combine_results)
+})
 
-def generate_response(user_input, ctx):
-    analysis = ctx.shared_state["analysis"]
-    ctx.shared_state["response"] = f"Response based on {analysis}"
-    ctx.finish()
-    return ctx
-
-# Create elegant workflow
-flow = create_simple_flow([
-    ("analyze", FunctionStep("analyze", analyze_request)),
-    ("respond", FunctionStep("respond", generate_response))
-])
-
-result = asyncio.run(flow.run(input_data="User request"))
+# Sequential: 2.0s → Parallel: 0.5s (3.9x speedup)
+result = await flow.run("Analyze this comprehensive text...")
 ```
+
+Run complex analysis tasks simultaneously without manual async implementation.
+
+**📖 Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
 
 ### Conditional Intelligence
 
@@ -295,22 +311,21 @@ print(f"Improvement opportunities: {len(improvement_candidates)}")
 pip install refinire
 ```
 
-### Your First Agent (30 seconds)
+### Your First Pipeline (30 seconds)
 
 ```python
-from refinire import create_simple_gen_agent, Context
-import asyncio
+from refinire import LLMPipeline
 
 # Create
-agent = create_simple_gen_agent(
+pipeline = LLMPipeline(
     name="hello_world",
-    instructions="You are a friendly assistant.",
+    generation_instructions="You are a friendly assistant.",
     model="gpt-4o-mini"
 )
 
 # Run
-result = asyncio.run(agent.run("Hello!", Context()))
-print(result.shared_state["hello_world_result"])
+result = pipeline.run("Hello!")
+print(result.content)
 ```
 
 ### Provider Flexibility
