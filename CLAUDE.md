@@ -150,6 +150,21 @@ Use `Context.shared_state` for data passing between steps. Call `context.finish(
 ### Tracing and Debugging
 All operations are automatically traced. Use `get_global_registry().search_by_flow_name()` for debugging. Enable console tracing via `enable_console_tracing()` for development.
 
+### Git Commit Messages
+When creating git commits, use clean, professional commit messages without external tool references:
+- Do NOT include "Generated with Claude Code" or similar tool references
+- Do NOT include links to claude.ai/code or other external tools
+- Do NOT add "Co-Authored-By: Claude" signatures
+- Focus on the actual changes made and their purpose
+- Follow conventional commit format: `type: description`
+
+Example good commit messages:
+```
+feat: Add LLMPipeline automatic evaluation support
+docs: Update README to emphasize Flow architecture
+fix: Resolve Context state management in parallel steps
+```
+
 ## Dependencies
 
 Core dependencies managed in `pyproject.toml`:
