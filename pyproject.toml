@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "refinire"
-version = "0.2.3"
+version = "0.2.4"
 description = "Refinire AI agent platform - Unified LLM interface and composable workflow orchestration"
 readme = "README.md"
 license = {text = "MIT"}
@@ -75,6 +75,12 @@ development = "refinire.templates:development_template"
 [tool.hatch.build.targets.wheel]
 packages = ["src/refinire"]
 
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"
 
 [tool.mypy]
 strict = true

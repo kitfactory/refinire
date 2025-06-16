@@ -3,7 +3,7 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/refinire)](https://pepy.tech/projects/refinire)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.17](https://img.shields.io/badge/OpenAI-Agents_0.0.17-green.svg)](https://github.com/openai/openai-agents-python)
-[![Coverage](https://img.shields.io/badge/coverage-72%25-brightgreen.svg)]
+[![Coverage](https://img.shields.io/badge/coverage-77%25-brightgreen.svg)]
 
 **Transform ideas into working AI agents—intuitive agent framework**
 
@@ -465,16 +465,6 @@ Explore comprehensive examples in the `examples/` directory:
 
 ---
 
-## Developer Experience
-
-> *"The complexity that once consumed days now resolves in minutes. Refinire doesn't just simplify—it elevates."*
-
-> *"Switching between AI providers feels like changing a variable. The abstraction is invisible yet powerful."*
-
-> *"Watching AI agents improve themselves through automatic evaluation—it's like witnessing the future of software."*
-
----
-
 ## License & Credits
 
 MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/openai/openai-agents-python).
@@ -495,7 +485,7 @@ MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/
 
 ### Quality & Testing
 - **100% Test Pass Rate**: All 408 tests now passing after comprehensive migration fixes
-- **72% Test Coverage**: Improved from 70% to 72% code coverage with better test quality
+- **77% Test Coverage**: Improved from 70% to 77% code coverage with better test quality
 - **Enhanced Compatibility**: Fixed Pydantic v2 compatibility and Context API improvements
 
 ### Developer Experience
