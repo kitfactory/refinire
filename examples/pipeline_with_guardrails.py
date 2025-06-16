@@ -1,9 +1,9 @@
 ﻿"""
-Pipeline example with input guardrails
-ガードレール（入力ガードレール）を使ったPipelineの例
+RefinireAgent example with input guardrails
+ガードレール（入力ガードレール）を使ったRefinireAgentの例
 """
 
-from src.refinire import AgentPipeline
+from refinire import RefinireAgent
 from agents import Agent, input_guardrail, GuardrailFunctionOutput, InputGuardrailTripwireTriggered, Runner, RunContextWrapper
 from pydantic import BaseModel
 import asyncio
@@ -34,7 +34,7 @@ async def math_guardrail(ctx: RunContextWrapper, agent: Agent, input: str):
 
 def main():
     # パイプラインのエージェントにガードレールを設定（input_guardrailsで渡す）
-    pipeline = AgentPipeline(
+    pipeline = RefinireAgent(
         name="guardrail_pipeline",
         generation_instructions="""
         You are a helpful assistant. Please answer the user's question.

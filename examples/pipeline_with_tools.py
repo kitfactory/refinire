@@ -1,9 +1,9 @@
 ﻿"""
-Pipeline example with tools for enhanced generation
-ツールを使用した拡張生成のPipelineの例
+RefinireAgent example with tools for enhanced generation
+ツールを使用した拡張生成のRefinireAgentの例
 """
 
-from src.refinire import AgentPipeline
+from refinire import RefinireAgent
 from agents import function_tool
 
 @function_tool
@@ -34,7 +34,7 @@ def main():
     # パイプライン用のツールを定義
     tools = [search_web, get_weather]
 
-    pipeline = AgentPipeline(
+    pipeline = RefinireAgent(
         name="tooled_generator",
         generation_instructions="""
         You are a helpful assistant that can use tools to gather information.

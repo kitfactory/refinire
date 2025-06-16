@@ -1,16 +1,16 @@
 ﻿"""
-Pipeline example with dynamic_prompt function
-動的プロンプト生成関数（dynamic_prompt）を使ったPipelineの例
+RefinireAgent example with dynamic_prompt function
+動的プロンプト生成関数（dynamic_prompt）を使ったRefinireAgentの例
 """
 
-from src.refinire import AgentPipeline
+from refinire import RefinireAgent
 
 def my_dynamic_prompt(user_input: str) -> str:
     # 例: ユーザー入力を大文字化し、履歴やセッションは含めないシンプルなカスタムプロンプト
     return f"[DYNAMIC PROMPT] USER SAID: {user_input.upper()}"
 
 def main():
-    pipeline = AgentPipeline(
+    pipeline = RefinireAgent(
         name="dynamic_prompt_example",
         generation_instructions="""
         You are a helpful assistant. Respond to the user's request.

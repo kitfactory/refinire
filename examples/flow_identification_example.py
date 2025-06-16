@@ -11,7 +11,7 @@ to track and debug workflow execution.
 """
 
 import asyncio
-from src.refinire import (
+from refinire import (
     Flow, Context, UserInputStep, FunctionStep, DebugStep,
     create_simple_flow, enable_console_tracing
 )

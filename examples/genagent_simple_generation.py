@@ -7,7 +7,7 @@ This example demonstrates the recommended way to replace AgentPipeline usage.
 """
 
 import asyncio
-from src.refinire import create_simple_gen_agent, create_simple_flow
+from refinire import create_simple_gen_agent, create_simple_flow
 
 async def main():
     """
@@ -46,7 +46,7 @@ async def main():
     # 方法2: 手動でGenAgent作成
     print("\n\n=== Method 2: Manual GenAgent creation ===")
     
-    from src.refinire import GenAgent, Flow
+    from refinire import GenAgent, Flow
     
     # Create GenAgent manually
     # GenAgentを手動で作成

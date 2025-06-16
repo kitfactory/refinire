@@ -21,17 +21,7 @@ from .llm_pipeline import (
     create_web_search_agent,
     create_calculator_agent,
     create_simple_interactive_agent,
-    create_evaluated_interactive_agent,
-    # Backward compatibility aliases
-    LLMPipeline,
-    InteractivePipeline,
-    create_simple_llm_pipeline,
-    create_evaluated_llm_pipeline,
-    create_tool_enabled_llm_pipeline,
-    create_web_search_pipeline,
-    create_calculator_pipeline,
-    create_simple_interactive_pipeline,
-    create_evaluated_interactive_pipeline
+    create_evaluated_interactive_agent
 )
 
 # Legacy AgentPipeline (deprecated - removed)
@@ -51,16 +41,5 @@ __all__ = [
     "create_web_search_agent",
     "create_calculator_agent",
     "create_simple_interactive_agent",
-    "create_evaluated_interactive_agent",
-    
-    # Backward compatibility aliases
-    "LLMPipeline",
-    "InteractivePipeline",
-    "create_simple_llm_pipeline",
-    "create_evaluated_llm_pipeline",
-    "create_tool_enabled_llm_pipeline",
-    "create_web_search_pipeline",
-    "create_calculator_pipeline",
-    "create_simple_interactive_pipeline",
-    "create_evaluated_interactive_pipeline"
+    "create_evaluated_interactive_agent"
 ]

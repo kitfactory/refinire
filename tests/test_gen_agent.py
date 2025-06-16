@@ -27,7 +27,7 @@ def patch_llm_pipeline(monkeypatch):
         def run(self, prompt, **kwargs):
             return DummyLLMResult(f"Generated response for: {prompt[:50]}...")
     
-    monkeypatch.setattr("refinire.agents.pipeline.llm_pipeline.LLMPipeline", DummyLLMPipeline)
+    monkeypatch.setattr("refinire.agents.pipeline.llm_pipeline.RefinireAgent", DummyLLMPipeline)
 
 
 class TestGenAgent:

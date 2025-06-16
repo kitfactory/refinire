@@ -11,7 +11,7 @@ This example shows how to use InteractivePipeline for:
 
 import os
 from typing import Any
-from src.refinire import (
+from refinire import (
     create_simple_interactive_pipeline,
     create_evaluated_interactive_pipeline,
     InteractivePipeline,

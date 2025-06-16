@@ -13,10 +13,10 @@ import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.refinire.flow.flow import Flow
-from src.refinire.flow.step import UserInputStep, ConditionStep, FunctionStep
-from src.refinire.flow.context import Context
-from src.refinire.agents.router import RouterAgent, RouterConfig
+from refinire.flow.flow import Flow
+from refinire.flow.step import UserInputStep, ConditionStep, FunctionStep
+from refinire.flow.context import Context
+from refinire.agents.router import RouterAgent, RouterConfig
 
 
 def main():

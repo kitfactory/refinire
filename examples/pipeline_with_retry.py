@@ -3,7 +3,7 @@ Example: Retry generation based on evaluation comment importance
 例: 評価コメントの重要度に基づくリトライ例
 """
 
-from src.refinire import AgentPipeline
+from refinire import RefinireAgent
 
 
 def main():
@@ -11,7 +11,7 @@ def main():
     # 日本語: この例は厳しい評価を行い、リトライ後でも生成が失敗と判断される場合を示しています。
     # English: Create pipeline that retries only on serious comments
     # 日本語: シリアスなコメントがある場合のみリトライするパイプラインを作成
-    pipeline = AgentPipeline(
+    pipeline = RefinireAgent(
         name="retry_example",
         generation_instructions="""
 Write a short tagline for a new AI writing assistant.

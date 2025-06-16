@@ -1,14 +1,14 @@
 ﻿"""
-Simple generation example using Pipeline without evaluation
-評価なしのPipelineを使用したシンプルな生成の例
+Simple generation example using RefinireAgent without evaluation
+評価なしのRefinireAgentを使用したシンプルな生成の例
 """
 
-from src.refinire import AgentPipeline
+from refinire import RefinireAgent
 
 def main():
     # Initialize pipeline with generation template only
     # 生成テンプレートのみでパイプラインを初期化
-    pipeline = AgentPipeline(
+    pipeline = RefinireAgent(
         name="simple_generator",
         generation_instructions="""
         You are a helpful assistant that generates creative stories.

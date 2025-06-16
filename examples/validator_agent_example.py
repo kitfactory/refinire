@@ -14,12 +14,12 @@ import os
 import asyncio
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.refinire.agents.validator import (
+from refinire.agents.validator import (
     ValidatorAgent, ValidatorConfig, ValidationRule,
     RequiredRule, EmailFormatRule, LengthRule, RangeRule, RegexRule, CustomFunctionRule,
     create_email_validator, create_required_validator, create_length_validator, create_custom_validator
 )
-from src.refinire.context import Context
+from refinire.context import Context
 
 
 async def example_1_basic_validation():

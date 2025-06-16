@@ -7,11 +7,11 @@ import asyncio
 import os
 from typing import List
 
-from src.refinire.flow import (
+from refinire.flow import (
     Flow, Context, UserInputStep, ConditionStep, FunctionStep, DebugStep,
     create_simple_condition, create_simple_flow
 )
-from src.refinire.pipeline import (
+from refinire.pipeline import (
     AgentPipelineStep, AgentPipeline
 )
 

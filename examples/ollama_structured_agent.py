@@ -7,7 +7,7 @@ import asyncio
 from typing import List
 from pydantic import BaseModel
 from agents import Agent, Runner
-from src.refinire import OllamaModel
+from refinire import OllamaModel
 
 class WeatherInfo(BaseModel):
     """

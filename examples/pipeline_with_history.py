@@ -1,13 +1,13 @@
 ﻿"""
-AgentPipeline example with conversation history
-会話履歴（history）を活用したAgentPipelineの例
+RefinireAgent example with conversation history
+会話履歴（history）を活用したRefinireAgentの例
 """
 
-from src.refinire import AgentPipeline
+from refinire import RefinireAgent
 
 def main():
     # 直近2件の履歴をプロンプトに含める
-    pipeline = AgentPipeline(
+    pipeline = RefinireAgent(
         name="history_example",
         generation_instructions="""
         You are a helpful assistant. Answer concisely.

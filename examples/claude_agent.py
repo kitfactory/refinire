@@ -7,7 +7,7 @@ import asyncio
 import os
 from agents.agent import Agent
 from agents.run import Runner
-from src.refinire.core import ClaudeModel
+from refinire.core import ClaudeModel
 
 async def main():
     # Get API key from environment variable

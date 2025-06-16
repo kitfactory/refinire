@@ -1,8 +1,8 @@
 ﻿from __future__ import annotations
 
-"""GenAgent — Modern LLMPipeline-based Step for Flow workflows.
+"""GenAgent — Modern RefinireAgent-based Step for Flow workflows.
 
-GenAgentはLLMPipelineをStepとして使用するためのモダンなクラスです。
+GenAgentはRefinireAgentをStepとして使用するためのモダンなクラスです。
 生成、評価、リトライ機能をFlow/Stepアーキテクチャ内で提供します。
 """
 
@@ -11,16 +11,16 @@ from typing import Any, Callable, List, Dict, Optional, Type
 
 from .flow.step import Step
 from .flow.context import Context
-from .pipeline.llm_pipeline import LLMPipeline, LLMResult
+from .pipeline.llm_pipeline import RefinireAgent, LLMResult
 
 
-# GenAgent implementation using LLMPipeline
-# LLMPipelineを使用するGenAgent実装
+# GenAgent implementation using RefinireAgent
+# RefinireAgentを使用するGenAgent実装
 
 class GenAgent(Step):
     """
-    Modern Step implementation using LLMPipeline instead of deprecated AgentPipeline
-    非推奨のAgentPipelineに代わってLLMPipelineを使用するモダンなStep実装
+    Modern Step implementation using RefinireAgent instead of deprecated AgentPipeline
+    非推奨のAgentPipelineに代わってRefinireAgentを使用するモダンなStep実装
     
     This class provides generation, evaluation, and retry capabilities within Flow workflows
     without depending on the deprecated AgentPipeline.
@@ -54,8 +54,8 @@ class GenAgent(Step):
         mcp_servers: Optional[List[str]] = None,
     ) -> None:
         """
-        Initialize GenAgent with LLMPipeline configuration
-        LLMPipeline設定でGenAgentを初期化する
+        Initialize GenAgent with RefinireAgent configuration
+        RefinireAgent設定でGenAgentを初期化する
 
         Args:
             name: Step name / ステップ名
@@ -87,9 +87,9 @@ class GenAgent(Step):
         self.next_step = next_step
         self.store_result_key = store_result_key or f"{name}_result"
         
-        # Create internal LLMPipeline instance
-        # 内部LLMPipelineインスタンスを作成
-        self.llm_pipeline = LLMPipeline(
+        # Create internal RefinireAgent instance
+        # 内部RefinireAgentインスタンスを作成
+        self.llm_pipeline = RefinireAgent(
             name=f"{name}_pipeline",
             generation_instructions=generation_instructions,
             evaluation_instructions=evaluation_instructions,
@@ -113,8 +113,8 @@ class GenAgent(Step):
 
     async def run(self, user_input: Optional[str], ctx: Context) -> Context:
         """
-        Execute GenAgent step using LLMPipeline
-        LLMPipelineを使用してGenAgentステップを実行する
+        Execute GenAgent step using RefinireAgent
+        RefinireAgentを使用してGenAgentステップを実行する
 
         Args:
             user_input: User input for the pipeline / パイプライン用ユーザー入力
@@ -138,8 +138,8 @@ class GenAgent(Step):
                 ctx.add_system_message(f"GenAgent {self.name}: No input available, skipping pipeline execution")
                 result = None
             else:
-                # English: Execute LLMPipeline synchronously (no async issues)
-                # 日本語: LLMPipelineを同期的に実行（非同期問題なし）
+                # English: Execute RefinireAgent synchronously (no async issues)
+                # 日本語: RefinireAgentを同期的に実行（非同期問題なし）
                 llm_result = self.llm_pipeline.run(input_text)
                 result = llm_result.content if llm_result.success else None
             

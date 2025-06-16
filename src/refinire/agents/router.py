@@ -14,7 +14,7 @@ import logging
 
 from .flow.step import Step
 from .flow.context import Context
-from .pipeline.llm_pipeline import LLMPipeline, create_simple_llm_pipeline
+from .pipeline.llm_pipeline import RefinireAgent, create_simple_agent
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class LLMClassifier(RouteClassifier):
     
     def __init__(
         self,
-        pipeline: LLMPipeline,
+        pipeline: RefinireAgent,
         classification_prompt: str,
         routes: List[str],
         examples: Optional[Dict[str, List[str]]] = None
@@ -237,7 +237,7 @@ class RouterAgent(Step):
     入力がどの処理パスに従うべきかを決定します。
     """
     
-    def __init__(self, config: RouterConfig, llm_pipeline: Optional[LLMPipeline] = None):
+    def __init__(self, config: RouterConfig, llm_pipeline: Optional[RefinireAgent] = None):
         """
         Initialize RouterAgent.
         RouterAgentを初期化します。
@@ -256,7 +256,10 @@ class RouterAgent(Step):
             if llm_pipeline is None:
                 # Create default LLM pipeline if none provided
                 # 提供されていない場合はデフォルトのLLMパイプラインを作成
-                llm_pipeline = create_simple_llm_pipeline()
+                llm_pipeline = create_simple_agent(
+                    name="router_classifier",
+                    instructions="You are a classification assistant. Classify the input text into the provided categories."
+                )
             
             # Use provided prompt or create default
             # 提供されたプロンプトを使用するか、デフォルトを作成
@@ -373,7 +376,7 @@ Choose the route that best matches the input's intent, content, or characteristi
 def create_intent_router(
     name: str = "intent_router",
     intents: Dict[str, str] = None,
-    llm_pipeline: Optional[LLMPipeline] = None
+    llm_pipeline: Optional[RefinireAgent] = None
 ) -> RouterAgent:
     """
     Create a router for intent-based routing.
@@ -435,7 +438,7 @@ Consider the tone, content, and context of the input to determine the intent.
 def create_content_type_router(
     name: str = "content_router",
     content_types: Dict[str, str] = None,
-    llm_pipeline: Optional[LLMPipeline] = None
+    llm_pipeline: Optional[RefinireAgent] = None
 ) -> RouterAgent:
     """
     Create a router for content type-based routing.

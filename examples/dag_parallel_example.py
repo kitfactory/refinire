@@ -11,7 +11,7 @@ to execute multiple analysis tasks simultaneously and efficiently aggregate resu
 
 import asyncio
 import time
-from src.refinire.flow import Flow, FunctionStep, Context
+from refinire.flow import Flow, FunctionStep, Context
 
 
 def create_text_analysis_flow():

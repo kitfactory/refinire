@@ -16,7 +16,7 @@ import os
 # プロジェクトルートをパスに追加
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.refinire import (
+from refinire import (
     GenAgent, 
     create_simple_gen_agent, 
     create_evaluated_gen_agent,
@@ -269,7 +269,7 @@ async def interactive_gen_agent_example():
         last_input = ctx.last_user_input or ""
         return last_input.lower() != "end"
     
-    from src.refinire import ConditionStep
+    from refinire import ConditionStep
     continue_check = ConditionStep(
         name="continue_check",
         condition=should_continue,

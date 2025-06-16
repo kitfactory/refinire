@@ -3,12 +3,12 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from dataclasses import dataclass
 
-from src.refinire.agents.flow.step import (
+from refinire.agents.flow.step import (
     Step, UserInputStep, ConditionStep, FunctionStep, 
     DebugStep,
     create_simple_condition, create_lambda_step
 )
-from src.refinire.agents.flow.context import Context
+from refinire.agents.flow.context import Context
 
 
 class DummyStep(Step):

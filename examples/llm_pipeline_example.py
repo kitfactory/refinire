@@ -7,7 +7,7 @@ import asyncio
 from typing import Optional
 from pydantic import BaseModel
 
-from src.refinire import (
+from refinire import (
     RefinireAgent, GenAgentV2, Flow, Context,
     create_simple_agent, create_evaluated_agent,
     create_simple_gen_agent_v2, create_evaluated_gen_agent_v2,

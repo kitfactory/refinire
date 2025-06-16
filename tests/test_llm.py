@@ -1,5 +1,5 @@
 ﻿import pytest
-from src.refinire.core import llm
+from refinire.core import llm
 
 class DummyOpenAIResponsesModel:
     def __init__(self, openai_client=None, **kwargs):

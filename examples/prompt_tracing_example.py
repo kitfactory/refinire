@@ -5,8 +5,8 @@ Example of using PromptStore with tracing for agent instructions
 
 from pathlib import Path
 import tempfile
-from src.refinire.core import PromptStore, PromptReference
-from src.refinire.pipeline import LLMPipeline
+from refinire.core import PromptStore, PromptReference
+from refinire import RefinireAgent
 
 
 def main():
@@ -87,7 +87,7 @@ def main():
         print("4. Creating agent with traced prompts...")
         
         try:
-            pipeline = LLMPipeline(
+            pipeline = RefinireAgent(
                 name="code_generator_pipeline",
                 generation_instructions=generation_prompt,  # PromptReference object
                 evaluation_instructions=evaluation_prompt,  # PromptReference object

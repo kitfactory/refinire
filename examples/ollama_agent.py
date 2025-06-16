@@ -7,7 +7,7 @@ import asyncio
 from agents.agent import Agent
 from agents.run import Runner
 from agents.items import ItemHelpers
-from src.refinire.core import OllamaModel
+from refinire.core import OllamaModel
 
 async def main():
     # Initialize the Ollama model

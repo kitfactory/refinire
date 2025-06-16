@@ -42,15 +42,7 @@ from .pipeline import (
     create_evaluated_agent,
     create_tool_enabled_agent,
     create_simple_interactive_agent,
-    create_evaluated_interactive_agent,
-    # Backward compatibility aliases
-    LLMPipeline,
-    InteractivePipeline,
-    create_simple_llm_pipeline,
-    create_evaluated_llm_pipeline,
-    create_tool_enabled_llm_pipeline,
-    create_simple_interactive_pipeline,
-    create_evaluated_interactive_pipeline
+    create_evaluated_interactive_agent
 )
 
 # Import implemented agents
@@ -169,14 +161,6 @@ __all__ = [
     "create_tool_enabled_agent",
     "create_simple_interactive_agent",
     "create_evaluated_interactive_agent",
-    # Backward compatibility aliases
-    "LLMPipeline",
-    "InteractivePipeline",
-    "create_simple_llm_pipeline",
-    "create_evaluated_llm_pipeline",
-    "create_tool_enabled_llm_pipeline",
-    "create_simple_interactive_pipeline",
-    "create_evaluated_interactive_pipeline",
     
     # Generation Agents
     "GenAgent",

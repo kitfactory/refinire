@@ -14,13 +14,13 @@ import os
 import asyncio
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.refinire.agents.extractor import (
+from refinire.agents.extractor import (
     ExtractorAgent, ExtractorConfig, ExtractionRule,
     RegexExtractionRule, EmailExtractionRule, PhoneExtractionRule, URLExtractionRule,
     HTMLExtractionRule, JSONExtractionRule, CustomFunctionExtractionRule,
     create_contact_extractor, create_html_extractor, create_json_extractor
 )
-from src.refinire.flow.context import Context
+from refinire.flow.context import Context
 
 
 async def example_1_contact_extraction():

@@ -1,7 +1,7 @@
 ﻿import asyncio
 import os
 from agents import Agent, Runner
-from src.refinire import get_llm
+from refinire import get_llm
 
 
 async def main():

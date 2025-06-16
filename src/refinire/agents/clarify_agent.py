@@ -14,7 +14,7 @@ import json
 from .flow.step import Step
 from .flow.context import Context
 from .pipeline.llm_pipeline import (
-    LLMPipeline, LLMResult, InteractivePipeline, InteractionResult, InteractionQuestion
+    RefinireAgent, LLMResult, InteractiveAgent, InteractionResult, InteractionQuestion
 )
 
 try:
@@ -90,11 +90,11 @@ class ClarificationQuestion:
 
 class ClarifyPipeline:
     """
-    ClarifyPipeline class for requirements clarification using InteractivePipeline
-    InteractivePipelineを使用した要件明確化パイプラインクラス
+    ClarifyPipeline class for requirements clarification using InteractiveAgent
+    InteractiveAgentを使用した要件明確化パイプラインクラス
     
-    This class wraps InteractivePipeline to handle:
-    このクラスはInteractivePipelineをラップして以下を処理します：
+    This class wraps InteractiveAgent to handle:
+    このクラスはInteractiveAgentをラップして以下を処理します：
     - Iterative requirement clarification / 反復的な要件明確化
     - Type-safe output wrapping / 型安全な出力ラッピング
     - Maximum turn control / 最大ターン数制御
@@ -156,8 +156,8 @@ class ClarifyPipeline:
             output_data
         )
         
-        # English: Filter kwargs for InteractivePipeline compatibility
-        # 日本語: InteractivePipeline互換性のためkwargsをフィルタリング
+        # English: Filter kwargs for InteractiveAgent compatibility
+        # 日本語: InteractiveAgent互換性のためkwargsをフィルタリング
         pipeline_kwargs = {
             k: v for k, v in kwargs.items() 
             if k in [
@@ -174,9 +174,9 @@ class ClarifyPipeline:
         if mcp_servers is not None:
             pipeline_kwargs['mcp_servers'] = mcp_servers
         
-        # English: Create internal InteractivePipeline instance
-        # 日本語: 内部InteractivePipelineインスタンスを作成
-        self.interactive_pipeline = InteractivePipeline(
+        # English: Create internal InteractiveAgent instance
+        # 日本語: 内部InteractiveAgentインスタンスを作成
+        self.interactive_pipeline = InteractiveAgent(
             name=f"{name}_pipeline",
             generation_instructions=enhanced_instructions,
             evaluation_instructions=evaluation_instructions,
@@ -323,7 +323,7 @@ class ClarifyPipeline:
         InteractionResultをClarifyPipeline形式に変換する
         
         Args:
-            interaction_result: Result from InteractivePipeline / InteractivePipelineからの結果
+            interaction_result: Result from InteractiveAgent / InteractiveAgentからの結果
             
         Returns:
             Any: Clarification response / 明確化応答
@@ -411,8 +411,8 @@ class ClarifyPipeline:
     @property 
     def threshold(self) -> float:
         """
-        Get evaluation threshold from internal InteractivePipeline
-        内部InteractivePipelineから評価閾値を取得する
+        Get evaluation threshold from internal InteractiveAgent
+        内部InteractiveAgentから評価閾値を取得する
         
         Returns:
             float: Evaluation threshold / 評価閾値
@@ -422,8 +422,8 @@ class ClarifyPipeline:
     @property
     def retries(self) -> int:
         """
-        Get retry count from internal InteractivePipeline
-        内部InteractivePipelineからリトライ回数を取得する
+        Get retry count from internal InteractiveAgent
+        内部InteractiveAgentからリトライ回数を取得する
         
         Returns:
             int: Retry count / リトライ回数

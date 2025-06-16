@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import Mock, patch
 from typing import Any, Dict
 
-from src.refinire.agents.router import (
+from refinire.agents.router import (
     RouterAgent,
     RouterConfig,
     LLMClassifier,
@@ -17,7 +17,7 @@ from src.refinire.agents.router import (
     create_intent_router,
     create_content_type_router
 )
-from refinire import Context, LLMPipeline
+from refinire import Context, RefinireAgent
 
 
 class TestRouteClassifier:
@@ -35,7 +35,7 @@ class TestLLMClassifier:
     @pytest.fixture
     def mock_pipeline(self):
         """Create a mock LLM pipeline."""
-        pipeline = Mock(spec=LLMPipeline)
+        pipeline = Mock(spec=RefinireAgent)
         return pipeline
     
     @pytest.fixture
@@ -263,7 +263,7 @@ class TestRouterAgent:
     @pytest.fixture
     def mock_pipeline(self):
         """Create a mock LLM pipeline."""
-        pipeline = Mock(spec=LLMPipeline)
+        pipeline = Mock(spec=RefinireAgent)
         return pipeline
     
     @pytest.fixture
@@ -299,8 +299,8 @@ class TestRouterAgent:
     
     def test_llm_router_without_pipeline_creates_default(self, llm_config):
         """Test LLM router creates default pipeline if none provided."""
-        with patch('src.refinire.agents.router.create_simple_llm_pipeline') as mock_create:
-            mock_pipeline = Mock(spec=LLMPipeline)
+        with patch('refinire.agents.router.create_simple_agent') as mock_create:
+            mock_pipeline = Mock(spec=RefinireAgent)
             mock_create.return_value = mock_pipeline
             
             router = RouterAgent(llm_config)
@@ -414,10 +414,10 @@ class TestRouterAgent:
 class TestUtilityFunctions:
     """Test utility functions for creating common routers."""
     
-    @patch('src.refinire.agents.router.create_simple_llm_pipeline')
+    @patch('refinire.agents.router.create_simple_agent')
     def test_create_intent_router_defaults(self, mock_create_pipeline):
         """Test creating intent router with defaults."""
-        mock_pipeline = Mock(spec=LLMPipeline)
+        mock_pipeline = Mock(spec=RefinireAgent)
         mock_create_pipeline.return_value = mock_pipeline
         
         router = create_intent_router()
@@ -432,7 +432,7 @@ class TestUtilityFunctions:
     def test_create_intent_router_custom(self):
         """Test creating intent router with custom parameters."""
         custom_intents = {"intent1": "step1", "intent2": "step2"}
-        mock_pipeline = Mock(spec=LLMPipeline)
+        mock_pipeline = Mock(spec=RefinireAgent)
         
         router = create_intent_router(
             name="custom_router",
@@ -443,10 +443,10 @@ class TestUtilityFunctions:
         assert router.name == "custom_router"
         assert router.config.routes == custom_intents
     
-    @patch('src.refinire.agents.router.create_simple_llm_pipeline')
+    @patch('refinire.agents.router.create_simple_agent')
     def test_create_content_type_router_defaults(self, mock_create_pipeline):
         """Test creating content type router with defaults."""
-        mock_pipeline = Mock(spec=LLMPipeline)
+        mock_pipeline = Mock(spec=RefinireAgent)
         mock_create_pipeline.return_value = mock_pipeline
         
         router = create_content_type_router()
@@ -461,7 +461,7 @@ class TestUtilityFunctions:
     def test_create_content_type_router_custom(self):
         """Test creating content type router with custom parameters."""
         custom_types = {"type1": "processor1", "type2": "processor2"}
-        mock_pipeline = Mock(spec=LLMPipeline)
+        mock_pipeline = Mock(spec=RefinireAgent)
         
         router = create_content_type_router(
             name="custom_content_router",

@@ -1,4 +1,4 @@
-﻿"""Tests for InteractivePipeline - Generic interactive conversation pipeline
+﻿"""Tests for InteractiveAgent - Generic interactive conversation pipeline
 対話的パイプラインのテスト - 汎用対話パイプライン
 """
 
@@ -9,9 +9,9 @@ from unittest.mock import Mock, patch
 from typing import Any
 
 from refinire import (
-    InteractivePipeline, InteractionResult, InteractionQuestion,
-    create_simple_interactive_pipeline, create_evaluated_interactive_pipeline,
-    LLMResult, LLMPipeline
+    InteractiveAgent, InteractionResult, InteractionQuestion,
+    create_simple_interactive_agent, create_evaluated_interactive_agent,
+    LLMResult, RefinireAgent
 )
 
 try:
@@ -20,8 +20,8 @@ except ImportError:
     BaseModel = object
 
 
-class TestInteractivePipeline:
-    """Test cases for InteractivePipeline"""
+class TestInteractiveAgent:
+    """Test cases for InteractiveAgent"""
     
     def setup_method(self):
         """Setup method run before each test"""
@@ -56,12 +56,12 @@ class TestInteractivePipeline:
             pass
     
     def test_interactive_pipeline_initialization(self):
-        """Test InteractivePipeline can be initialized correctly"""
+        """Test InteractiveAgent can be initialized correctly"""
         
         def completion_check(result: Any) -> bool:
             return hasattr(result, 'done') and result.done
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="test_interactive",
             generation_instructions="You are a helpful assistant.",
             completion_check=completion_check,
@@ -81,15 +81,15 @@ class TestInteractivePipeline:
         def completion_check(result: Any) -> bool:
             return str(result).lower().startswith("done")
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="test_completion",
             generation_instructions="Complete when user says done.",
             completion_check=completion_check,
             max_turns=5
         )
         
-        # Mock the LLMPipeline run method (super().run) and time.time
-        with patch.object(LLMPipeline, 'run') as mock_run, \
+        # Mock the RefinireAgent run method (super().run) and time.time
+        with patch.object(RefinireAgent, 'run') as mock_run, \
              patch('time.time', return_value=1234567890.0):
             mock_run.side_effect = [
                 LLMResult(
@@ -120,14 +120,14 @@ class TestInteractivePipeline:
         def never_complete(result: Any) -> bool:
             return False  # Never complete
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="test_max_turns",
             generation_instructions="Never complete.",
             completion_check=never_complete,
             max_turns=2
         )
         
-        with patch.object(LLMPipeline, 'run') as mock_run, \
+        with patch.object(RefinireAgent, 'run') as mock_run, \
              patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="Continue asking",
@@ -155,7 +155,7 @@ class TestInteractivePipeline:
         def custom_format(response: str, turn: int, remaining: int) -> str:
             return f"Q{turn}: {response} (あと{remaining}ターン)"
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="test_format",
             generation_instructions="Ask questions.",
             completion_check=completion_check,
@@ -163,7 +163,7 @@ class TestInteractivePipeline:
             question_format=custom_format
         )
         
-        with patch.object(LLMPipeline, 'run') as mock_run, \
+        with patch.object(RefinireAgent, 'run') as mock_run, \
              patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="What do you need?",
@@ -180,14 +180,14 @@ class TestInteractivePipeline:
         def completion_check(result: Any) -> bool:
             return False
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="test_error",
             generation_instructions="Test error handling.",
             completion_check=completion_check,
             max_turns=5
         )
         
-        with patch.object(LLMPipeline, 'run') as mock_run, \
+        with patch.object(RefinireAgent, 'run') as mock_run, \
              patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content=None,
@@ -208,14 +208,14 @@ class TestInteractivePipeline:
         def completion_check(result: Any) -> bool:
             return False
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="test_history",
             generation_instructions="Track conversation.",
             completion_check=completion_check,
             max_turns=3
         )
         
-        with patch.object(LLMPipeline, 'run') as mock_run, \
+        with patch.object(RefinireAgent, 'run') as mock_run, \
              patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="Response 1",
@@ -247,14 +247,14 @@ class TestInteractivePipeline:
         def completion_check(result: Any) -> bool:
             return False
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="test_reset",
             generation_instructions="Test reset.",
             completion_check=completion_check,
             max_turns=5
         )
         
-        with patch.object(LLMPipeline, 'run') as mock_run, \
+        with patch.object(RefinireAgent, 'run') as mock_run, \
              patch('time.time', return_value=1234567890.0):
             mock_run.return_value = LLMResult(
                 content="Response",
@@ -276,13 +276,13 @@ class TestInteractivePipeline:
             assert not pipeline.is_complete
             assert len(pipeline.interaction_history) == 0
     
-    def test_create_simple_interactive_pipeline(self):
+    def test_create_simple_interactive_agent(self):
         """Test simple pipeline creation utility"""
         
         def completion_check(result: Any) -> bool:
             return "finished" in str(result).lower()
         
-        pipeline = create_simple_interactive_pipeline(
+        pipeline = create_simple_interactive_agent(
             name="simple_test",
             instructions="Simple instructions",
             completion_check=completion_check,
@@ -290,18 +290,18 @@ class TestInteractivePipeline:
             model="gpt-3.5-turbo"
         )
         
-        assert isinstance(pipeline, InteractivePipeline)
+        assert isinstance(pipeline, InteractiveAgent)
         assert pipeline.name == "simple_test"
         assert pipeline.max_turns == 15
         assert pipeline.model == "gpt-3.5-turbo"
     
-    def test_create_evaluated_interactive_pipeline(self):
+    def test_create_evaluated_interactive_agent(self):
         """Test evaluated pipeline creation utility"""
         
         def completion_check(result: Any) -> bool:
             return "evaluated" in str(result).lower()
         
-        pipeline = create_evaluated_interactive_pipeline(
+        pipeline = create_evaluated_interactive_agent(
             name="eval_test",
             generation_instructions="Generate with evaluation",
             evaluation_instructions="Evaluate the response",
@@ -311,7 +311,7 @@ class TestInteractivePipeline:
             threshold=90.0
         )
         
-        assert isinstance(pipeline, InteractivePipeline)
+        assert isinstance(pipeline, InteractiveAgent)
         assert pipeline.name == "eval_test"
         assert pipeline.max_turns == 25
         assert pipeline.model == "gpt-4"
@@ -324,8 +324,8 @@ class MockCompletionModel(BaseModel):
     result: str = ""
 
 
-class TestInteractivePipelineWithStructuredOutput:
-    """Test InteractivePipeline with structured output models"""
+class TestInteractiveAgentWithStructuredOutput:
+    """Test InteractiveAgent with structured output models"""
     
     def setup_method(self):
         """Setup method run before each test"""
@@ -365,7 +365,7 @@ class TestInteractivePipelineWithStructuredOutput:
         def completion_check(result: Any) -> bool:
             return hasattr(result, 'is_complete') and result.is_complete
         
-        pipeline = InteractivePipeline(
+        pipeline = InteractiveAgent(
             name="structured_test",
             generation_instructions="Return structured output.",
             completion_check=completion_check,
@@ -373,7 +373,7 @@ class TestInteractivePipelineWithStructuredOutput:
             max_turns=5
         )
         
-        with patch.object(LLMPipeline, 'run') as mock_run, \
+        with patch.object(RefinireAgent, 'run') as mock_run, \
              patch('time.time', return_value=1234567890.0):
             # First - not complete
             mock_run.return_value = LLMResult(

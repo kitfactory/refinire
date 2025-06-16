@@ -1,25 +1,25 @@
 ﻿"""
-Test LLMPipeline tool functionality
-LLMPipelineのtool機能をテスト
+Test RefinireAgent tool functionality
+RefinireAgentのtool機能をテスト
 
-This test module ensures that LLMPipeline correctly handles tools,
+This test module ensures that RefinireAgent correctly handles tools,
 function calling, and automatic tool execution.
-このテストモジュールは、LLMPipelineがtools、関数呼び出し、
+このテストモジュールは、RefinireAgentがtools、関数呼び出し、
 自動tool実行を正しく処理することを確保します。
 """
 
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from refinire import LLMPipeline, LLMResult, create_tool_enabled_llm_pipeline
-from refinire.agents.pipeline.llm_pipeline import create_calculator_pipeline, create_web_search_pipeline
+from refinire import RefinireAgent, LLMResult, create_tool_enabled_agent
+from refinire.agents.pipeline.llm_pipeline import create_calculator_agent, create_web_search_agent
 
 
-class TestLLMPipelineTools:
-    """Test LLMPipeline tool integration / LLMPipelineのtool統合をテスト"""
+class TestRefinireAgentTools:
+    """Test RefinireAgent tool integration / RefinireAgentのtool統合をテスト"""
     
     def test_add_function_tool(self):
         """Test adding Python function as tool / Python関数をtoolとして追加するテスト"""
-        pipeline = LLMPipeline(
+        pipeline = RefinireAgent(
             name="test_pipeline",
             generation_instructions="Test instructions",
             model="gpt-4o-mini",
@@ -54,7 +54,7 @@ class TestLLMPipelineTools:
     
     def test_add_tool_with_handler(self):
         """Test adding tool with custom handler / カスタムハンドラー付きtoolの追加をテスト"""
-        pipeline = LLMPipeline(
+        pipeline = RefinireAgent(
             name="test_pipeline",
             generation_instructions="Test instructions",
             model="gpt-4o-mini",
@@ -86,7 +86,7 @@ class TestLLMPipelineTools:
     
     def test_list_tools(self):
         """Test listing available tools / 利用可能なtoolのリストをテスト"""
-        pipeline = LLMPipeline(
+        pipeline = RefinireAgent(
             name="test_pipeline",
             generation_instructions="Test instructions",
             model="gpt-4o-mini",
@@ -109,7 +109,7 @@ class TestLLMPipelineTools:
     
     def test_remove_tool(self):
         """Test removing tools / toolの削除をテスト"""
-        pipeline = LLMPipeline(
+        pipeline = RefinireAgent(
             name="test_pipeline",
             generation_instructions="Test instructions",
             model="gpt-4o-mini",
@@ -176,7 +176,7 @@ class TestLLMPipelineTools:
             """Get weather for a city"""
             return f"Weather in {city}: Sunny, 22°C"
         
-        pipeline = create_tool_enabled_llm_pipeline(
+        pipeline = create_tool_enabled_agent(
             name="weather_assistant",
             instructions="You can get weather information.",
             tools=[get_weather],
@@ -205,7 +205,7 @@ class TestLLMPipelineTools:
         def calculate(expr: str) -> float:
             return 42.0
         
-        pipeline = create_tool_enabled_llm_pipeline(
+        pipeline = create_tool_enabled_agent(
             name="multi_tool",
             instructions="Assistant with tools",
             tools=[get_time, calculate],
@@ -217,9 +217,9 @@ class TestLLMPipelineTools:
         assert "get_time" in tool_names
         assert "calculate" in tool_names
     
-    def test_create_calculator_pipeline(self):
+    def test_create_calculator_agent(self):
         """Test calculator pipeline creation / 計算機パイプライン作成をテスト"""
-        pipeline = create_calculator_pipeline(
+        pipeline = create_calculator_agent(
             name="math_assistant",
             model="gpt-4o-mini"
         )
@@ -243,9 +243,9 @@ class TestLLMPipelineTools:
         assert isinstance(result, str)
         assert "Error" in result
     
-    def test_create_web_search_pipeline(self):
+    def test_create_web_search_agent(self):
         """Test web search pipeline creation / Web検索パイプライン作成をテスト"""
-        pipeline = create_web_search_pipeline(
+        pipeline = create_web_search_agent(
             name="search_assistant",
             model="gpt-4o-mini"
         )
@@ -265,7 +265,7 @@ class TestLLMPipelineTools:
     
     def test_tool_execution_error_handling(self):
         """Test error handling in tool execution / tool実行でのエラーハンドリングをテスト"""
-        pipeline = LLMPipeline(
+        pipeline = RefinireAgent(
             name="test_pipeline",
             generation_instructions="Test instructions",
             model="gpt-4o-mini",
@@ -296,7 +296,7 @@ class TestLLMPipelineTools:
     
     def test_tool_not_found_error(self):
         """Test error when tool is not found / toolが見つからない場合のエラーをテスト"""
-        pipeline = LLMPipeline(
+        pipeline = RefinireAgent(
             name="test_pipeline",
             generation_instructions="Test instructions",
             model="gpt-4o-mini",
@@ -314,8 +314,8 @@ class TestLLMPipelineTools:
             pipeline._execute_tool(mock_tool_call)
 
 
-class TestLLMPipelineToolIntegration:
-    """Integration tests for LLMPipeline tools / LLMPipelineのtools統合テスト"""
+class TestRefinireAgentToolIntegration:
+    """Integration tests for RefinireAgent tools / RefinireAgentのtools統合テスト"""
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_multiple_tool_calls(self, mock_openai):
@@ -331,7 +331,7 @@ class TestLLMPipelineToolIntegration:
         
         # For now, just verify the structure exists
         # 現在は、構造が存在することのみ確認
-        pipeline = create_tool_enabled_llm_pipeline(
+        pipeline = create_tool_enabled_agent(
             name="test",
             instructions="Test",
             tools=[],

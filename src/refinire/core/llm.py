@@ -1,11 +1,9 @@
 ﻿from typing import Literal, Optional, Any, List
-from agents.models.interface import Model
-from agents import OpenAIChatCompletionsModel  # Import from agents library
-from agents import set_tracing_disabled  # Import set_tracing_disabled for tracing control
+from agents import Model, OpenAIChatCompletionsModel, set_tracing_disabled
 # English: Import OpenAI client
 # 日本語: OpenAI クライアントをインポート
 from openai import AsyncOpenAI
-from agents.models.openai_responses import OpenAIResponsesModel
+from agents import OpenAIResponsesModel
 # English: Import HTTP client for API requests
 # 日本語: API リクエスト用の HTTP クライアントをインポート
 import httpx

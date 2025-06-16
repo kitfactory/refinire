@@ -1292,20 +1292,8 @@ def create_evaluated_interactive_agent(
     )
 
 
-# Backward compatibility aliases
-# 後方互換性エイリアス
-LLMPipeline = RefinireAgent  # For backward compatibility / 後方互換性のため
-InteractivePipeline = InteractiveAgent  # For backward compatibility / 後方互換性のため
-
-# Factory function aliases for backward compatibility
-# 後方互換性のためのファクトリ関数エイリアス
-create_simple_llm_pipeline = create_simple_agent
-create_evaluated_llm_pipeline = create_evaluated_agent  
-create_tool_enabled_llm_pipeline = create_tool_enabled_agent
-create_web_search_pipeline = create_web_search_agent
-create_calculator_pipeline = create_calculator_agent
-create_simple_interactive_pipeline = create_simple_interactive_agent
-create_evaluated_interactive_pipeline = create_evaluated_interactive_agent
+# Utility functions for RefinireAgent (existing)
+# RefinireAgent用ユーティリティ関数（既存）
 
 # Utility functions for RefinireAgent (existing)
 # RefinireAgent用ユーティリティ関数（既存） 

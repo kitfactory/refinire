@@ -8,7 +8,7 @@ Test basic Flow functionality to debug execution issues.
 """
 
 import asyncio
-from src.refinire import Flow, FunctionStep, DebugStep
+from refinire import Flow, FunctionStep, DebugStep
 
 
 async def main():

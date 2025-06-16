@@ -9,11 +9,11 @@ from typing import List
 from unittest.mock import patch, MagicMock
 from pydantic import BaseModel
 
-from src.refinire import (
+from refinire import (
     ClarifyAgent, Context, ClarificationResult, 
     create_simple_clarify_agent, create_evaluated_clarify_agent
 )
-from src.refinire.agents.clarify_agent import ClarificationQuestion
+from refinire.agents.clarify_agent import ClarificationQuestion
 
 
 class ReportRequirementsForTest(BaseModel):

@@ -11,7 +11,7 @@ import os
 import json
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.refinire.agents.extractor import (
+from refinire.agents.extractor import (
     ExtractorAgent, ExtractorConfig, ExtractionRule, ExtractionResult,
     RegexExtractionRule, EmailExtractionRule, PhoneExtractionRule, URLExtractionRule,
     DateExtractionRule, HTMLExtractionRule, JSONExtractionRule, LLMExtractionRule,

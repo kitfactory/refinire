@@ -10,10 +10,10 @@ import asyncio
 from typing import List
 from pydantic import BaseModel
 
-from src.refinire import (
-    GenAgent, ClarifyAgent, LLMPipeline, Context,
+from refinire import (
+    GenAgent, ClarifyAgent, RefinireAgent, Context,
     create_simple_gen_agent, create_simple_clarify_agent,
-    create_simple_llm_pipeline, create_evaluated_llm_pipeline,
+    create_simple_agent, create_evaluated_agent,
     ClarificationResult
 )
 
@@ -195,7 +195,7 @@ def demo_llmpipeline_standalone():
     
     # 1. シンプルなLLMPipelineを直接作成
     # Create simple LLMPipeline directly
-    pipeline = create_simple_llm_pipeline(
+    pipeline = create_simple_agent(
         name="code_reviewer",
         instructions="""
         あなたはコードレビューの専門家です。
@@ -244,7 +244,7 @@ def demo_evaluated_llmpipeline_standalone():
     
     # 1. 評価機能付きLLMPipelineを作成
     # Create LLMPipeline with evaluation
-    pipeline = create_evaluated_llm_pipeline(
+    pipeline = create_evaluated_agent(
         name="technical_writer",
         generation_instructions="""
         あなたは技術文書作成の専門家です。

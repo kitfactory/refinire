@@ -1,14 +1,14 @@
 ﻿"""
-Pipeline example with generation and evaluation
-生成と評価を行うPipelineの例
+RefinireAgent example with generation and evaluation
+生成と評価を行うRefinireAgentの例
 """
 
-from src.refinire import AgentPipeline
+from refinire import RefinireAgent
 
 def main():
     # Initialize pipeline with both generation and evaluation templates
     # 生成と評価のテンプレートでパイプラインを初期化
-    pipeline = AgentPipeline(
+    pipeline = RefinireAgent(
         name="evaluated_generator",
         generation_instructions="""
         You are a helpful assistant that generates creative stories.

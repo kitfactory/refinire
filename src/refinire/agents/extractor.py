@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 
 from .flow.context import Context
 from .flow.step import Step
-from .pipeline.llm_pipeline import LLMPipeline
+from .pipeline.llm_pipeline import RefinireAgent
 
 logger = logging.getLogger(__name__)
 
@@ -323,7 +323,7 @@ class LLMExtractionRule(ExtractionRule):
     自然言語プロンプトを使ってLLMで情報を抽出するルール。
     """
     
-    def __init__(self, name: str, prompt: str, llm_pipeline: LLMPipeline = None,
+    def __init__(self, name: str, prompt: str, llm_pipeline: RefinireAgent = None,
                  output_format: str = "text", multiple: bool = False):
         """
         Initialize LLM extraction rule.
@@ -501,7 +501,7 @@ class ExtractorAgent(Step):
     """
     
     def __init__(self, config: ExtractorConfig, custom_rules: List[ExtractionRule] = None,
-                 llm_pipeline: LLMPipeline = None):
+                 llm_pipeline: RefinireAgent = None):
         """
         Initialize ExtractorAgent.
         ExtractorAgentを初期化します。
@@ -765,7 +765,7 @@ def create_json_extractor(name: str, paths: Dict[str, str]) -> ExtractorAgent:
 
 
 def create_llm_extractor(name: str, prompts: Dict[str, str], 
-                        llm_pipeline: LLMPipeline) -> ExtractorAgent:
+                        llm_pipeline: RefinireAgent) -> ExtractorAgent:
     """
     Create an extractor using LLM with custom prompts.
     カスタムプロンプトを持つLLMを使ったエクストラクターを作成します。

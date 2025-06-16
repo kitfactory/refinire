@@ -10,7 +10,7 @@ This example demonstrates how to use OpenAI tools with GenAgent and ClarifyAgent
 import asyncio
 import json
 from typing import Optional
-from src.refinire import (
+from refinire import (
     GenAgent, 
     ClarifyAgent, 
     create_simple_gen_agent, 
@@ -156,11 +156,11 @@ async def test_direct_llm_pipeline_with_tools():
     print("\n⚙️ Testing LLMPipeline directly with Tools")
     print("LLMPipelineを直接ツールでテスト")
     
-    from src.refinire.pipeline.llm_pipeline import LLMPipeline
+    from refinire import RefinireAgent
     
     tools = [calculator_tool()]
     
-    pipeline = LLMPipeline(
+    pipeline = RefinireAgent(
         name="direct_pipeline",
         generation_instructions="You are a helpful calculator assistant. When asked to calculate, consider using the calculator tool.",
         tools=tools
