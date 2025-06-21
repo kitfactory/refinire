@@ -7,6 +7,7 @@ GenAgentを参考に作成されており、Flowワークフロー内で使用�
 """
 
 import asyncio
+import logging
 from typing import Any, Callable, List, Dict, Optional, Type, TypeVar, Generic
 from dataclasses import dataclass
 import json
@@ -25,6 +26,8 @@ except ImportError:
 # English: Generic type variable for user requirement type
 # 日本語: ユーザー要求型用のジェネリック型変数
 T = TypeVar('T')
+
+logger = logging.getLogger(__name__)
 
 
 class ClarifyBase(BaseModel):
@@ -688,7 +691,7 @@ class ClarifyAgent(Step):
             
             # English: Log error for debugging
             # 日本語: デバッグ用エラーログ
-            print(f"🚨 {error_msg}")
+            logger.error(error_msg)
         
         return ctx
 

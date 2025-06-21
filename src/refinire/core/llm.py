@@ -8,6 +8,8 @@ from agents import OpenAIResponsesModel
 # 日本語: API リクエスト用の HTTP クライアントをインポート
 import httpx
 import asyncio
+import logging
+import os
 
 from .anthropic import ClaudeModel
 from .gemini import GeminiModel
@@ -16,7 +18,7 @@ from .ollama import OllamaModel
 # Define the provider type hint
 ProviderType = Literal["openai", "google", "anthropic", "ollama"]
 
-import os
+logger = logging.getLogger(__name__)
 
 def get_llm(
     model: Optional[str] = None,
@@ -260,12 +262,12 @@ async def get_available_models_async(
                 # English: If connection fails, return empty list with error info
                 # 日本語: 接続に失敗した場合、エラー情報と共に空のリストを返す
                 result["ollama"] = []
-                print(f"Warning: Could not connect to Ollama at {ollama_base_url}: {e}")
+                logger.warning(f"Could not connect to Ollama at {ollama_base_url}: {e}")
             except Exception as e:
                 # English: Handle other errors
                 # 日本語: その他のエラーを処理
                 result["ollama"] = []
-                print(f"Warning: Error fetching Ollama models: {e}")
+                logger.warning(f"Error fetching Ollama models: {e}")
         else:
             raise ValueError(f"Unsupported provider: {provider}. Must be one of {ProviderType.__args__}")
     

@@ -7,12 +7,15 @@ GenAgentはRefinireAgentをStepとして使用するためのモダンなクラ�
 """
 
 import warnings
+import asyncio
+import logging
 from typing import Any, Callable, List, Dict, Optional, Type
 
 from .flow.step import Step
 from .flow.context import Context
 from .pipeline.llm_pipeline import RefinireAgent, LLMResult
 
+logger = logging.getLogger(__name__)
 
 # GenAgent implementation using RefinireAgent
 # RefinireAgentを使用するGenAgent実装
@@ -178,7 +181,7 @@ class GenAgent(Step):
             
             # English: Log error for debugging
             # 日本語: デバッグ用エラーログ
-            print(f"🚨 {error_msg}")
+            logger.error(error_msg)
         
         # English: Set next step if specified
         # 日本語: 指定されている場合は次ステップを設定

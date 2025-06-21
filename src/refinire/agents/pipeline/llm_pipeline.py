@@ -7,28 +7,21 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Callable, Dict, List, Optional, Type, Union
+import logging
+import re
+import time
+import traceback
 from dataclasses import dataclass, field
-from concurrent.futures import ThreadPoolExecutor
-import warnings
+from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 
-try:
-    from openai import OpenAI, AsyncOpenAI
-    from pydantic import BaseModel
-except ImportError as e:
-    raise ImportError(f"Required dependencies not found: {e}. Please install openai and pydantic.")
+from agents import Agent, Runner
+from pydantic import BaseModel, ValidationError
 
-try:
-    from agents import Agent, Runner, function_tool
-except ImportError as e:
-    raise ImportError(f"OpenAI Agents SDK not found: {e}. Please install openai-agents.")
+from ..flow.context import Context
+from ...core.tracing import TraceRegistry
 
-try:
-    from ...core.prompt_store import PromptReference
-except ImportError:
-    PromptReference = None
-
-from agents.tool import FunctionTool
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -305,13 +298,6 @@ class RefinireAgent:
         )
     
     async def run_async(self, user_input: str) -> LLMResult:
-        print("run_async entered")
-        # Debug: Check SDK tools at the start of run_async
-        # デバッグ: run_async開始時のSDKツールを確認
-        print(f"🔍 DEBUG: run_async - SDK tools count: {len(self._sdk_tools)}")
-        for i, tool in enumerate(self._sdk_tools):
-            print(f"🔍 DEBUG: run_async - SDK tool {i+1}: {getattr(tool, 'name', getattr(tool, '__name__', 'unknown'))} - {type(tool)}")
-        
         # Input validation
         if not self._validate_input(user_input):
             return LLMResult(
@@ -325,44 +311,21 @@ class RefinireAgent:
             # If tools are available, use only user input (instructions are in Agent)
             # ツールが利用可能な場合、ユーザー入力のみを使用（指示文はAgentに含まれる）
             full_prompt = user_input
-            print(f"🔍 DEBUG: Using {len(self._sdk_tools)} SDK tools")
-            for i, tool in enumerate(self._sdk_tools):
-                print(f"🔍 DEBUG: Tool {i+1}: {getattr(tool, '__name__', 'unknown')}")
         else:
             # For non-tool agents, include history but not instructions (Agent already has them)
             # ツールなしエージェントの場合は履歴を含めるが指示文は除く（Agentは既に持っている）
             full_prompt = self._build_prompt(user_input, include_instructions=False)
-            print(f"🔍 DEBUG: No SDK tools available")
-        
-        # Debug output
-        print(f"🔍 DEBUG: Full prompt sent to SDK: {full_prompt}")
-        print(f"🔍 DEBUG: Agent instructions: {getattr(self._sdk_agent, 'instructions', 'No instructions')}")
-        print(f"🔍 DEBUG: Agent tools count: {len(getattr(self._sdk_agent, 'tools', []))}")
         
         # Generation with retries using OpenAI Agents SDK
         for attempt in range(1, self.max_retries + 1):
             try:
-                print(f"🔍 DEBUG: Attempt {attempt}/{self.max_retries}")
                 # Use OpenAI Agents SDK Runner
                 result = await Runner.run(self._sdk_agent, full_prompt)
-                
-                # Debug the result structure
-                print(f"🔍 DEBUG: Result type: {type(result)}")
-                print(f"🔍 DEBUG: Result attributes: {dir(result)}")
-                print(f"🔍 DEBUG: Result final_output: {result.final_output}")
-                if hasattr(result, 'output'):
-                    print(f"🔍 DEBUG: Result output: {result.output}")
-                if hasattr(result, 'steps'):
-                    print(f"🔍 DEBUG: Result steps count: {len(result.steps) if result.steps else 0}")
-                    for i, step in enumerate(result.steps or []):
-                        print(f"🔍 DEBUG: Step {i}: {type(step)} - {getattr(step, 'type', 'unknown')}")
                 
                 # Extract content from result
                 content = result.final_output
                 if not content and hasattr(result, 'output') and result.output:
                     content = result.output
-                
-                print(f"🔍 DEBUG: Attempt {attempt} result: {content}")
                 
                 # Parse structured output if model specified
                 if self.output_model and content:
@@ -372,7 +335,6 @@ class RefinireAgent:
                 
                 # Output validation
                 if not self._validate_output(parsed_content):
-                    print(f"🔍 DEBUG: Attempt {attempt} failed validation")
                     if attempt < self.max_retries:
                         continue
                     return LLMResult(
@@ -388,7 +350,6 @@ class RefinireAgent:
                     
                     # Check if evaluation passed
                     if not evaluation_result.passed and attempt < self.max_retries:
-                        print(f"🔍 DEBUG: Attempt {attempt} failed evaluation")
                         # Generate improvement if callback provided
                         if self.improvement_callback:
                             improvement = self.improvement_callback(
@@ -398,7 +359,6 @@ class RefinireAgent:
                             full_prompt = f"{full_prompt}\n\nImprovement needed: {improvement}"
                         continue
                 
-                print(f"🔍 DEBUG: Attempt {attempt} succeeded")
                 # Success - store in history and return
                 metadata = {
                     "model": self.model,
@@ -693,44 +653,58 @@ class RefinireAgent:
             self.tool_handlers[tool_definition.get("function", {}).get("name", "unknown")] = handler
     
     def add_mcp_server(self, server_config: Dict) -> None:
-        """Add MCP server configuration / MCPサーバー設定を追加"""
-        # MCP server integration would be implemented here
-        # MCPサーバー統合をここで実装
-        self.mcp_servers.append(server_config)
+        """
+        Add MCP server configuration (placeholder for future implementation)
+        MCPサーバー設定を追加（将来の実装のためのプレースホルダー）
         
-        # For now, log that MCP is configured but not fully implemented
-        # 現在のところ、MCPが設定されているがまだ完全に実装されていないことをログ
-        print(f"MCP server configured: {server_config.get('name', 'unnamed')}")
-        print("Note: Full MCP integration is planned for future release")
+        Args:
+            server_config: MCP server configuration / MCPサーバー設定
+        """
+        # Placeholder for MCP integration
+        # MCP統合のためのプレースホルダー
+        logger.info(f"MCP server configured: {server_config.get('name', 'unnamed')}")
+        logger.info("Note: Full MCP integration is planned for future release")
     
     def remove_tool(self, tool_name: str) -> bool:
         """Remove a tool by name / 名前でtoolを削除"""
-        for i, tool in enumerate(self.tools):
-            if tool.get("function", {}).get("name") == tool_name:
-                del self.tools[i]
-                return True
-        return False
+        removed = False
+        # Remove from self.tools
+        new_tools = []
+        for tool in self.tools:
+            name = None
+            if isinstance(tool, dict):
+                name = tool.get("function", {}).get("name")
+            elif hasattr(tool, 'name'):
+                name = tool.name
+            elif hasattr(tool, '__name__'):
+                name = tool.__name__
+            if name == tool_name:
+                removed = True
+                continue
+            new_tools.append(tool)
+        self.tools = new_tools
+        # Remove from _sdk_tools
+        self._sdk_tools = [t for t in self._sdk_tools if not (hasattr(t, 'name') and t.name == tool_name)]
+        # Remove from tool_handlers if present
+        if hasattr(self, 'tool_handlers') and tool_name in self.tool_handlers:
+            del self.tool_handlers[tool_name]
+        return removed
     
     def list_tools(self) -> List[str]:
         """List all available tool names / 利用可能なtool名をリスト"""
         tool_names = []
-        
-        # Handle SDK tools (FunctionTool objects)
+        # SDK tools (FunctionTool objects)
         for tool in self._sdk_tools:
             if hasattr(tool, 'name'):
                 tool_names.append(tool.name)
             elif hasattr(tool, '__name__'):
                 tool_names.append(tool.__name__)
-            else:
-                tool_names.append(str(tool))
-        
-        # Handle legacy dictionary tools
+        # Legacy dictionary tools
         for tool in self.tools:
             if isinstance(tool, dict):
-                tool_names.append(tool.get("function", {}).get("name", "unnamed"))
-            else:
-                tool_names.append(str(tool))
-        
+                name = tool.get("function", {}).get("name")
+                if name and name not in tool_names:
+                    tool_names.append(name)
         return tool_names
     
     def _parse_structured_output(self, content: str) -> Any:

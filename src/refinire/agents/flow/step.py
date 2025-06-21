@@ -7,12 +7,15 @@ UserInputStep、ConditionStep、ForkStep、JoinStepなどの基本的なステ�
 """
 
 import asyncio
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Union, Awaitable
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
 from .context import Context
+
+logger = logging.getLogger(__name__)
 
 
 class Step(ABC):
@@ -357,10 +360,10 @@ class JoinStep(Step):
 class DebugStep(Step):
     """
     Step for debugging and logging
-    デバッグとログ用ステップ
+    デバッグとログ記録用のステップ
     
     This step prints or logs context information for debugging purposes.
-    このステップはデバッグ目的でコンテキスト情報を印刷またはログ出力します。
+    このステップはデバッグ目的でコンテキスト情報を印刷またはログ記録します。
     """
     
     def __init__(self, name: str, message: str = "", print_context: bool = False, next_step: Optional[str] = None):
@@ -371,8 +374,8 @@ class DebugStep(Step):
         Args:
             name: Step name / ステップ名
             message: Debug message / デバッグメッセージ
-            print_context: Whether to print full context / 完全なコンテキストを印刷するか
-            next_step: Next step / 次ステップ
+            print_context: Whether to print full context / 完全なコンテキストを印刷するかどうか
+            next_step: Next step name / 次ステップ名
         """
         super().__init__(name)
         self.message = message
@@ -393,16 +396,17 @@ class DebugStep(Step):
         """
         ctx.update_step_info(self.name)
         
-        # Print debug information
-        # デバッグ情報を印刷
-        print(f"🐛 DEBUG [{self.name}]: {self.message}")
+        # Log debug information
+        # デバッグ情報をログ記録
+        debug_info = f"DEBUG [{self.name}]: {self.message}"
         if user_input:
-            print(f"   User Input: {user_input}")
-        print(f"   Step Count: {ctx.step_count}")
-        print(f"   Next Label: {ctx.next_label}")
+            debug_info += f" | User Input: {user_input}"
+        debug_info += f" | Step Count: {ctx.step_count} | Next Label: {ctx.next_label}"
+        
+        logger.debug(debug_info)
         
         if self.print_context:
-            print(f"   Context: {ctx.model_dump()}")
+            logger.debug(f"Context: {ctx.model_dump()}")
         
         # Add debug message to system messages
         # デバッグメッセージをシステムメッセージに追加

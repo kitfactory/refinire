@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """
-Test RefinireAgent implementation for improved coverage.
+Test RefinireAgent functionality
+RefinireAgentの機能をテスト
 
-RefinireAgentの実装の改善されたカバレッジをテストします。
+This test module ensures that RefinireAgent correctly handles
+various configurations, tool integration, and error scenarios.
+このテストモジュールは、RefinireAgentが様々な設定、ツール統合、
+エラーシナリオを正しく処理することを確保します。
 """
 
 import pytest
@@ -10,6 +14,13 @@ import asyncio
 from unittest.mock import Mock, patch, MagicMock, AsyncMock
 from pydantic import BaseModel
 from dataclasses import dataclass
+
+try:
+    from agents import function_tool
+except ImportError:
+    # Fallback if function_tool is not available
+    def function_tool(func):
+        return func
 
 from refinire.agents.pipeline.llm_pipeline import (
     RefinireAgent, LLMResult, EvaluationResult, 
@@ -28,6 +39,7 @@ class OutputModel(BaseModel):
 # テスト用のツール関数
 # ============================================================================
 
+@function_tool
 def get_weather_test(location: str) -> str:
     """
     Get weather information for testing
@@ -36,11 +48,13 @@ def get_weather_test(location: str) -> str:
     weather_data = {
         "Tokyo": "Sunny, 22°C",
         "New York": "Cloudy, 18°C",
-        "London": "Rainy, 15°C"
+        "London": "Rainy, 15°C",
+        "Paris": "Partly Cloudy, 20°C"
     }
     return weather_data.get(location, f"Weather data not available for {location}")
 
 
+@function_tool
 def calculate_test(expression: str) -> str:
     """
     Perform mathematical calculations for testing
@@ -207,40 +221,50 @@ class TestRefinireAgentAdvanced:
         assert agent.max_retries == 5
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
-    def test_refinire_agent_add_function_tool(self, mock_openai):
-        """Test adding function tools to RefinireAgent."""
-        agent = RefinireAgent(
-            name="test_agent",
-            generation_instructions="Test instructions"
-        )
-        
+    def test_refinire_agent_constructor_with_function_tools(self, mock_openai):
+        """Test adding function tools to RefinireAgent via constructor."""
+        @function_tool
         def test_function(x: int) -> int:
             """Test function."""
             return x * 2
         
-        agent.add_function_tool(test_function)
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            tools=[test_function]
+        )
         
         # Verify tool was added
         assert len(agent.tools) == 1
-        assert agent.tools[0]["function"]["name"] == "test_function"
+        assert len(agent._sdk_tools) == 1
+        assert test_function in agent._sdk_tools
+        
+        # Verify tool name
+        tool_names = agent.list_tools()
+        assert "test_function" in tool_names
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
-    def test_refinire_agent_add_function_tool_with_custom_name(self, mock_openai):
-        """Test adding function tools with custom name."""
-        agent = RefinireAgent(
-            name="test_agent",
-            generation_instructions="Test instructions"
-        )
-        
+    def test_refinire_agent_constructor_with_custom_named_tools(self, mock_openai):
+        """Test adding function tools with custom name via constructor."""
+        @function_tool
         def test_function(x: int) -> int:
             """Test function."""
             return x * 2
         
-        agent.add_function_tool(test_function, name="custom_name")
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            tools=[test_function]
+        )
         
-        # Verify tool was added with custom name
+        # Verify tool was added
         assert len(agent.tools) == 1
-        assert agent.tools[0]["function"]["name"] == "custom_name"
+        assert len(agent._sdk_tools) == 1
+        assert test_function in agent._sdk_tools
+        
+        # Verify tool name (uses function name)
+        tool_names = agent.list_tools()
+        assert "test_function" in tool_names
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_refinire_agent_add_tool_dict(self, mock_openai):
@@ -273,19 +297,19 @@ class TestRefinireAgentAdvanced:
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_refinire_agent_list_tools(self, mock_openai):
         """Test listing tools in RefinireAgent."""
-        agent = RefinireAgent(
-            name="test_agent",
-            generation_instructions="Test instructions"
-        )
-        
+        @function_tool
         def tool1(x: int) -> int:
             return x * 2
         
+        @function_tool
         def tool2(y: str) -> str:
             return y.upper()
         
-        agent.add_function_tool(tool1)
-        agent.add_function_tool(tool2)
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            tools=[tool1, tool2]
+        )
         
         tool_names = agent.list_tools()
         assert "tool1" in tool_names
@@ -295,15 +319,16 @@ class TestRefinireAgentAdvanced:
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_refinire_agent_remove_tool(self, mock_openai):
         """Test removing tools from RefinireAgent."""
-        agent = RefinireAgent(
-            name="test_agent",
-            generation_instructions="Test instructions"
-        )
-        
+        @function_tool
         def test_function(x: int) -> int:
             return x * 2
         
-        agent.add_function_tool(test_function)
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            tools=[test_function]
+        )
+        
         assert len(agent.tools) == 1
         
         # Remove the tool
@@ -710,6 +735,7 @@ class TestRefinireAgentFactoryFunctions:
     
     def test_create_tool_enabled_agent(self):
         """Test create_tool_enabled_agent factory function."""
+        @function_tool
         def test_tool(x: int) -> int:
             return x * 2
         

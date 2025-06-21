@@ -213,21 +213,24 @@ if result.success:
 ### ツール統合
 
 ```python
-def get_weather(city: str) -> str:
-    """天気情報を取得"""
-    return f"{city}の天気: 晴れ、22度"
+from agents import function_tool
 
-def calculate(expression: str) -> float:
-    """計算を実行"""
-    return eval(expression)
+@function_tool
+def tool1():
+    pass
 
-pipeline = LLMPipeline(
-    name="tool_pipeline",
-    generation_instructions="ツールを使って質問に回答してください",
-    tools=[get_weather, calculate]
-)
+@function_tool
+def tool2():
+    pass
 
-result = pipeline.run("東京の天気と15*23の計算結果を教えて")
+# AgentPipeline: generation_toolsパラメータ
+pipeline = AgentPipeline(generation_tools=[tool1, tool2])
+
+# LLMPipeline: toolsパラメータ
+pipeline = LLMPipeline(tools=[tool1, tool2])
+
+# GenAgent: create_simple_gen_agentのtoolsパラメータ
+agent = create_simple_gen_agent(tools=[tool1, tool2])
 ```
 
 ## 🏃‍♂️ 段階的移行戦略
@@ -311,6 +314,16 @@ score = result.shared_state.get("agent_name_evaluation", {}).get("score")
 #### 3. ツール呼び出しの違い
 
 ```python
+from agents import function_tool
+
+@function_tool
+def tool1():
+    pass
+
+@function_tool
+def tool2():
+    pass
+
 # AgentPipeline: generation_toolsパラメータ
 pipeline = AgentPipeline(generation_tools=[tool1, tool2])
 
