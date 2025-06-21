@@ -6,7 +6,8 @@ RefinireAgentの実装の改善されたカバレッジをテストします。
 """
 
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+import asyncio
+from unittest.mock import Mock, patch, MagicMock, AsyncMock
 from pydantic import BaseModel
 from dataclasses import dataclass
 
@@ -21,6 +22,42 @@ class OutputModel(BaseModel):
     message: str
     score: int
 
+
+# ============================================================================
+# Tool Functions for Testing
+# テスト用のツール関数
+# ============================================================================
+
+def get_weather_test(location: str) -> str:
+    """
+    Get weather information for testing
+    テスト用の天気情報を取得する
+    """
+    weather_data = {
+        "Tokyo": "Sunny, 22°C",
+        "New York": "Cloudy, 18°C",
+        "London": "Rainy, 15°C"
+    }
+    return weather_data.get(location, f"Weather data not available for {location}")
+
+
+def calculate_test(expression: str) -> str:
+    """
+    Perform mathematical calculations for testing
+    テスト用の数学的計算を実行する
+    """
+    try:
+        allowed_names = {'abs': abs, 'round': round, 'min': min, 'max': max}
+        result = eval(expression, {"__builtins__": {}}, allowed_names)
+        return f"Result: {result}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+# ============================================================================
+# Advanced Test Cases
+# 高度なテストケース
+# ============================================================================
 
 class TestRefinireAgentAdvanced:
     """Advanced test cases for RefinireAgent."""
@@ -213,19 +250,25 @@ class TestRefinireAgentAdvanced:
             generation_instructions="Test instructions"
         )
         
-        tool_def = {
+        tool_dict = {
             "type": "function",
             "function": {
                 "name": "test_tool",
-                "description": "A test tool"
+                "description": "A test tool",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "x": {"type": "integer"}
+                    }
+                }
             }
         }
         
-        agent.add_tool(tool_def)
+        agent.add_tool(tool_dict)
         
         # Verify tool was added
         assert len(agent.tools) == 1
-        assert agent.tools[0]["function"]["name"] == "test_tool"
+        assert agent.tools[0] == tool_dict
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_refinire_agent_list_tools(self, mock_openai):
@@ -236,18 +279,18 @@ class TestRefinireAgentAdvanced:
         )
         
         def tool1(x: int) -> int:
-            return x
+            return x * 2
         
         def tool2(y: str) -> str:
-            return y
+            return y.upper()
         
         agent.add_function_tool(tool1)
         agent.add_function_tool(tool2)
         
-        tools = agent.list_tools()
-        assert len(tools) == 2
-        assert "tool1" in tools
-        assert "tool2" in tools
+        tool_names = agent.list_tools()
+        assert "tool1" in tool_names
+        assert "tool2" in tool_names
+        assert len(tool_names) == 2
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_refinire_agent_remove_tool(self, mock_openai):
@@ -258,29 +301,364 @@ class TestRefinireAgentAdvanced:
         )
         
         def test_function(x: int) -> int:
-            return x
+            return x * 2
         
         agent.add_function_tool(test_function)
         assert len(agent.tools) == 1
         
+        # Remove the tool
         success = agent.remove_tool("test_function")
-        assert success is True
+        assert success
         assert len(agent.tools) == 0
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_refinire_agent_remove_nonexistent_tool(self, mock_openai):
-        """Test removing non-existent tool."""
+        """Test removing non-existent tool from RefinireAgent."""
         agent = RefinireAgent(
             name="test_agent",
             generation_instructions="Test instructions"
         )
         
+        # Try to remove non-existent tool
         success = agent.remove_tool("nonexistent_tool")
-        assert success is False
+        assert not success
 
+
+# ============================================================================
+# Tool Integration Tests
+# ツール統合テスト
+# ============================================================================
+
+class TestRefinireAgentToolIntegration:
+    """Test RefinireAgent tool integration with OpenAI Agents SDK."""
+    
+    def test_refinire_agent_constructor_with_tools(self):
+        """Test RefinireAgent constructor with tools parameter."""
+        # Mock function_tool decorator
+        with patch('refinire.agents.pipeline.llm_pipeline.function_tool') as mock_function_tool:
+            # Mock the decorated function
+            mock_decorated_function = Mock()
+            mock_function_tool.return_value = mock_decorated_function
+            
+            agent = RefinireAgent(
+                name="test_agent",
+                generation_instructions="Test instructions",
+                tools=[get_weather_test, calculate_test]
+            )
+            
+            # Verify tools were processed
+            assert len(agent._sdk_tools) == 2
+            assert get_weather_test in agent._sdk_tools
+            assert calculate_test in agent._sdk_tools
+    
+    def test_refinire_agent_constructor_with_function_tools(self):
+        """Test RefinireAgent constructor with FunctionTool objects."""
+        # Mock FunctionTool
+        mock_function_tool = Mock()
+        mock_function_tool.name = "test_tool"
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            tools=[mock_function_tool]
+        )
+        
+        # Verify FunctionTool was added
+        assert len(agent._sdk_tools) == 1
+        assert mock_function_tool in agent._sdk_tools
+    
+    def test_refinire_agent_constructor_with_dict_tools(self):
+        """Test RefinireAgent constructor with dictionary tools."""
+        dict_tool = {
+            "type": "function",
+            "function": {
+                "name": "dict_tool",
+                "description": "A dictionary tool"
+            }
+        }
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            tools=[dict_tool]
+        )
+        
+        # Verify dict tool was added to tools list
+        assert len(agent.tools) == 1
+        assert agent.tools[0] == dict_tool
+        # Verify no SDK tools were added
+        assert len(agent._sdk_tools) == 0
+    
+    def test_refinire_agent_constructor_with_mixed_tools(self):
+        """Test RefinireAgent constructor with mixed tool types."""
+        dict_tool = {
+            "type": "function",
+            "function": {"name": "dict_tool"}
+        }
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            tools=[get_weather_test, dict_tool, calculate_test]
+        )
+        
+        # Verify SDK tools
+        assert len(agent._sdk_tools) == 2
+        assert get_weather_test in agent._sdk_tools
+        assert calculate_test in agent._sdk_tools
+        
+        # Verify dict tools
+        assert len(agent.tools) == 1
+        assert agent.tools[0] == dict_tool
+    
+    @patch('refinire.agents.pipeline.llm_pipeline.Agent')
+    @patch('refinire.agents.pipeline.llm_pipeline.Runner')
+    def test_refinire_agent_run_async_with_tools(self, mock_runner, mock_agent):
+        """Test RefinireAgent run_async with tools integration."""
+        # Mock Runner.run to return a successful result
+        mock_result = Mock()
+        mock_result.final_output = "The weather in Tokyo is sunny, 22°C"
+        mock_runner.run = AsyncMock(return_value=mock_result)
+        
+        # Mock Agent constructor
+        mock_agent_instance = Mock()
+        mock_agent_instance.instructions = "Test instructions"
+        mock_agent_instance.tools = []
+        mock_agent.return_value = mock_agent_instance
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="You are a helpful assistant with weather tools.",
+            tools=[get_weather_test]
+        )
+        
+        # Test run_async
+        result = asyncio.run(agent.run_async("What's the weather in Tokyo?"))
+        
+        # Verify result
+        assert result.success
+        assert "sunny" in result.content
+        assert result.metadata["sdk"] is True
+        
+        # Verify Runner.run was called
+        mock_runner.run.assert_called_once()
+        call_args = mock_runner.run.call_args
+        assert call_args[0][0] == agent._sdk_agent  # First argument should be the SDK agent
+        assert "Tokyo" in call_args[0][1]  # Second argument should contain the prompt
+    
+    @patch('refinire.agents.pipeline.llm_pipeline.Agent')
+    @patch('refinire.agents.pipeline.llm_pipeline.Runner')
+    def test_refinire_agent_run_async_without_tools(self, mock_runner, mock_agent):
+        """Test RefinireAgent run_async without tools."""
+        # Mock Runner.run to return a successful result
+        mock_result = Mock()
+        mock_result.final_output = "Artificial intelligence is a field of computer science."
+        mock_runner.run = AsyncMock(return_value=mock_result)
+        
+        # Mock Agent constructor
+        mock_agent_instance = Mock()
+        mock_agent_instance.instructions = "Test instructions"
+        mock_agent_instance.tools = []
+        mock_agent.return_value = mock_agent_instance
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="You are a helpful assistant."
+        )
+        
+        # Test run_async
+        result = asyncio.run(agent.run_async("What is AI?"))
+        
+        # Verify result
+        assert result.success
+        assert "intelligence" in result.content
+        assert result.metadata["sdk"] is True
+        
+        # Verify Runner.run was called
+        mock_runner.run.assert_called_once()
+    
+    @patch('refinire.agents.pipeline.llm_pipeline.Agent')
+    @patch('refinire.agents.pipeline.llm_pipeline.Runner')
+    def test_refinire_agent_run_async_with_evaluation(self, mock_runner, mock_agent):
+        """Test RefinireAgent run_async with evaluation."""
+        # Mock Runner.run to return a successful result
+        mock_result = Mock()
+        mock_result.final_output = "Test response"
+        mock_runner.run = AsyncMock(return_value=mock_result)
+        
+        # Mock Agent constructor
+        mock_agent_instance = Mock()
+        mock_agent_instance.instructions = "Test instructions"
+        mock_agent_instance.tools = []
+        mock_agent.return_value = mock_agent_instance
+        
+        # Mock evaluation to pass
+        with patch.object(RefinireAgent, '_evaluate_content') as mock_evaluate:
+            mock_evaluate.return_value = EvaluationResult(
+                score=90.0,
+                passed=True,
+                feedback="Good response"
+            )
+            
+            agent = RefinireAgent(
+                name="test_agent",
+                generation_instructions="Generate content",
+                evaluation_instructions="Evaluate content",
+                threshold=85.0
+            )
+            
+            # Test run_async
+            result = asyncio.run(agent.run_async("Test input"))
+            
+            # Verify result
+            assert result.success
+            assert result.evaluation_score == 90.0
+            assert result.metadata["sdk"] is True
+    
+    @patch('refinire.agents.pipeline.llm_pipeline.Agent')
+    @patch('refinire.agents.pipeline.llm_pipeline.Runner')
+    def test_refinire_agent_run_async_with_failed_evaluation(self, mock_runner, mock_agent):
+        """Test RefinireAgent run_async with failed evaluation and retry."""
+        # Mock Runner.run to return different results on each call
+        mock_results = [
+            Mock(final_output="First attempt"),
+            Mock(final_output="Second attempt - better")
+        ]
+        mock_runner.run = AsyncMock(side_effect=mock_results)
+        
+        # Mock Agent constructor
+        mock_agent_instance = Mock()
+        mock_agent_instance.instructions = "Test instructions"
+        mock_agent_instance.tools = []
+        mock_agent.return_value = mock_agent_instance
+        
+        # Mock evaluation to fail first, then pass
+        evaluation_results = [
+            EvaluationResult(score=70.0, passed=False, feedback="Needs improvement"),
+            EvaluationResult(score=90.0, passed=True, feedback="Good response")
+        ]
+        
+        with patch.object(RefinireAgent, '_evaluate_content') as mock_evaluate:
+            mock_evaluate.side_effect = evaluation_results
+            
+            agent = RefinireAgent(
+                name="test_agent",
+                generation_instructions="Generate content",
+                evaluation_instructions="Evaluate content",
+                threshold=85.0,
+                max_retries=2
+            )
+            
+            # Test run_async
+            result = asyncio.run(agent.run_async("Test input"))
+            
+            # Verify result
+            assert result.success
+            assert result.evaluation_score == 90.0
+            assert result.attempts == 2
+            assert result.metadata["sdk"] is True
+            
+            # Verify Runner.run was called twice
+            assert mock_runner.run.call_count == 2
+    
+    @patch('refinire.agents.pipeline.llm_pipeline.Agent')
+    @patch('refinire.agents.pipeline.llm_pipeline.Runner')
+    def test_refinire_agent_run_async_with_input_validation_failure(self, mock_runner, mock_agent):
+        """Test RefinireAgent run_async with input validation failure."""
+        # Mock Agent constructor
+        mock_agent_instance = Mock()
+        mock_agent_instance.instructions = "Test instructions"
+        mock_agent_instance.tools = []
+        mock_agent.return_value = mock_agent_instance
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            input_guardrails=[lambda x: len(x) > 0]  # Reject empty input
+        )
+        
+        # Test run_async with empty input
+        result = asyncio.run(agent.run_async(""))
+        
+        # Verify result
+        assert not result.success
+        assert result.content is None
+        assert "Input validation failed" in result.metadata["error"]
+        
+        # Verify Runner.run was not called
+        mock_runner.run.assert_not_called()
+    
+    @patch('refinire.agents.pipeline.llm_pipeline.Agent')
+    @patch('refinire.agents.pipeline.llm_pipeline.Runner')
+    def test_refinire_agent_run_async_with_output_validation_failure(self, mock_runner, mock_agent):
+        """Test RefinireAgent run_async with output validation failure."""
+        # Mock Runner.run to return a result
+        mock_result = Mock()
+        mock_result.final_output = "Invalid output"
+        mock_runner.run = AsyncMock(return_value=mock_result)
+        
+        # Mock Agent constructor
+        mock_agent_instance = Mock()
+        mock_agent_instance.instructions = "Test instructions"
+        mock_agent_instance.tools = []
+        mock_agent.return_value = mock_agent_instance
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            output_guardrails=[lambda x: "valid" in x.lower()]  # Require "valid" in output
+        )
+        
+        # Test run_async
+        result = asyncio.run(agent.run_async("Test input"))
+        
+        # Verify result
+        assert not result.success
+        assert result.content is None
+        assert "Output validation failed" in result.metadata["error"]
+        
+        # Verify Runner.run was called
+        mock_runner.run.assert_called_once()
+    
+    @patch('refinire.agents.pipeline.llm_pipeline.Agent')
+    @patch('refinire.agents.pipeline.llm_pipeline.Runner')
+    def test_refinire_agent_run_async_with_exception(self, mock_runner, mock_agent):
+        """Test RefinireAgent run_async with exception handling."""
+        # Mock Runner.run to raise an exception
+        mock_runner.run = AsyncMock(side_effect=Exception("Test error"))
+        
+        # Mock Agent constructor
+        mock_agent_instance = Mock()
+        mock_agent_instance.instructions = "Test instructions"
+        mock_agent_instance.tools = []
+        mock_agent.return_value = mock_agent_instance
+        
+        agent = RefinireAgent(
+            name="test_agent",
+            generation_instructions="Test instructions",
+            max_retries=1
+        )
+        
+        # Test run_async
+        result = asyncio.run(agent.run_async("Test input"))
+        
+        # Verify result
+        assert not result.success
+        assert result.content is None
+        assert "Test error" in result.metadata["error"]
+        assert result.metadata["sdk"] is True
+        
+        # Verify Runner.run was called
+        mock_runner.run.assert_called_once()
+
+
+# ============================================================================
+# Factory Function Tests
+# ファクトリ関数テスト
+# ============================================================================
 
 class TestRefinireAgentFactoryFunctions:
-    """Test factory functions for RefinireAgent."""
+    """Test RefinireAgent factory functions."""
     
     def test_create_simple_agent(self):
         """Test create_simple_agent factory function."""
@@ -333,21 +711,28 @@ class TestRefinireAgentFactoryFunctions:
     def test_create_tool_enabled_agent(self):
         """Test create_tool_enabled_agent factory function."""
         def test_tool(x: int) -> int:
-            return x
+            return x * 2
         
         agent = create_tool_enabled_agent(
             name="tool_agent",
-            instructions="Tool instructions",
+            instructions="Use tools",
             tools=[test_tool]
         )
         
         assert isinstance(agent, RefinireAgent)
         assert agent.name == "tool_agent"
-        assert len(agent.tools) == 1
+        assert agent.generation_instructions == "Use tools"
+        assert len(agent._sdk_tools) == 1
+        assert test_tool in agent._sdk_tools
 
+
+# ============================================================================
+# Internal Method Tests
+# 内部メソッドテスト
+# ============================================================================
 
 class TestRefinireAgentInternalMethods:
-    """Test internal methods of RefinireAgent."""
+    """Test RefinireAgent internal methods."""
     
     @patch('refinire.agents.pipeline.llm_pipeline.OpenAI')
     def test_refinire_agent_initialization_sets_up_client(self, mock_openai):
@@ -360,8 +745,9 @@ class TestRefinireAgentInternalMethods:
             generation_instructions="Test instructions"
         )
         
-        # OpenAI client is created lazily, so check the mock was available
-        assert mock_openai is not None
+        # Verify OpenAI client was created
+        mock_openai.assert_called_once()
+        assert agent._client == mock_client
     
     def test_refinire_agent_string_representation(self):
         """Test RefinireAgent string representation."""
@@ -371,44 +757,52 @@ class TestRefinireAgentInternalMethods:
         )
         
         str_repr = str(agent)
-        assert "test_agent" in str_repr
         assert "RefinireAgent" in str_repr
+        assert "test_agent" in str_repr
     
     def test_refinire_agent_repr(self):
-        """Test RefinireAgent repr."""
+        """Test RefinireAgent repr representation."""
         agent = RefinireAgent(
             name="test_agent",
-            generation_instructions="Test instructions"
+            generation_instructions="Test instructions",
+            model="gpt-4o-mini"
         )
         
         repr_str = repr(agent)
         assert "RefinireAgent" in repr_str
         assert "test_agent" in repr_str
+        assert "gpt-4o-mini" in repr_str
 
+
+# ============================================================================
+# Data Class Tests
+# データクラステスト
+# ============================================================================
 
 class TestLLMResult:
-    """Test LLMResult dataclass."""
+    """Test LLMResult data class."""
     
     def test_llm_result_creation(self):
-        """Test LLMResult creation."""
+        """Test LLMResult creation with all parameters."""
         result = LLMResult(
             content="Test content",
             success=True,
-            metadata={"test": "value"},
+            metadata={"key": "value"},
             evaluation_score=85.0,
             attempts=2
         )
         
         assert result.content == "Test content"
         assert result.success is True
-        assert result.metadata == {"test": "value"}
+        assert result.metadata == {"key": "value"}
         assert result.evaluation_score == 85.0
         assert result.attempts == 2
     
     def test_llm_result_defaults(self):
-        """Test LLMResult default values."""
-        result = LLMResult(content="Test")
+        """Test LLMResult creation with default values."""
+        result = LLMResult(content="Test content")
         
+        assert result.content == "Test content"
         assert result.success is True
         assert result.metadata == {}
         assert result.evaluation_score is None
@@ -416,36 +810,42 @@ class TestLLMResult:
 
 
 class TestEvaluationResult:
-    """Test EvaluationResult dataclass."""
+    """Test EvaluationResult data class."""
     
     def test_evaluation_result_creation(self):
-        """Test EvaluationResult creation."""
+        """Test EvaluationResult creation with all parameters."""
         result = EvaluationResult(
-            score=85.0,
+            score=90.0,
             passed=True,
-            feedback="Good result"
+            feedback="Good response",
+            metadata={"key": "value"}
         )
         
-        assert result.score == 85.0
+        assert result.score == 90.0
         assert result.passed is True
-        assert result.feedback == "Good result"
+        assert result.feedback == "Good response"
+        assert result.metadata == {"key": "value"}
     
     def test_evaluation_result_defaults(self):
-        """Test EvaluationResult default values."""
-        result = EvaluationResult(
-            score=75.0,
-            passed=False
-        )
+        """Test EvaluationResult creation with default values."""
+        result = EvaluationResult(score=85.0, passed=False)
         
+        assert result.score == 85.0
+        assert result.passed is False
         assert result.feedback is None
         assert result.metadata == {}
 
+
+# ============================================================================
+# Error Handling Tests
+# エラーハンドリングテスト
+# ============================================================================
 
 class TestRefinireAgentErrorHandling:
     """Test RefinireAgent error handling."""
     
     def test_refinire_agent_with_invalid_model(self):
-        """Test RefinireAgent handles invalid model gracefully."""
+        """Test RefinireAgent with invalid model name."""
         # This should not raise an exception during initialization
         agent = RefinireAgent(
             name="test_agent",
@@ -457,6 +857,7 @@ class TestRefinireAgentErrorHandling:
     
     def test_refinire_agent_with_negative_threshold(self):
         """Test RefinireAgent with negative threshold."""
+        # This should not raise an exception during initialization
         agent = RefinireAgent(
             name="test_agent",
             generation_instructions="Test instructions",
@@ -467,6 +868,7 @@ class TestRefinireAgentErrorHandling:
     
     def test_refinire_agent_with_zero_retries(self):
         """Test RefinireAgent with zero retries."""
+        # This should not raise an exception during initialization
         agent = RefinireAgent(
             name="test_agent",
             generation_instructions="Test instructions",
