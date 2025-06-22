@@ -1,5 +1,5 @@
 # Refinire — Refined Simplicity for Agentic AI
-ひらめきを“すぐに動く”へ、直感的エージェント・フレームワーク
+ひらめきを"すぐに動く"へ、直感的エージェント・フレームワーク
 
 # Why Refinire?
 
@@ -119,11 +119,14 @@ RefinireAgentは関数ツールを自動的に実行します。
 
 ```python
 from refinire import RefinireAgent
+from agents import function_tool
 
+@function_tool
 def calculate(expression: str) -> float:
     """数式を計算する"""
     return eval(expression)
 
+@function_tool
 def get_weather(city: str) -> str:
     """都市の天気を取得"""
     return f"{city}の天気: 晴れ、22℃"
@@ -132,11 +135,9 @@ def get_weather(city: str) -> str:
 agent = RefinireAgent(
     name="tool_assistant",
     generation_instructions="ツールを使って質問に答えてください",
+    tools=[calculate, get_weather],
     model="gpt-4o-mini"
 )
-
-agent.add_function_tool(calculate)
-agent.add_function_tool(get_weather)
 
 result = agent.run("東京の天気は？あと、15 * 23は？")
 print(result.content)  # 両方の質問に自動的に答えます

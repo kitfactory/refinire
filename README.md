@@ -134,11 +134,14 @@ RefinireAgent automatically executes function tools:
 
 ```python
 from refinire import RefinireAgent
+from agents import function_tool
 
+@function_tool
 def calculate(expression: str) -> float:
     """Calculate mathematical expressions"""
     return eval(expression)
 
+@function_tool
 def get_weather(city: str) -> str:
     """Get weather for a city"""
     return f"Weather in {city}: Sunny, 22°C"
@@ -147,11 +150,9 @@ def get_weather(city: str) -> str:
 agent = RefinireAgent(
     name="tool_assistant",
     generation_instructions="Answer questions using tools",
+    tools=[calculate, get_weather],
     model="gpt-4o-mini"
 )
-
-agent.add_function_tool(calculate)
-agent.add_function_tool(get_weather)
 
 result = agent.run("What's the weather in Tokyo? Also, what's 15 * 23?")
 print(result.content)  # Automatically answers both questions
@@ -395,6 +396,10 @@ agent = RefinireAgent(
 ### Custom Tool Integration
 
 ```python
+from refinire import RefinireAgent
+from agents import function_tool
+
+@function_tool
 def web_search(query: str) -> str:
     """Search the web for information"""
     # Your search implementation
@@ -403,10 +408,9 @@ def web_search(query: str) -> str:
 agent = RefinireAgent(
     name="research_assistant",
     generation_instructions="Help with research using web search",
+    tools=[web_search],
     model="gpt-4o-mini"
 )
-
-agent.add_function_tool(web_search)
 ```
 
 ---
