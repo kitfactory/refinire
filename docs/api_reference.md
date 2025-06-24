@@ -382,3 +382,157 @@ async def main():
 asyncio.run(main())
 ```
 
+## ContextProvider Interface
+
+| Class/Method         | Description (EN)                                                                 | Arguments / Returns                |
+|---------------------|--------------------------------------------------------------------------------|------------------------------------|
+| `ContextProvider`   | Abstract base for all context providers.                                        |                                    |
+| `provider_name`     | Provider name (class variable).                                                | `str`                              |
+| `get_config_schema` | Returns config schema for the provider.                                        | `classmethod` → `Dict[str, Any]`   |
+| `from_config`       | Instantiates provider from config dict.                                         | `classmethod` → instance           |
+| `get_context`       | Returns context string for a query.                                            | `query: str, previous_context: Optional[str], **kwargs` → `str` |
+| `update`            | Updates provider state with new interaction.                                   | `interaction: Dict[str, Any]`      |
+| `clear`             | Clears provider state.                                                         |                                    |
+
+---
+
+## Built-in Providers
+
+### ConversationHistoryProvider
+
+Manages conversation history.
+
+**Configuration Example:**
+```python
+{
+    "type": "conversation_history",
+    "max_items": 10
+}
+```
+
+**Parameters:**
+- `max_items` (int): Maximum number of messages to keep (default: 10)
+
+### FixedFileProvider
+
+Always provides content from specified files.
+
+**Configuration Example:**
+```python
+{
+    "type": "fixed_file",
+    "file_path": "config.yaml",
+    "encoding": "utf-8",
+    "check_updates": True
+}
+```
+
+**Parameters:**
+- `file_path` (str, required): Path to the file to read
+- `encoding` (str): File encoding (default: "utf-8")
+- `check_updates` (bool): Whether to check for file updates (default: True)
+
+### SourceCodeProvider
+
+Automatically searches for source code related to user questions.
+
+**Configuration Example:**
+```python
+{
+    "type": "source_code",
+    "base_path": ".",
+    "max_files": 5,
+    "max_file_size": 1000,
+    "file_extensions": [".py", ".js", ".ts"],
+    "include_patterns": ["src/**/*"],
+    "exclude_patterns": ["tests/**/*"]
+}
+```
+
+**Parameters:**
+- `base_path` (str): Base directory path for codebase analysis (default: ".")
+- `max_files` (int): Maximum number of files to include in context (default: 50)
+- `max_file_size` (int): Maximum file size in bytes to read (default: 10000)
+- `file_extensions` (list): List of file extensions to include
+- `include_patterns` (list): List of patterns to include
+- `exclude_patterns` (list): List of patterns to exclude
+
+### CutContextProvider
+
+Compresses context to specified length.
+
+**Configuration Example:**
+```python
+{
+    "type": "cut_context",
+    "provider": {
+        "type": "source_code",
+        "max_files": 10,
+        "max_file_size": 2000
+    },
+    "max_chars": 3000,
+    "max_tokens": None,
+    "cut_strategy": "middle",
+    "preserve_sections": True
+}
+```
+
+**Parameters:**
+- `provider` (dict, required): Configuration for the wrapped context provider
+- `max_chars` (int): Maximum character count (None for no limit)
+- `max_tokens` (int): Maximum token count (None for no limit)
+- `cut_strategy` (str): How to cut the context ("start", "end", "middle") (default: "end")
+- `preserve_sections` (bool): Whether to preserve complete sections when cutting (default: True)
+
+---
+
+## RefinireAgent Extensions
+
+| Class/Method         | Description (EN)                                                                 | Arguments / Returns                |
+|---------------------|--------------------------------------------------------------------------------|------------------------------------|
+| `context_providers_config` | List/dict/YAML string for context provider config.                | `List[dict]`/`str`                 |
+| `get_context_provider_schemas` | Returns schemas for all available providers.                   | `classmethod` → `Dict[str, Any]`   |
+| `clear_context`     | Clears all context providers.                                                  |                                    |
+
+---
+
+## Example: Using SourceCodeProvider
+
+```python
+from refinire.agents.context_provider_factory import ContextProviderFactory
+
+config = {
+    "type": "source_code",
+    "base_path": "src",
+    "max_files": 5
+}
+provider = ContextProviderFactory.create_provider(config)
+context = provider.get_context("How does the pipeline work?")
+print(context)
+```
+
+---
+
+## Example: YAML-like Multi-provider
+
+```yaml
+- conversation_history:
+    max_items: 5
+- source_code:
+    base_path: src
+    max_files: 3
+- cut_context:
+    provider:
+      type: conversation_history
+      max_items: 10
+    max_chars: 4000
+    cut_strategy: end
+```
+
+---
+
+## See Also
+- `docs/api_reference_ja.md` (Japanese)
+- `docs/context_management.md` (Design)
+- `examples/context_management_example.py` (Usage)
+

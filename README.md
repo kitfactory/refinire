@@ -413,6 +413,48 @@ agent = RefinireAgent(
 )
 ```
 
+### Context Management - Intelligent Memory
+
+RefinireAgent provides sophisticated context management for enhanced conversations:
+
+```python
+from refinire import RefinireAgent
+
+# Agent with conversation history and file context
+agent = RefinireAgent(
+    name="code_assistant",
+    generation_instructions="Help with code analysis and improvements",
+    context_providers_config=[
+        {
+            "type": "conversation_history",
+            "max_items": 10
+        },
+        {
+            "type": "fixed_file",
+            "file_path": "src/main.py",
+            "description": "Main application file"
+        },
+        {
+            "type": "source_code",
+            "base_path": "src/",
+            "file_patterns": ["*.py"],
+            "max_files": 5
+        }
+    ],
+    model="gpt-4o-mini"
+)
+
+# Context is automatically managed across conversations
+result = agent.run("What's the main function doing?")
+print(result.content)
+
+# Context persists and evolves
+result = agent.run("How can I improve the error handling?")
+print(result.content)
+```
+
+**📖 Details:** [Context Management](docs/context_management.md)
+
 ---
 
 ## Why Refinire?
@@ -458,6 +500,11 @@ Explore comprehensive examples in the `examples/` directory:
 - `notification_agent_example.py` - Event notifications
 - `extractor_agent_example.py` - Data extraction
 - `validator_agent_example.py` - Content validation
+
+### Context Management
+- `context_management_basic.py` - Basic context provider usage
+- `context_management_advanced.py` - Advanced context with source code analysis
+- `context_management_practical.py` - Real-world context management scenarios
 
 ---
 
@@ -508,6 +555,13 @@ MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/
 - **Consistent API**: Uniform interface across all agent types and use cases
 - **Better Performance**: Optimized architecture with reduced legacy overhead
 - **Enhanced Maintainability**: Cleaner codebase structure and organization
+
+### 🧠 Context Management System
+- **Intelligent Memory**: Built-in conversation history and file context management
+- **Context Providers**: Modular system for conversation history, fixed files, and source code analysis
+- **Chain Processing**: Context providers can build upon each other for sophisticated memory
+- **Easy Configuration**: Simple YAML-like configuration for context providers
+- **Default Behavior**: Automatic conversation history (max 10 items) when no providers specified
 
 ---
 

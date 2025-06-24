@@ -380,4 +380,158 @@ async def main():
     print(result.shared_state["final_result"])
 
 asyncio.run(main())
-``` 
+```
+
+## ContextProviderインターフェース
+
+| クラス/メソッド         | 説明                                                                 | 引数 / 戻り値                |
+|---------------------|--------------------------------------------------------------------|------------------------------|
+| `ContextProvider`   | すべてのコンテキストプロバイダーの抽象基底クラス。                  |                              |
+| `provider_name`     | プロバイダー名（クラス変数）。                                      | `str`                        |
+| `get_config_schema` | プロバイダーの設定スキーマを返す。                                  | `classmethod` → `Dict[str, Any]` |
+| `from_config`       | 設定辞書からプロバイダーを生成。                                     | `classmethod` → インスタンス |
+| `get_context`       | クエリに対するコンテキスト文字列を返す。                            | `query: str, previous_context: Optional[str], **kwargs` → `str` |
+| `update`            | 新しい対話でプロバイダー状態を更新。                                 | `interaction: Dict[str, Any]`|
+| `clear`             | プロバイダー状態をクリア。                                          |                              |
+
+---
+
+## 標準プロバイダー
+
+### ConversationHistoryProvider
+
+会話履歴を管理するプロバイダーです。
+
+**設定例:**
+```python
+{
+    "type": "conversation_history",
+    "max_items": 10
+}
+```
+
+**パラメータ:**
+- `max_items` (int): 保持する最大メッセージ数（デフォルト: 10）
+
+### FixedFileProvider
+
+指定されたファイルの内容を常に提供するプロバイダーです。
+
+**設定例:**
+```python
+{
+    "type": "fixed_file",
+    "file_path": "config.yaml",
+    "encoding": "utf-8",
+    "check_updates": True
+}
+```
+
+**パラメータ:**
+- `file_path` (str, 必須): 読み取るファイルのパス
+- `encoding` (str): ファイルエンコーディング（デフォルト: "utf-8"）
+- `check_updates` (bool): ファイル更新をチェックするか（デフォルト: True）
+
+### SourceCodeProvider
+
+ユーザーの質問に関連するソースコードを自動検索するプロバイダーです。
+
+**設定例:**
+```python
+{
+    "type": "source_code",
+    "base_path": ".",
+    "max_files": 5,
+    "max_file_size": 1000,
+    "file_extensions": [".py", ".js", ".ts"],
+    "include_patterns": ["src/**/*"],
+    "exclude_patterns": ["tests/**/*"]
+}
+```
+
+**パラメータ:**
+- `base_path` (str): コードベース分析のベースディレクトリ（デフォルト: "."）
+- `max_files` (int): コンテキストに含める最大ファイル数（デフォルト: 50）
+- `max_file_size` (int): 読み込む最大ファイルサイズ（バイト）（デフォルト: 10000）
+- `file_extensions` (list): 含めるファイル拡張子のリスト
+- `include_patterns` (list): 含めるファイルパターンのリスト
+- `exclude_patterns` (list): 除外するファイルパターンのリスト
+
+### CutContextProvider
+
+コンテキストを指定された長さに圧縮するプロバイダーです。
+
+**設定例:**
+```python
+{
+    "type": "cut_context",
+    "provider": {
+        "type": "source_code",
+        "max_files": 10,
+        "max_file_size": 2000
+    },
+    "max_chars": 3000,
+    "max_tokens": None,
+    "cut_strategy": "middle",
+    "preserve_sections": True
+}
+```
+
+**パラメータ:**
+- `provider` (dict, 必須): ラップするコンテキストプロバイダーの設定
+- `max_chars` (int): 最大文字数（Noneで制限なし）
+- `max_tokens` (int): 最大トークン数（Noneで制限なし）
+- `cut_strategy` (str): カット戦略（"start", "end", "middle"）（デフォルト: "end"）
+- `preserve_sections` (bool): カット時に完全なセクションを保持するか（デフォルト: True）
+
+---
+
+## RefinireAgent拡張
+
+| クラス/メソッド         | 説明                                                                 | 引数 / 戻り値                |
+|---------------------|--------------------------------------------------------------------|------------------------------|
+| `context_providers_config` | コンテキストプロバイダー設定（リスト/辞書/YAML文字列）。 | `List[dict]`/`str`           |
+| `get_context_provider_schemas` | 利用可能な全プロバイダーのスキーマを返す。             | `classmethod` → `Dict[str, Any]` |
+| `clear_context`     | すべてのコンテキストプロバイダーをクリア。                          |                              |
+
+---
+
+## 使用例: SourceCodeProviderの利用
+
+```python
+from refinire.agents.context_provider_factory import ContextProviderFactory
+
+config = {
+    "type": "source_code",
+    "base_path": "src",
+    "max_files": 5
+}
+provider = ContextProviderFactory.create_provider(config)
+context = provider.get_context("パイプラインの仕組みは？")
+print(context)
+```
+
+---
+
+## 使用例: YAMLライクな複数プロバイダー
+
+```yaml
+- conversation_history:
+    max_items: 5
+- source_code:
+    base_path: src
+    max_files: 3
+- cut_context:
+    provider:
+      type: conversation_history
+      max_items: 10
+    max_chars: 4000
+    cut_strategy: end
+```
+
+---
+
+## 関連ドキュメント
+- `docs/api_reference.md`（英語）
+- `docs/context_management.md`（設計）
+- `examples/context_management_example.py`（使用例） 

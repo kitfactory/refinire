@@ -11,6 +11,8 @@ from typing import Dict, Any, List, Type, Optional
 from refinire.agents.context_provider import ContextProvider
 from refinire.agents.providers.conversation_history import ConversationHistoryProvider
 from refinire.agents.providers.fixed_file import FixedFileProvider
+from refinire.agents.providers.source_code import SourceCodeProvider
+from refinire.agents.providers.cut_context import CutContextProvider
 
 
 class ContextProviderFactory:
@@ -28,8 +30,10 @@ class ContextProviderFactory:
     # Registry of available providers
     # 利用可能なプロバイダーのレジストリ
     _provider_classes: Dict[str, Type] = {
-        "conversation": ConversationHistoryProvider,
+        "conversation_history": ConversationHistoryProvider,
         "fixed_file": FixedFileProvider,
+        "source_code": SourceCodeProvider,
+        "cut_context": CutContextProvider,
     }
     
     @classmethod

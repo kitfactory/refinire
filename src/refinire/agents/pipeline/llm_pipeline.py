@@ -96,7 +96,7 @@ class RefinireAgent:
         locale: str = "en",
         tools: Optional[List[Callable]] = None,
         mcp_servers: Optional[List[str]] = None,
-        context_providers_config: Optional[Dict[str, Any]] = None
+        context_providers_config: Optional[Union[str, List[Dict[str, Any]]]] = None
     ) -> None:
         """
         Initialize Refinire Agent
@@ -122,7 +122,7 @@ class RefinireAgent:
             locale: Locale for messages / メッセージ用ロケール
             tools: OpenAI function tools / OpenAI関数ツール
             mcp_servers: MCP server identifiers / MCPサーバー識別子
-            context_providers_config: Configuration for context providers / コンテキストプロバイダーの設定
+            context_providers_config: Configuration for context providers (YAML-like string or dict list) / コンテキストプロバイダーの設定（YAMLライクな文字列または辞書リスト）
         """
         # Basic configuration
         self.name = name
@@ -178,7 +178,42 @@ class RefinireAgent:
         )
         
         # Context providers
-        self.context_providers = ContextProviderFactory.create_providers(context_providers_config)
+        self.context_providers = []
+        if context_providers_config is None or (isinstance(context_providers_config, str) and not context_providers_config.strip()):
+            # Default to conversation history provider
+            # デフォルトで会話履歴プロバイダーを使用
+            context_providers_config = [
+                {"type": "conversation_history", "max_items": 10}
+            ]
+        
+        if context_providers_config:
+            # Handle YAML-like string or dict list
+            # YAMLライクな文字列または辞書リストを処理
+            if isinstance(context_providers_config, str):
+                # Parse YAML-like string
+                # YAMLライクな文字列を解析
+                parsed_configs = ContextProviderFactory.parse_config_string(context_providers_config)
+                if not parsed_configs:
+                    # If parsing results in empty list, use default
+                    # 解析結果が空リストの場合はデフォルトを使用
+                    context_providers_config = [
+                        {"type": "conversation_history", "max_items": 10}
+                    ]
+                else:
+                    # Convert parsed configs to the format expected by create_providers
+                    # 解析された設定をcreate_providersが期待する形式に変換
+                    provider_configs = []
+                    for parsed_config in parsed_configs:
+                        provider_config = {"type": parsed_config["name"]}
+                        provider_config.update(parsed_config["config"])
+                        provider_configs.append(provider_config)
+                    context_providers_config = provider_configs
+            
+            # Validate configuration before creating providers
+            # プロバイダー作成前に設定を検証
+            for config in context_providers_config:
+                ContextProviderFactory.validate_config(config)
+            self.context_providers = ContextProviderFactory.create_providers(context_providers_config)
     
     def run(self, user_input: str) -> LLMResult:
         """
@@ -279,8 +314,8 @@ class RefinireAgent:
     
     def _build_prompt(self, user_input: str, include_instructions: bool = True) -> str:
         """
-        Build complete prompt with instructions and history
-        指示と履歴を含む完全なプロンプトを構築
+        Build complete prompt with instructions, context providers, and history
+        指示、コンテキストプロバイダー、履歴を含む完全なプロンプトを構築
         
         Args:
             user_input: User input / ユーザー入力
@@ -293,6 +328,32 @@ class RefinireAgent:
         # 要求された場合のみ指示文を追加（OpenAI Agents SDKの場合は除く）
         if include_instructions:
             prompt_parts.append(self.generation_instructions)
+        
+        # Add context from context providers (with chaining)
+        # コンテキストプロバイダーからのコンテキストを追加（連鎖機能付き）
+        if hasattr(self, 'context_providers') and self.context_providers:
+            context_parts = []
+            previous_context = ""
+            
+            for provider in self.context_providers:
+                try:
+                    provider_context = provider.get_context(user_input, previous_context)
+                    # Ensure provider_context is a string (convert None to empty string)
+                    # provider_contextが文字列であることを保証（Noneは空文字列に変換）
+                    if provider_context is None:
+                        provider_context = ""
+                    if provider_context:
+                        context_parts.append(provider_context)
+                        previous_context = provider_context
+                except Exception as e:
+                    # Log error but continue with other providers
+                    # エラーをログに記録するが、他のプロバイダーは続行
+                    logger.warning(f"Context provider {provider.__class__.__name__} failed: {e}")
+                    continue
+            
+            if context_parts:
+                context_text = "\n\n".join(context_parts)
+                prompt_parts.append(f"Context:\n{context_text}")
         
         # Add history if available
         if self.session_history:
@@ -360,7 +421,7 @@ Return your response as JSON with 'score' and 'feedback' fields.
             )
     
     def _store_in_history(self, user_input: str, result: LLMResult) -> None:
-        """Store interaction in history / 対話を履歴に保存"""
+        """Store interaction in history and update context providers / 対話を履歴に保存し、コンテキストプロバイダーを更新"""
         interaction = {
             "user_input": user_input,
             "result": result.content,
@@ -378,11 +439,35 @@ Return your response as JSON with 'score' and 'feedback' fields.
         # Trim history if needed
         if len(self.session_history) > self.history_size:
             self.session_history = self.session_history[-self.history_size:]
+        
+        # Update context providers
+        # コンテキストプロバイダーを更新
+        if hasattr(self, 'context_providers') and self.context_providers:
+            for provider in self.context_providers:
+                try:
+                    provider.update(interaction)
+                except Exception as e:
+                    # Log error but continue with other providers
+                    # エラーをログに記録するが、他のプロバイダーは続行
+                    logger.warning(f"Failed to update context provider {provider.__class__.__name__}: {e}")
+                    continue
     
     def clear_history(self) -> None:
-        """Clear all history / 全履歴をクリア"""
+        """Clear all history and context providers / 全履歴とコンテキストプロバイダーをクリア"""
         self._pipeline_history.clear()
         self.session_history.clear()
+        
+        # Clear context providers
+        # コンテキストプロバイダーをクリア
+        if hasattr(self, 'context_providers') and self.context_providers:
+            for provider in self.context_providers:
+                try:
+                    provider.clear()
+                except Exception as e:
+                    # Log error but continue with other providers
+                    # エラーをログに記録するが、他のプロバイダーは続行
+                    logger.warning(f"Failed to clear context provider {provider.__class__.__name__}: {e}")
+                    continue
     
     def get_history(self) -> List[Dict[str, Any]]:
         """Get pipeline history / パイプライン履歴を取得"""
@@ -405,6 +490,30 @@ Return your response as JSON with 'score' and 'feedback' fields.
             self.threshold = threshold
         else:
             raise ValueError("Threshold must be between 0 and 100")
+    
+    @classmethod
+    def get_context_provider_schemas(cls) -> Dict[str, Dict[str, Any]]:
+        """
+        Get available context provider schemas
+        利用可能なコンテキストプロバイダーのスキーマを取得
+        
+        Returns:
+            Dict[str, Dict[str, Any]]: Provider schemas / プロバイダースキーマ
+        """
+        return ContextProviderFactory.get_all_provider_schemas()
+    
+    def clear_context(self) -> None:
+        """
+        Clear context providers only (keep history)
+        コンテキストプロバイダーのみをクリア（履歴は保持）
+        """
+        if hasattr(self, 'context_providers') and self.context_providers:
+            for provider in self.context_providers:
+                try:
+                    provider.clear()
+                except Exception as e:
+                    logger.warning(f"Failed to clear context provider {provider.__class__.__name__}: {e}")
+                    continue
     
     def __str__(self) -> str:
         return f"RefinireAgent(name={self.name}, model={self.model})"

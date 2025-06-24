@@ -8,6 +8,7 @@
 - プロバイダー — OpenAI / Anthropic / Google / Ollama を共通APIで
 - 自動評価&再生成ループが既に構築済み
 - 並列処理を一行で実現 — 複雑な非同期処理も `{"parallel": [...]}` だけ
+- インテリジェントコンテキスト管理 — 会話履歴とファイルコンテキストの自動管理
 
 # 30-Second Quick Start
 
@@ -176,6 +177,47 @@ result = await flow.run("この包括的なテキストを分析...")
 
 **📖 詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture.md)
 
+## 5. コンテキスト管理 - インテリジェントメモリ
+RefinireAgentは高度なコンテキスト管理機能を提供し、会話をより豊かにします。
+
+```python
+from refinire import RefinireAgent
+
+# 会話履歴とファイルコンテキストを持つエージェント
+agent = RefinireAgent(
+    name="code_assistant",
+    generation_instructions="コード分析と改善を支援します",
+    context_providers_config=[
+        {
+            "type": "conversation_history",
+            "max_items": 10
+        },
+        {
+            "type": "fixed_file",
+            "file_path": "src/main.py",
+            "description": "メインアプリケーションファイル"
+        },
+        {
+            "type": "source_code",
+            "base_path": "src/",
+            "file_patterns": ["*.py"],
+            "max_files": 5
+        }
+    ],
+    model="gpt-4o-mini"
+)
+
+# コンテキストは会話全体で自動的に管理されます
+result = agent.run("メイン関数は何をしていますか？")
+print(result.content)
+
+# コンテキストは保持され、進化します
+result = agent.run("エラーハンドリングをどのように改善できますか？")
+print(result.content)
+```
+
+**📖 詳細:** [コンテキスト管理](docs/context_management.md)
+
 ## Architecture Diagram
 
 Learn More
@@ -218,6 +260,13 @@ Refinire は、複雑さを洗練されたシンプルさに変えることで�
 - **一貫したAPI**: すべてのエージェントタイプと使用ケースで統一インターフェース
 - **パフォーマンス向上**: レガシーオーバーヘッド削減による最適化アーキテクチャ
 - **保守性向上**: よりクリーンなコードベース構造と組織化
+
+### 🧠 コンテキスト管理システム
+- **インテリジェントメモリ**: 会話履歴とファイルコンテキストの組み込み管理
+- **コンテキストプロバイダー**: 会話履歴、固定ファイル、ソースコード分析のモジュラーシステム
+- **連鎖処理**: コンテキストプロバイダーが相互に構築し合い、高度なメモリを実現
+- **簡単設定**: コンテキストプロバイダーのシンプルなYAMLライク設定
+- **デフォルト動作**: プロバイダーが指定されていない場合、自動的に会話履歴（最大10項目）を有効化
 
 ---
 
