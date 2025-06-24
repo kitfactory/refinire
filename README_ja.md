@@ -1,14 +1,13 @@
 # Refinire — Refined Simplicity for Agentic AI
 ひらめきを"すぐに動く"へ、直感的エージェント・フレームワーク
 
-# Why Refinire?
+## Why Refinire?
 
-- 簡単インストール pip install refinireだけ
-- LLM特有の設定、複雑な手順を簡単に
-- プロバイダー — OpenAI / Anthropic / Google / Ollama を共通APIで
-- 自動評価&再生成ループが既に構築済み
-- 並列処理を一行で実現 — 複雑な非同期処理も `{"parallel": [...]}` だけ
-- インテリジェントコンテキスト管理 — 会話履歴とファイルコンテキストの自動管理
+- **Simple installation** — Just `pip install refinire`
+- **Simplify LLM-specific configuration** — No complex setup required
+- **Unified API across providers** — OpenAI / Anthropic / Google / Ollama  
+- **Built-in evaluation & regeneration loops** — Quality assurance out of the box
+- **One-line parallel processing** — Complex async operations with just `{"parallel": [...]}`
 
 # 30-Second Quick Start
 
@@ -74,19 +73,43 @@ flow = Flow({
 result = await flow.run("複雑なユーザーリクエスト")
 ```
 
-## 1. Unified LLM Interface
-複数の LLM プロバイダーを統一されたインターフェースで扱うことができます。
+## 1. Unified LLM Interface（統一LLMインターフェース）
+
+RefinireAgentはOpenAI、Anthropic、Google、Ollamaなど、さまざまなLLMプロバイダーに対応しています。
+
+`RefinireAgent` の `model` 引数にモデル名を指定するだけで、環境変数（例: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` など）から自動的に最適なプロバイダーが選択されます。
 
 ```python
-from refinire import get_llm
+from refinire import RefinireAgent
 
-llm = get_llm("gpt-4o-mini")      # OpenAI
-llm = get_llm("claude-3-sonnet")  # Anthropic
-llm = get_llm("gemini-pro")       # Google
-llm = get_llm("llama3.1:8b")      # Ollama
+# モデル名を指定するだけで自動的にプロバイダーが解決されます
+agent = RefinireAgent(
+    name="assistant",
+    generation_instructions="親切なアシスタントです",
+    model="gpt-4o-mini"  # OpenAI
+)
+
+# Anthropic, Google, Ollama も同様にモデル名だけでOK
+agent2 = RefinireAgent(
+    name="anthropic_assistant",
+    generation_instructions="Anthropicモデル用",
+    model="claude-3-sonnet"  # Anthropic
+)
+
+agent3 = RefinireAgent(
+    name="google_assistant",
+    generation_instructions="Google Gemini用",
+    model="gemini-pro"  # Google
+)
+
+agent4 = RefinireAgent(
+    name="ollama_assistant",
+    generation_instructions="Ollamaモデル用",
+    model="llama3.1:8b"  # Ollama
+)
 ```
 
-これにより、プロバイダー間の切り替えが容易になり、開発の柔軟性が向上します。
+これにより、プロバイダー間の切り替えやAPIキーの管理が非常に簡単になり、開発の柔軟性が大幅に向上します。
 
 **📖 詳細:** [統一LLMインターフェース](docs/unified-llm-interface.md)
 
@@ -146,7 +169,7 @@ print(result.content)  # 両方の質問に自動的に答えます
 
 **📖 詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture.md)
 
-## 4. 自動並列処理: 3.9倍高速化
+## 4. 自動並列処理:
 複雑な処理を並列実行して劇的にパフォーマンスを向上させます。
 
 ```python
@@ -169,7 +192,7 @@ flow = Flow(start="preprocess", steps={
     "aggregate": FunctionStep("aggregate", combine_results)
 })
 
-# 順次実行: 2.0秒 → 並列実行: 0.5秒（3.9倍高速化）
+# 順次実行: 2.0秒 → 並列実行: 0.5秒（大幅な高速化）
 result = await flow.run("この包括的なテキストを分析...")
 ```
 
@@ -226,6 +249,27 @@ API Reference — 型ヒント付きで迷わない
 Contributing — 初回PR歓迎！
 
 Refinire は、複雑さを洗練されたシンプルさに変えることで、AIエージェント開発をより直感的で効率的なものにします。
+
+---
+
+## リリースノート - v0.2.7
+
+### 🎯 フローアーキテクチャの強化
+- **改善されたフローコンテキスト管理**: 複雑なワークフローシナリオのためのコンテキスト処理の強化
+- **より良いエラーハンドリング**: フロー実行全体でのより堅牢なエラー管理
+- **パフォーマンス最適化**: より良いパフォーマンスのためのフロー実行の効率化
+- **デバッグ機能の強化**: フロートラブルシューティングのための改善されたデバッグ機能
+
+### 🔧 開発者体験の改善
+- **より良い型ヒント**: より良いIDEサポートのための型注釈の強化
+- **ドキュメントの改善**: より多くの例を含むAPIドキュメントの更新
+- **コード品質**: コード品質と保守性の向上
+- **テストの改善**: より良いテストカバレッジと信頼性
+
+### ✅ 安定性と互換性
+- **バグ修正**: 様々なバグ修正と安定性の改善
+- **互換性**: 既存APIとの互換性を維持
+- **パフォーマンス**: フレームワーク全体での一般的なパフォーマンス改善
 
 ---
 

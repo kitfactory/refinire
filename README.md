@@ -90,15 +90,41 @@ result = await flow.run("Complex user request")
 
 ## 1. Unified LLM Interface
 
-Handle multiple LLM providers with a unified interface:
+RefinireAgent supports a wide range of LLM providers, including OpenAI, Anthropic, Google, and Ollama.
+
+Simply specify the model name in the `model` argument of `RefinireAgent`, and the optimal provider will be automatically selected based on environment variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.).
 
 ```python
-from refinire import get_llm
+from refinire import RefinireAgent
 
-# One interface, infinite possibilities
-llm = get_llm("gpt-4o-mini")
-response = llm.complete("Explain the concept of refinement")
+# Just specify the model name—provider is resolved automatically
+agent = RefinireAgent(
+    name="assistant",
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini"  # OpenAI
+)
+
+# Anthropic, Google, and Ollama are also supported in the same way
+agent2 = RefinireAgent(
+    name="anthropic_assistant",
+    generation_instructions="For Anthropic model",
+    model="claude-3-sonnet"  # Anthropic
+)
+
+agent3 = RefinireAgent(
+    name="google_assistant",
+    generation_instructions="For Google Gemini",
+    model="gemini-pro"  # Google
+)
+
+agent4 = RefinireAgent(
+    name="ollama_assistant",
+    generation_instructions="For Ollama model",
+    model="llama3.1:8b"  # Ollama
+)
 ```
+
+This makes switching between providers and managing API keys extremely simple, greatly increasing development flexibility.
 
 **📖 Details:** [Unified LLM Interface](docs/unified-llm-interface.md)
 
@@ -160,7 +186,7 @@ print(result.content)  # Automatically answers both questions
 
 **📖 Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
 
-## 4. Automatic Parallel Processing: 3.9x Performance Boost
+## 4. Automatic Parallel Processing: Dramatic Performance Boost
 
 Dramatically improve performance with parallel execution:
 
@@ -184,7 +210,7 @@ flow = Flow(start="preprocess", steps={
     "aggregate": FunctionStep("aggregate", combine_results)
 })
 
-# Sequential: 2.0s → Parallel: 0.5s (3.9x speedup)
+# Sequential execution → Parallel execution (significant speedup)
 result = await flow.run("Analyze this comprehensive text...")
 ```
 
@@ -206,7 +232,7 @@ flow = Flow({
 })
 ```
 
-### Parallel Processing: 3.9x Performance Boost
+### Parallel Processing: Dramatic Performance Boost
 
 ```python
 from refinire import Flow, FunctionStep
@@ -227,7 +253,7 @@ flow = Flow(start="preprocess", steps={
     "aggregate": FunctionStep("aggregate", combine_results)
 })
 
-# Sequential execution: 2.0s → Parallel execution: 0.5s (3.9x speedup)
+# Sequential execution → Parallel execution (significant speedup)
 result = await flow.run("Analyze this comprehensive text...")
 ```
 
@@ -521,6 +547,27 @@ Explore comprehensive examples in the `examples/` directory:
 MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/openai/openai-agents-python).
 
 **Refinire**: Where complexity becomes clarity, and development becomes art.
+
+---
+
+## Release Notes - v0.2.7
+
+### 🎯 Enhanced Flow Architecture
+- **Improved Flow Context Management**: Enhanced context handling for complex workflow scenarios
+- **Better Error Handling**: More robust error management across flow execution
+- **Performance Optimizations**: Streamlined flow execution for better performance
+- **Enhanced Debugging**: Improved debugging capabilities for flow troubleshooting
+
+### 🔧 Developer Experience Improvements
+- **Better Type Hints**: Enhanced type annotations for better IDE support
+- **Improved Documentation**: Updated API documentation with more examples
+- **Code Quality**: Enhanced code quality and maintainability
+- **Testing Improvements**: Better test coverage and reliability
+
+### ✅ Stability & Compatibility
+- **Bug Fixes**: Various bug fixes and stability improvements
+- **Compatibility**: Maintained compatibility with existing APIs
+- **Performance**: General performance improvements across the framework
 
 ---
 
