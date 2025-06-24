@@ -12,13 +12,9 @@
         <meta name="author" content="kitfactory">
       
       
-        <link rel="canonical" href="https://kitfactory.github.io/refinire/api_reference/">
+        <link rel="canonical" href="https://kitfactory.github.io/refinire/api_reference_ja/">
       
       
-        <link rel="prev" href="../minimal_example/">
-      
-      
-        <link rel="next" href="../tutorials/quickstart/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -26,7 +22,7 @@
     
     
       
-        <title>概要 - Refinire</title>
+        <title>APIリファレンス - Refinire</title>
       
     
     
@@ -70,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#api-reference" class="md-skip">
+        <a href="#api" class="md-skip">
           コンテンツにスキップ
         </a>
       
@@ -104,7 +100,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              概要
+              APIリファレンス
             
           </span>
         </div>
@@ -230,13 +226,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../api_reference/" class="md-tabs__link">
           
   
   
@@ -381,31 +375,28 @@
       
   
   
-    
   
   
-  
     
     
     
     
-      
-        
-        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -418,7 +409,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             APIリファレンス
@@ -429,32 +420,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    概要
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../api_reference/" class="md-nav__link">
         
   
   
@@ -465,470 +434,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="目次">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      目次
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#classes-and-functions-overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Classes and Functions Overview
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#unified-llm-interface" class="md-nav__link">
-    <span class="md-ellipsis">
-      Unified LLM Interface
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Unified LLM Interface">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#get_llm" class="md-nav__link">
-    <span class="md-ellipsis">
-      get_llm
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="get_llm">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      Parameters
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#returns" class="md-nav__link">
-    <span class="md-ellipsis">
-      Returns
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#supported-models" class="md-nav__link">
-    <span class="md-ellipsis">
-      Supported Models
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#agent-creation-functions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Agent Creation Functions
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Agent Creation Functions">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#create_simple_gen_agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      create_simple_gen_agent
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="create_simple_gen_agent">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#parameters_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Parameters
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#create_evaluated_gen_agent" class="md-nav__link">
-    <span class="md-ellipsis">
-      create_evaluated_gen_agent
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="create_evaluated_gen_agent">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#parameters_2" class="md-nav__link">
-    <span class="md-ellipsis">
-      Parameters
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#flowstep-architecture" class="md-nav__link">
-    <span class="md-ellipsis">
-      Flow/Step Architecture
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Flow/Step Architecture">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#flow" class="md-nav__link">
-    <span class="md-ellipsis">
-      Flow
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Flow">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#main-methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      Main Methods
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#context" class="md-nav__link">
-    <span class="md-ellipsis">
-      Context
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Context">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#main-attributes-and-methods" class="md-nav__link">
-    <span class="md-ellipsis">
-      Main Attributes and Methods
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#agent-classes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Agent Classes
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Agent Classes">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#genagent" class="md-nav__link">
-    <span class="md-ellipsis">
-      GenAgent
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="GenAgent">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#main-methods_1" class="md-nav__link">
-    <span class="md-ellipsis">
-      Main Methods
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#clarifyagent" class="md-nav__link">
-    <span class="md-ellipsis">
-      ClarifyAgent
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tracing-functionality" class="md-nav__link">
-    <span class="md-ellipsis">
-      Tracing Functionality
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Tracing Functionality">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#enable_console_tracing" class="md-nav__link">
-    <span class="md-ellipsis">
-      enable_console_tracing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#disable_tracing" class="md-nav__link">
-    <span class="md-ellipsis">
-      disable_tracing
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#consoletracingprocessor" class="md-nav__link">
-    <span class="md-ellipsis">
-      ConsoleTracingProcessor
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#deprecated-apis" class="md-nav__link">
-    <span class="md-ellipsis">
-      Deprecated APIs
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Deprecated APIs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#agentpipeline-deprecated" class="md-nav__link">
-    <span class="md-ellipsis">
-      AgentPipeline (Deprecated)
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#architecture-diagram" class="md-nav__link">
-    <span class="md-ellipsis">
-      Architecture Diagram
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Usage Examples
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Usage Examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-usage-pattern" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Usage Pattern
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#complex-workflow-example" class="md-nav__link">
-    <span class="md-ellipsis">
-      Complex Workflow Example
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#contextprovider-interface" class="md-nav__link">
-    <span class="md-ellipsis">
-      ContextProvider Interface
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#built-in-providers" class="md-nav__link">
-    <span class="md-ellipsis">
-      Built-in Providers
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Built-in Providers">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#conversationhistoryprovider" class="md-nav__link">
-    <span class="md-ellipsis">
-      ConversationHistoryProvider
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fixedfileprovider" class="md-nav__link">
-    <span class="md-ellipsis">
-      FixedFileProvider
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sourcecodeprovider" class="md-nav__link">
-    <span class="md-ellipsis">
-      SourceCodeProvider
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cutcontextprovider" class="md-nav__link">
-    <span class="md-ellipsis">
-      CutContextProvider
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#refinireagent-extensions" class="md-nav__link">
-    <span class="md-ellipsis">
-      RefinireAgent Extensions
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-using-sourcecodeprovider" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example: Using SourceCodeProvider
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#example-yaml-like-multi-provider" class="md-nav__link">
-    <span class="md-ellipsis">
-      Example: YAML-like Multi-provider
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    <span class="md-ellipsis">
-      See Also
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1325,22 +830,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#classes-and-functions-overview" class="md-nav__link">
+  <a href="#_1" class="md-nav__link">
     <span class="md-ellipsis">
-      Classes and Functions Overview
+      クラス・関数一覧
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#unified-llm-interface" class="md-nav__link">
+  <a href="#llm" class="md-nav__link">
     <span class="md-ellipsis">
-      Unified LLM Interface
+      統一LLMインターフェース
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Unified LLM Interface">
+    <nav class="md-nav" aria-label="統一LLMインターフェース">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1354,27 +859,27 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
+  <a href="#_2" class="md-nav__link">
     <span class="md-ellipsis">
-      Parameters
+      引数
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#returns" class="md-nav__link">
+  <a href="#_3" class="md-nav__link">
     <span class="md-ellipsis">
-      Returns
+      戻り値
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#supported-models" class="md-nav__link">
+  <a href="#_4" class="md-nav__link">
     <span class="md-ellipsis">
-      Supported Models
+      サポートされるモデル
     </span>
   </a>
   
@@ -1391,13 +896,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agent-creation-functions" class="md-nav__link">
+  <a href="#_5" class="md-nav__link">
     <span class="md-ellipsis">
-      Agent Creation Functions
+      エージェント作成関数
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Agent Creation Functions">
+    <nav class="md-nav" aria-label="エージェント作成関数">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1411,9 +916,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#parameters_1" class="md-nav__link">
+  <a href="#_6" class="md-nav__link">
     <span class="md-ellipsis">
-      Parameters
+      引数
     </span>
   </a>
   
@@ -1435,9 +940,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#parameters_2" class="md-nav__link">
+  <a href="#_7" class="md-nav__link">
     <span class="md-ellipsis">
-      Parameters
+      引数
     </span>
   </a>
   
@@ -1454,13 +959,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#flowstep-architecture" class="md-nav__link">
+  <a href="#flowstep" class="md-nav__link">
     <span class="md-ellipsis">
-      Flow/Step Architecture
+      Flow/Stepアーキテクチャ
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Flow/Step Architecture">
+    <nav class="md-nav" aria-label="Flow/Stepアーキテクチャ">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1474,9 +979,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#main-methods" class="md-nav__link">
+  <a href="#_8" class="md-nav__link">
     <span class="md-ellipsis">
-      Main Methods
+      主要メソッド
     </span>
   </a>
   
@@ -1498,9 +1003,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#main-attributes-and-methods" class="md-nav__link">
+  <a href="#_9" class="md-nav__link">
     <span class="md-ellipsis">
-      Main Attributes and Methods
+      主要属性・メソッド
     </span>
   </a>
   
@@ -1517,13 +1022,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agent-classes" class="md-nav__link">
+  <a href="#_10" class="md-nav__link">
     <span class="md-ellipsis">
-      Agent Classes
+      エージェントクラス
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Agent Classes">
+    <nav class="md-nav" aria-label="エージェントクラス">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1537,9 +1042,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#main-methods_1" class="md-nav__link">
+  <a href="#_11" class="md-nav__link">
     <span class="md-ellipsis">
-      Main Methods
+      主要メソッド
     </span>
   </a>
   
@@ -1565,13 +1070,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tracing-functionality" class="md-nav__link">
+  <a href="#_12" class="md-nav__link">
     <span class="md-ellipsis">
-      Tracing Functionality
+      トレーシング機能
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Tracing Functionality">
+    <nav class="md-nav" aria-label="トレーシング機能">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1607,19 +1112,19 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deprecated-apis" class="md-nav__link">
+  <a href="#api_1" class="md-nav__link">
     <span class="md-ellipsis">
-      Deprecated APIs
+      非推奨API
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Deprecated APIs">
+    <nav class="md-nav" aria-label="非推奨API">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#agentpipeline-deprecated" class="md-nav__link">
+  <a href="#agentpipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      AgentPipeline (Deprecated)
+      AgentPipeline（非推奨）
     </span>
   </a>
   
@@ -1631,37 +1136,37 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#architecture-diagram" class="md-nav__link">
+  <a href="#_13" class="md-nav__link">
     <span class="md-ellipsis">
-      Architecture Diagram
+      アーキテクチャ図
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage-examples" class="md-nav__link">
+  <a href="#_14" class="md-nav__link">
     <span class="md-ellipsis">
-      Usage Examples
+      使用例
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Usage Examples">
+    <nav class="md-nav" aria-label="使用例">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#basic-usage-pattern" class="md-nav__link">
+  <a href="#_15" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Usage Pattern
+      基本的な使用パターン
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#complex-workflow-example" class="md-nav__link">
+  <a href="#_16" class="md-nav__link">
     <span class="md-ellipsis">
-      Complex Workflow Example
+      複雑なワークフローの例
     </span>
   </a>
   
@@ -1673,22 +1178,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#contextprovider-interface" class="md-nav__link">
+  <a href="#contextprovider" class="md-nav__link">
     <span class="md-ellipsis">
-      ContextProvider Interface
+      ContextProviderインターフェース
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#built-in-providers" class="md-nav__link">
+  <a href="#_17" class="md-nav__link">
     <span class="md-ellipsis">
-      Built-in Providers
+      標準プロバイダー
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Built-in Providers">
+    <nav class="md-nav" aria-label="標準プロバイダー">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1733,36 +1238,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#refinireagent-extensions" class="md-nav__link">
+  <a href="#refinireagent" class="md-nav__link">
     <span class="md-ellipsis">
-      RefinireAgent Extensions
+      RefinireAgent拡張
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-using-sourcecodeprovider" class="md-nav__link">
+  <a href="#sourcecodeprovider_1" class="md-nav__link">
     <span class="md-ellipsis">
-      Example: Using SourceCodeProvider
+      使用例: SourceCodeProviderの利用
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#example-yaml-like-multi-provider" class="md-nav__link">
+  <a href="#yaml" class="md-nav__link">
     <span class="md-ellipsis">
-      Example: YAML-like Multi-provider
+      使用例: YAMLライクな複数プロバイダー
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
+  <a href="#_18" class="md-nav__link">
     <span class="md-ellipsis">
-      See Also
+      関連ドキュメント
     </span>
   </a>
   
@@ -1787,79 +1292,79 @@
   
 
 
-<h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
-<p>This page provides detailed API reference for the Refinire package's main components.</p>
-<h2 id="classes-and-functions-overview">Classes and Functions Overview<a class="headerlink" href="#classes-and-functions-overview" title="Permanent link">&para;</a></h2>
+<h1 id="api">APIリファレンス<a class="headerlink" href="#api" title="Permanent link">&para;</a></h1>
+<p>このページでは、Refinire パッケージの主要APIの詳細なリファレンスを提供します。</p>
+<h2 id="_1">クラス・関数一覧<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
+<th>名前</th>
+<th>種別</th>
+<th>概要</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>get_llm</td>
-<td>Function</td>
-<td>Get LLM instance from model name and provider</td>
+<td>関数</td>
+<td>モデル名・プロバイダー名からLLMインスタンスを取得</td>
 </tr>
 <tr>
 <td>create_simple_gen_agent</td>
-<td>Function</td>
-<td>Create a simple generation agent</td>
+<td>関数</td>
+<td>シンプルな生成エージェントを作成</td>
 </tr>
 <tr>
 <td>create_evaluated_gen_agent</td>
-<td>Function</td>
-<td>Create a generation agent with evaluation capabilities</td>
+<td>関数</td>
+<td>評価機能付き生成エージェントを作成</td>
 </tr>
 <tr>
 <td>Flow</td>
-<td>Class</td>
-<td>Central workflow management class</td>
+<td>クラス</td>
+<td>ワークフロー管理の中心クラス</td>
 </tr>
 <tr>
 <td>GenAgent</td>
-<td>Class</td>
-<td>Agent class with generation and evaluation capabilities</td>
+<td>クラス</td>
+<td>生成・評価機能を持つエージェントクラス</td>
 </tr>
 <tr>
 <td>ClarifyAgent</td>
-<td>Class</td>
-<td>Interactive task clarification agent</td>
+<td>クラス</td>
+<td>対話型タスク明確化エージェント</td>
 </tr>
 <tr>
 <td>Context</td>
-<td>Class</td>
-<td>Context for sharing state between steps</td>
+<td>クラス</td>
+<td>ステップ間での状態共有用コンテキスト</td>
 </tr>
 <tr>
 <td>ConsoleTracingProcessor</td>
-<td>Class</td>
-<td>Console colored trace output processor</td>
+<td>クラス</td>
+<td>コンソール色分けトレース出力用プロセッサ</td>
 </tr>
 <tr>
 <td>enable_console_tracing</td>
-<td>Function</td>
-<td>Enable console tracing functionality</td>
+<td>関数</td>
+<td>コンソールトレーシングを有効化</td>
 </tr>
 <tr>
 <td>disable_tracing</td>
-<td>Function</td>
-<td>Disable all tracing functionality</td>
+<td>関数</td>
+<td>トレーシング機能をすべて無効化</td>
 </tr>
 <tr>
 <td>AgentPipeline</td>
-<td>Class</td>
-<td><strong>[Deprecated]</strong> Integrated pipeline for generation, evaluation, tools, and guardrails</td>
+<td>クラス</td>
+<td>【非推奨】生成・評価・ツール・ガードレールを統合したパイプライン</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="unified-llm-interface">Unified LLM Interface<a class="headerlink" href="#unified-llm-interface" title="Permanent link">&para;</a></h2>
+<h2 id="llm">統一LLMインターフェース<a class="headerlink" href="#llm" title="Permanent link">&para;</a></h2>
 <h3 id="get_llm">get_llm<a class="headerlink" href="#get_llm" title="Permanent link">&para;</a></h3>
-<p>Factory function for handling multiple LLM providers with a unified interface.</p>
+<p>複数のLLMプロバイダーを統一インターフェースで扱うためのファクトリ関数です。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_llm</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># OpenAI</span>
@@ -1871,77 +1376,77 @@
 </span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># Google Gemini</span>
 </span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm</span><span class="p">(</span><span class="s2">&quot;gemini-pro&quot;</span><span class="p">)</span>
 </span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Ollama (Local)</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Ollama（ローカル）</span>
 </span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">get_llm</span><span class="p">(</span><span class="s2">&quot;llama3.1:8b&quot;</span><span class="p">)</span>
 </span></code></pre></div>
-<h4 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h4>
+<h4 id="_2">引数<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Required/Optional</th>
-<th>Default</th>
-<th>Description</th>
+<th>名前</th>
+<th>型</th>
+<th>必須/オプション</th>
+<th>デフォルト</th>
+<th>説明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>model</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>LLM model name to use</td>
+<td>使用するLLMモデル名</td>
 </tr>
 <tr>
 <td>provider</td>
 <td>str</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>None</td>
-<td>Model provider name (auto-inferred if None)</td>
+<td>モデルのプロバイダー名（自動推論可）</td>
 </tr>
 <tr>
 <td>temperature</td>
 <td>float</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>0.3</td>
-<td>Sampling temperature (0.0-2.0)</td>
+<td>サンプリング温度（0.0-2.0）</td>
 </tr>
 <tr>
 <td>api_key</td>
 <td>str</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>None</td>
-<td>Provider API key</td>
+<td>プロバイダーAPIキー</td>
 </tr>
 <tr>
 <td>base_url</td>
 <td>str</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>None</td>
-<td>Provider API base URL</td>
+<td>プロバイダーAPIベースURL</td>
 </tr>
 <tr>
 <td>thinking</td>
 <td>bool</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>False</td>
-<td>Claude model thinking mode</td>
+<td>Claudeモデルの思考モード</td>
 </tr>
 <tr>
 <td>tracing</td>
 <td>bool</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>False</td>
-<td>Enable Agents SDK tracing</td>
+<td>Agents SDKのトレーシングを有効化するか</td>
 </tr>
 </tbody>
 </table>
-<h4 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h4>
+<h4 id="_3">戻り値<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h4>
 <ul>
-<li><strong>LLM Instance</strong>: LLM object for the specified provider</li>
+<li><strong>LLMインスタンス</strong>: 指定されたプロバイダーのLLMオブジェクト</li>
 </ul>
-<h4 id="supported-models">Supported Models<a class="headerlink" href="#supported-models" title="Permanent link">&para;</a></h4>
+<h4 id="_4">サポートされるモデル<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h4>
 <p><strong>OpenAI</strong>
 - gpt-4o, gpt-4o-mini
 - gpt-4-turbo, gpt-4
@@ -1958,154 +1463,154 @@
 - mistral:7b
 - codellama:7b</p>
 <hr />
-<h2 id="agent-creation-functions">Agent Creation Functions<a class="headerlink" href="#agent-creation-functions" title="Permanent link">&para;</a></h2>
+<h2 id="_5">エージェント作成関数<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
 <h3 id="create_simple_gen_agent">create_simple_gen_agent<a class="headerlink" href="#create_simple_gen_agent" title="Permanent link">&para;</a></h3>
-<p>Creates a simple generation agent.</p>
+<p>シンプルな生成エージェントを作成します。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;You are a helpful assistant.&quot;</span><span class="p">,</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;あなたは親切なアシスタントです。&quot;</span><span class="p">,</span>
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="p">)</span>
 </span></code></pre></div>
-<h4 id="parameters_1">Parameters<a class="headerlink" href="#parameters_1" title="Permanent link">&para;</a></h4>
+<h4 id="_6">引数<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Required/Optional</th>
-<th>Default</th>
-<th>Description</th>
+<th>名前</th>
+<th>型</th>
+<th>必須/オプション</th>
+<th>デフォルト</th>
+<th>説明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>name</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>Agent name</td>
+<td>エージェント名</td>
 </tr>
 <tr>
 <td>instructions</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>System prompt</td>
+<td>システムプロンプト</td>
 </tr>
 <tr>
 <td>model</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>Model name to use</td>
+<td>使用するモデル名</td>
 </tr>
 <tr>
 <td>tools</td>
 <td>list</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>None</td>
-<td>List of available tools</td>
+<td>使用可能なツールのリスト</td>
 </tr>
 </tbody>
 </table>
 <h3 id="create_evaluated_gen_agent">create_evaluated_gen_agent<a class="headerlink" href="#create_evaluated_gen_agent" title="Permanent link">&para;</a></h3>
-<p>Creates a generation agent with evaluation capabilities.</p>
+<p>評価機能付きの生成エージェントを作成します。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_evaluated_gen_agent</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">create_evaluated_gen_agent</span><span class="p">(</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;quality_assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate helpful responses.&quot;</span><span class="p">,</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;Evaluate accuracy and usefulness.&quot;</span><span class="p">,</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;役立つ回答を生成してください。&quot;</span><span class="p">,</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;正確性と有用性を評価してください。&quot;</span><span class="p">,</span>
 </span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">threshold</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span>
 </span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
 </span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
 </span></code></pre></div>
-<h4 id="parameters_2">Parameters<a class="headerlink" href="#parameters_2" title="Permanent link">&para;</a></h4>
+<h4 id="_7">引数<a class="headerlink" href="#_7" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Required/Optional</th>
-<th>Default</th>
-<th>Description</th>
+<th>名前</th>
+<th>型</th>
+<th>必須/オプション</th>
+<th>デフォルト</th>
+<th>説明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>name</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>Agent name</td>
+<td>エージェント名</td>
 </tr>
 <tr>
 <td>generation_instructions</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>Generation system prompt</td>
+<td>生成用システムプロンプト</td>
 </tr>
 <tr>
 <td>evaluation_instructions</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>Evaluation system prompt</td>
+<td>評価用システムプロンプト</td>
 </tr>
 <tr>
 <td>threshold</td>
 <td>float</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>Quality threshold (0-100)</td>
+<td>品質閾値（0-100）</td>
 </tr>
 <tr>
 <td>model</td>
 <td>str</td>
-<td>Required</td>
+<td>必須</td>
 <td>-</td>
-<td>Model name to use</td>
+<td>使用するモデル名</td>
 </tr>
 <tr>
 <td>tools</td>
 <td>list</td>
-<td>Optional</td>
+<td>オプション</td>
 <td>None</td>
-<td>List of available tools</td>
+<td>使用可能なツールのリスト</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="flowstep-architecture">Flow/Step Architecture<a class="headerlink" href="#flowstep-architecture" title="Permanent link">&para;</a></h2>
+<h2 id="flowstep">Flow/Stepアーキテクチャ<a class="headerlink" href="#flowstep" title="Permanent link">&para;</a></h2>
 <h3 id="flow">Flow<a class="headerlink" href="#flow" title="Permanent link">&para;</a></h3>
-<p>Central workflow management class. Create complex processing flows by combining multiple steps.</p>
+<p>ワークフロー管理の中心クラスです。複数のステップを組み合わせて複雑な処理フローを作成できます。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">FunctionStep</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Simple Flow</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># シンプルなFlow</span>
 </span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">gen_agent</span><span class="p">)</span>
 </span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Multi-step Flow</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># 複数ステップのFlow</span>
 </span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">([</span>
 </span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="p">(</span><span class="s2">&quot;step1&quot;</span><span class="p">,</span> <span class="n">FunctionStep</span><span class="p">(</span><span class="s2">&quot;step1&quot;</span><span class="p">,</span> <span class="n">func1</span><span class="p">)),</span>
 </span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>    <span class="p">(</span><span class="s2">&quot;step2&quot;</span><span class="p">,</span> <span class="n">FunctionStep</span><span class="p">(</span><span class="s2">&quot;step2&quot;</span><span class="p">,</span> <span class="n">func2</span><span class="p">))</span>
 </span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="p">])</span>
 </span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1"># Execute</span>
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;input data&quot;</span><span class="p">))</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="c1"># 実行</span>
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="n">result</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;入力データ&quot;</span><span class="p">))</span>
 </span></code></pre></div>
-<h4 id="main-methods">Main Methods<a class="headerlink" href="#main-methods" title="Permanent link">&para;</a></h4>
+<h4 id="_8">主要メソッド<a class="headerlink" href="#_8" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Method Name</th>
-<th>Parameters</th>
-<th>Return Value</th>
-<th>Description</th>
+<th>メソッド名</th>
+<th>引数</th>
+<th>戻り値</th>
+<th>説明</th>
 </tr>
 </thead>
 <tbody>
@@ -2113,79 +1618,79 @@
 <td>run</td>
 <td>input_data: Any</td>
 <td>Context</td>
-<td>Execute workflow asynchronously</td>
+<td>ワークフローを非同期実行</td>
 </tr>
 <tr>
 <td>run_sync</td>
 <td>input_data: Any</td>
 <td>Context</td>
-<td>Execute workflow synchronously</td>
+<td>ワークフローを同期実行</td>
 </tr>
 <tr>
 <td>show</td>
 <td>-</td>
 <td>None</td>
-<td>Visualize workflow structure</td>
+<td>ワークフロー構造を可視化</td>
 </tr>
 </tbody>
 </table>
 <h3 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h3>
-<p>Context class for sharing state between steps.</p>
+<p>ステップ間での状態共有に使用するコンテキストクラスです。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">Context</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 </span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">ctx</span> <span class="o">=</span> <span class="n">Context</span><span class="p">()</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">ctx</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;key&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;value&quot;</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">ctx</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>  <span class="c1"># End workflow</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">ctx</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>  <span class="c1"># ワークフロー終了</span>
 </span></code></pre></div>
-<h4 id="main-attributes-and-methods">Main Attributes and Methods<a class="headerlink" href="#main-attributes-and-methods" title="Permanent link">&para;</a></h4>
+<h4 id="_9">主要属性・メソッド<a class="headerlink" href="#_9" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
+<th>名前</th>
+<th>型</th>
+<th>説明</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>shared_state</td>
 <td>dict</td>
-<td>State shared between steps</td>
+<td>ステップ間で共有される状態</td>
 </tr>
 <tr>
 <td>user_input</td>
 <td>Any</td>
-<td>User input data</td>
+<td>ユーザー入力データ</td>
 </tr>
 <tr>
 <td>finish()</td>
-<td>Method</td>
-<td>Signal workflow completion</td>
+<td>メソッド</td>
+<td>ワークフロー終了を指示</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="agent-classes">Agent Classes<a class="headerlink" href="#agent-classes" title="Permanent link">&para;</a></h2>
+<h2 id="_10">エージェントクラス<a class="headerlink" href="#_10" title="Permanent link">&para;</a></h2>
 <h3 id="genagent">GenAgent<a class="headerlink" href="#genagent" title="Permanent link">&para;</a></h3>
-<p>Agent class with generation and evaluation capabilities. Can be used as a step within Flow.</p>
+<p>生成・評価機能を持つエージェントクラスです。Flow内でのステップとして使用できます。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">GenAgent</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
 </span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">GenAgent</span><span class="p">(</span>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;generator&quot;</span><span class="p">,</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate text.&quot;</span><span class="p">,</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;Evaluate quality.&quot;</span><span class="p">,</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;文章を生成してください。&quot;</span><span class="p">,</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;品質を評価してください。&quot;</span><span class="p">,</span>
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
 </span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">threshold</span><span class="o">=</span><span class="mf">75.0</span>
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="p">)</span>
 </span></code></pre></div>
-<h4 id="main-methods_1">Main Methods<a class="headerlink" href="#main-methods_1" title="Permanent link">&para;</a></h4>
+<h4 id="_11">主要メソッド<a class="headerlink" href="#_11" title="Permanent link">&para;</a></h4>
 <table>
 <thead>
 <tr>
-<th>Method Name</th>
-<th>Parameters</th>
-<th>Return Value</th>
-<th>Description</th>
+<th>メソッド名</th>
+<th>引数</th>
+<th>戻り値</th>
+<th>説明</th>
 </tr>
 </thead>
 <tbody>
@@ -2193,42 +1698,42 @@
 <td>run</td>
 <td>user_input: str, ctx: Context</td>
 <td>Context</td>
-<td>Execute agent asynchronously</td>
+<td>エージェントを非同期実行</td>
 </tr>
 <tr>
 <td>run_sync</td>
 <td>user_input: str, ctx: Context</td>
 <td>Context</td>
-<td>Execute agent synchronously</td>
+<td>エージェントを同期実行</td>
 </tr>
 </tbody>
 </table>
 <h3 id="clarifyagent">ClarifyAgent<a class="headerlink" href="#clarifyagent" title="Permanent link">&para;</a></h3>
-<p>Interactive task clarification agent. Asks questions to clarify unclear requests.</p>
+<p>対話型タスク明確化エージェントです。不明確な要求を明確化するための質問を行います。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClarifyAgent</span>
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">ClarifyAgent</span><span class="p">(</span>
 </span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;clarifier&quot;</span><span class="p">,</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;Clarify user requirements.&quot;</span><span class="p">,</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;ユーザーの要求を明確化してください。&quot;</span><span class="p">,</span>
 </span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
 </span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="p">)</span>
 </span></code></pre></div>
 <hr />
-<h2 id="tracing-functionality">Tracing Functionality<a class="headerlink" href="#tracing-functionality" title="Permanent link">&para;</a></h2>
+<h2 id="_12">トレーシング機能<a class="headerlink" href="#_12" title="Permanent link">&para;</a></h2>
 <h3 id="enable_console_tracing">enable_console_tracing<a class="headerlink" href="#enable_console_tracing" title="Permanent link">&para;</a></h3>
-<p>Enable colored console tracing.</p>
+<p>コンソールでの色分けトレーシングを有効化します。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">enable_console_tracing</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">enable_console_tracing</span><span class="p">()</span>
 </span></code></pre></div>
 <h3 id="disable_tracing">disable_tracing<a class="headerlink" href="#disable_tracing" title="Permanent link">&para;</a></h3>
-<p>Disable all tracing functionality.</p>
+<p>全てのトレーシング機能を無効化します。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">disable_tracing</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">disable_tracing</span><span class="p">()</span>
 </span></code></pre></div>
 <h3 id="consoletracingprocessor">ConsoleTracingProcessor<a class="headerlink" href="#consoletracingprocessor" title="Permanent link">&para;</a></h3>
-<p>Class for custom trace processing.</p>
+<p>カスタムトレース処理用のクラスです。</p>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire.tracing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConsoleTracingProcessor</span>
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">processor</span> <span class="o">=</span> <span class="n">ConsoleTracingProcessor</span><span class="p">(</span>
@@ -2237,22 +1742,22 @@
 </span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="p">)</span>
 </span></code></pre></div>
 <hr />
-<h2 id="deprecated-apis">Deprecated APIs<a class="headerlink" href="#deprecated-apis" title="Permanent link">&para;</a></h2>
-<h3 id="agentpipeline-deprecated">AgentPipeline (Deprecated)<a class="headerlink" href="#agentpipeline-deprecated" title="Permanent link">&para;</a></h3>
-<p>⚠️ <strong>Important</strong>: <code>AgentPipeline</code> will be removed in v0.1.0. Use <code>GenAgent + Flow</code> for new code.</p>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Deprecated - Do not use in new code</span>
+<h2 id="api_1">非推奨API<a class="headerlink" href="#api_1" title="Permanent link">&para;</a></h2>
+<h3 id="agentpipeline">AgentPipeline（非推奨）<a class="headerlink" href="#agentpipeline" title="Permanent link">&para;</a></h3>
+<p>⚠️ <strong>重要</strong>: <code>AgentPipeline</code>は v0.1.0 で削除される予定です。新しいコードでは <code>GenAgent + Flow</code> を使用してください。</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># 非推奨 - 新しいコードでは使用しないでください</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">AgentPipeline</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">AgentPipeline</span><span class="p">(</span>
 </span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="p">,</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Generate text.&quot;</span><span class="p">,</span>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;Evaluate quality.&quot;</span><span class="p">,</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;文章を生成してください。&quot;</span><span class="p">,</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;品質を評価してください。&quot;</span><span class="p">,</span>
 </span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span>
 </span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>    <span class="n">threshold</span><span class="o">=</span><span class="mi">80</span>
 </span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="p">)</span>
 </span></code></pre></div>
 <hr />
-<h2 id="architecture-diagram">Architecture Diagram<a class="headerlink" href="#architecture-diagram" title="Permanent link">&para;</a></h2>
+<h2 id="_13">アーキテクチャ図<a class="headerlink" href="#_13" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>classDiagram
     class Flow {
         +run(input_data)
@@ -2281,29 +1786,29 @@
     Flow --&gt; Context
     GenAgent --&gt; Context
     ClarifyAgent --&gt; Context</code></pre>
-<h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
-<h3 id="basic-usage-pattern">Basic Usage Pattern<a class="headerlink" href="#basic-usage-pattern" title="Permanent link">&para;</a></h3>
+<h2 id="_14">使用例<a class="headerlink" href="#_14" title="Permanent link">&para;</a></h2>
+<h3 id="_15">基本的な使用パターン<a class="headerlink" href="#_15" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_simple_gen_agent</span><span class="p">,</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">Context</span>
 </span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># 1. Create agent</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># 1. エージェント作成</span>
 </span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">create_simple_gen_agent</span><span class="p">(</span>
 </span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;assistant&quot;</span><span class="p">,</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;Respond as a helpful assistant.&quot;</span><span class="p">,</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="n">instructions</span><span class="o">=</span><span class="s2">&quot;親切なアシスタントとして回答してください。&quot;</span><span class="p">,</span>
 </span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
 </span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="p">)</span>
 </span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>
-</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1"># 2. Create flow</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="c1"># 2. フロー作成</span>
 </span><span id="__span-11-12"><a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="n">flow</span> <span class="o">=</span> <span class="n">Flow</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="n">agent</span><span class="p">)</span>
 </span><span id="__span-11-13"><a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a>
-</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="c1"># 3. Execute</span>
+</span><span id="__span-11-14"><a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="c1"># 3. 実行</span>
 </span><span id="__span-11-15"><a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span>
+</span><span id="__span-11-16"><a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a>    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;こんにちは&quot;</span><span class="p">)</span>
 </span><span id="__span-11-17"><a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;assistant_result&quot;</span><span class="p">])</span>
 </span><span id="__span-11-18"><a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a>
 </span><span id="__span-11-19"><a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </span></code></pre></div>
-<h3 id="complex-workflow-example">Complex Workflow Example<a class="headerlink" href="#complex-workflow-example" title="Permanent link">&para;</a></h3>
+<h3 id="_16">複雑なワークフローの例<a class="headerlink" href="#_16" title="Permanent link">&para;</a></h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flow</span><span class="p">,</span> <span class="n">FunctionStep</span><span class="p">,</span> <span class="n">create_evaluated_gen_agent</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 </span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>
@@ -2313,15 +1818,15 @@
 </span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
 </span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="n">agent</span> <span class="o">=</span> <span class="n">create_evaluated_gen_agent</span><span class="p">(</span>
 </span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;analyzer&quot;</span><span class="p">,</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;Analyze the input.&quot;</span><span class="p">,</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;Evaluate analysis accuracy.&quot;</span><span class="p">,</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>    <span class="n">generation_instructions</span><span class="o">=</span><span class="s2">&quot;入力を分析してください。&quot;</span><span class="p">,</span>
+</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>    <span class="n">evaluation_instructions</span><span class="o">=</span><span class="s2">&quot;分析の正確性を評価してください。&quot;</span><span class="p">,</span>
 </span><span id="__span-12-12"><a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>    <span class="n">threshold</span><span class="o">=</span><span class="mf">80.0</span><span class="p">,</span>
 </span><span id="__span-12-13"><a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o-mini&quot;</span>
 </span><span id="__span-12-14"><a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="p">)</span>
 </span><span id="__span-12-15"><a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>
 </span><span id="__span-12-16"><a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="k">def</span><span class="w"> </span><span class="nf">postprocess</span><span class="p">(</span><span class="n">user_input</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">Context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Context</span><span class="p">:</span>
 </span><span id="__span-12-17"><a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">shared_state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;analyzer_result&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>    <span class="n">ctx</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;final_result&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Final result: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-12-18"><a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>    <span class="n">ctx</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;final_result&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;最終結果: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
 </span><span id="__span-12-19"><a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>    <span class="n">ctx</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
 </span><span id="__span-12-20"><a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>    <span class="k">return</span> <span class="n">ctx</span>
 </span><span id="__span-12-21"><a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>
@@ -2332,73 +1837,73 @@
 </span><span id="__span-12-26"><a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a><span class="p">])</span>
 </span><span id="__span-12-27"><a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>
 </span><span id="__span-12-28"><a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
-</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;  Analyze this text  &quot;</span><span class="p">)</span>
+</span><span id="__span-12-29"><a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>    <span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">flow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="s2">&quot;  テキストを分析して  &quot;</span><span class="p">)</span>
 </span><span id="__span-12-30"><a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">shared_state</span><span class="p">[</span><span class="s2">&quot;final_result&quot;</span><span class="p">])</span>
 </span><span id="__span-12-31"><a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a>
 </span><span id="__span-12-32"><a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
 </span></code></pre></div>
-<h2 id="contextprovider-interface">ContextProvider Interface<a class="headerlink" href="#contextprovider-interface" title="Permanent link">&para;</a></h2>
+<h2 id="contextprovider">ContextProviderインターフェース<a class="headerlink" href="#contextprovider" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Class/Method</th>
-<th>Description (EN)</th>
-<th>Arguments / Returns</th>
+<th>クラス/メソッド</th>
+<th>説明</th>
+<th>引数 / 戻り値</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>ContextProvider</code></td>
-<td>Abstract base for all context providers.</td>
+<td>すべてのコンテキストプロバイダーの抽象基底クラス。</td>
 <td></td>
 </tr>
 <tr>
 <td><code>provider_name</code></td>
-<td>Provider name (class variable).</td>
+<td>プロバイダー名（クラス変数）。</td>
 <td><code>str</code></td>
 </tr>
 <tr>
 <td><code>get_config_schema</code></td>
-<td>Returns config schema for the provider.</td>
+<td>プロバイダーの設定スキーマを返す。</td>
 <td><code>classmethod</code> → <code>Dict[str, Any]</code></td>
 </tr>
 <tr>
 <td><code>from_config</code></td>
-<td>Instantiates provider from config dict.</td>
-<td><code>classmethod</code> → instance</td>
+<td>設定辞書からプロバイダーを生成。</td>
+<td><code>classmethod</code> → インスタンス</td>
 </tr>
 <tr>
 <td><code>get_context</code></td>
-<td>Returns context string for a query.</td>
+<td>クエリに対するコンテキスト文字列を返す。</td>
 <td><code>query: str, previous_context: Optional[str], **kwargs</code> → <code>str</code></td>
 </tr>
 <tr>
 <td><code>update</code></td>
-<td>Updates provider state with new interaction.</td>
+<td>新しい対話でプロバイダー状態を更新。</td>
 <td><code>interaction: Dict[str, Any]</code></td>
 </tr>
 <tr>
 <td><code>clear</code></td>
-<td>Clears provider state.</td>
+<td>プロバイダー状態をクリア。</td>
 <td></td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="built-in-providers">Built-in Providers<a class="headerlink" href="#built-in-providers" title="Permanent link">&para;</a></h2>
+<h2 id="_17">標準プロバイダー<a class="headerlink" href="#_17" title="Permanent link">&para;</a></h2>
 <h3 id="conversationhistoryprovider">ConversationHistoryProvider<a class="headerlink" href="#conversationhistoryprovider" title="Permanent link">&para;</a></h3>
-<p>Manages conversation history.</p>
-<p><strong>Configuration Example:</strong>
+<p>会話履歴を管理するプロバイダーです。</p>
+<p><strong>設定例:</strong>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="p">{</span>
 </span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;conversation_history&quot;</span><span class="p">,</span>
 </span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="s2">&quot;max_items&quot;</span><span class="p">:</span> <span class="mi">10</span>
 </span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="p">}</span>
 </span></code></pre></div></p>
-<p><strong>Parameters:</strong>
-- <code>max_items</code> (int): Maximum number of messages to keep (default: 10)</p>
+<p><strong>パラメータ:</strong>
+- <code>max_items</code> (int): 保持する最大メッセージ数（デフォルト: 10）</p>
 <h3 id="fixedfileprovider">FixedFileProvider<a class="headerlink" href="#fixedfileprovider" title="Permanent link">&para;</a></h3>
-<p>Always provides content from specified files.</p>
-<p><strong>Configuration Example:</strong>
+<p>指定されたファイルの内容を常に提供するプロバイダーです。</p>
+<p><strong>設定例:</strong>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="p">{</span>
 </span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;fixed_file&quot;</span><span class="p">,</span>
 </span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="s2">&quot;file_path&quot;</span><span class="p">:</span> <span class="s2">&quot;config.yaml&quot;</span><span class="p">,</span>
@@ -2406,13 +1911,13 @@
 </span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="s2">&quot;check_updates&quot;</span><span class="p">:</span> <span class="kc">True</span>
 </span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="p">}</span>
 </span></code></pre></div></p>
-<p><strong>Parameters:</strong>
-- <code>file_path</code> (str, required): Path to the file to read
-- <code>encoding</code> (str): File encoding (default: "utf-8")
-- <code>check_updates</code> (bool): Whether to check for file updates (default: True)</p>
+<p><strong>パラメータ:</strong>
+- <code>file_path</code> (str, 必須): 読み取るファイルのパス
+- <code>encoding</code> (str): ファイルエンコーディング（デフォルト: "utf-8"）
+- <code>check_updates</code> (bool): ファイル更新をチェックするか（デフォルト: True）</p>
 <h3 id="sourcecodeprovider">SourceCodeProvider<a class="headerlink" href="#sourcecodeprovider" title="Permanent link">&para;</a></h3>
-<p>Automatically searches for source code related to user questions.</p>
-<p><strong>Configuration Example:</strong>
+<p>ユーザーの質問に関連するソースコードを自動検索するプロバイダーです。</p>
+<p><strong>設定例:</strong>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="p">{</span>
 </span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;source_code&quot;</span><span class="p">,</span>
 </span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="s2">&quot;base_path&quot;</span><span class="p">:</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span>
@@ -2423,16 +1928,16 @@
 </span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>    <span class="s2">&quot;exclude_patterns&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;tests/**/*&quot;</span><span class="p">]</span>
 </span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="p">}</span>
 </span></code></pre></div></p>
-<p><strong>Parameters:</strong>
-- <code>base_path</code> (str): Base directory path for codebase analysis (default: ".")
-- <code>max_files</code> (int): Maximum number of files to include in context (default: 50)
-- <code>max_file_size</code> (int): Maximum file size in bytes to read (default: 10000)
-- <code>file_extensions</code> (list): List of file extensions to include
-- <code>include_patterns</code> (list): List of patterns to include
-- <code>exclude_patterns</code> (list): List of patterns to exclude</p>
+<p><strong>パラメータ:</strong>
+- <code>base_path</code> (str): コードベース分析のベースディレクトリ（デフォルト: "."）
+- <code>max_files</code> (int): コンテキストに含める最大ファイル数（デフォルト: 50）
+- <code>max_file_size</code> (int): 読み込む最大ファイルサイズ（バイト）（デフォルト: 10000）
+- <code>file_extensions</code> (list): 含めるファイル拡張子のリスト
+- <code>include_patterns</code> (list): 含めるファイルパターンのリスト
+- <code>exclude_patterns</code> (list): 除外するファイルパターンのリスト</p>
 <h3 id="cutcontextprovider">CutContextProvider<a class="headerlink" href="#cutcontextprovider" title="Permanent link">&para;</a></h3>
-<p>Compresses context to specified length.</p>
-<p><strong>Configuration Example:</strong>
+<p>コンテキストを指定された長さに圧縮するプロバイダーです。</p>
+<p><strong>設定例:</strong>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="p">{</span>
 </span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;cut_context&quot;</span><span class="p">,</span>
 </span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    <span class="s2">&quot;provider&quot;</span><span class="p">:</span> <span class="p">{</span>
@@ -2446,42 +1951,42 @@
 </span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>    <span class="s2">&quot;preserve_sections&quot;</span><span class="p">:</span> <span class="kc">True</span>
 </span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="p">}</span>
 </span></code></pre></div></p>
-<p><strong>Parameters:</strong>
-- <code>provider</code> (dict, required): Configuration for the wrapped context provider
-- <code>max_chars</code> (int): Maximum character count (None for no limit)
-- <code>max_tokens</code> (int): Maximum token count (None for no limit)
-- <code>cut_strategy</code> (str): How to cut the context ("start", "end", "middle") (default: "end")
-- <code>preserve_sections</code> (bool): Whether to preserve complete sections when cutting (default: True)</p>
+<p><strong>パラメータ:</strong>
+- <code>provider</code> (dict, 必須): ラップするコンテキストプロバイダーの設定
+- <code>max_chars</code> (int): 最大文字数（Noneで制限なし）
+- <code>max_tokens</code> (int): 最大トークン数（Noneで制限なし）
+- <code>cut_strategy</code> (str): カット戦略（"start", "end", "middle"）（デフォルト: "end"）
+- <code>preserve_sections</code> (bool): カット時に完全なセクションを保持するか（デフォルト: True）</p>
 <hr />
-<h2 id="refinireagent-extensions">RefinireAgent Extensions<a class="headerlink" href="#refinireagent-extensions" title="Permanent link">&para;</a></h2>
+<h2 id="refinireagent">RefinireAgent拡張<a class="headerlink" href="#refinireagent" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Class/Method</th>
-<th>Description (EN)</th>
-<th>Arguments / Returns</th>
+<th>クラス/メソッド</th>
+<th>説明</th>
+<th>引数 / 戻り値</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><code>context_providers_config</code></td>
-<td>List/dict/YAML string for context provider config.</td>
+<td>コンテキストプロバイダー設定（リスト/辞書/YAML文字列）。</td>
 <td><code>List[dict]</code>/<code>str</code></td>
 </tr>
 <tr>
 <td><code>get_context_provider_schemas</code></td>
-<td>Returns schemas for all available providers.</td>
+<td>利用可能な全プロバイダーのスキーマを返す。</td>
 <td><code>classmethod</code> → <code>Dict[str, Any]</code></td>
 </tr>
 <tr>
 <td><code>clear_context</code></td>
-<td>Clears all context providers.</td>
+<td>すべてのコンテキストプロバイダーをクリア。</td>
 <td></td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="example-using-sourcecodeprovider">Example: Using SourceCodeProvider<a class="headerlink" href="#example-using-sourcecodeprovider" title="Permanent link">&para;</a></h2>
+<h2 id="sourcecodeprovider_1">使用例: SourceCodeProviderの利用<a class="headerlink" href="#sourcecodeprovider_1" title="Permanent link">&para;</a></h2>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">refinire.agents.context_provider_factory</span><span class="w"> </span><span class="kn">import</span> <span class="n">ContextProviderFactory</span>
 </span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
 </span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
@@ -2490,11 +1995,11 @@
 </span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="s2">&quot;max_files&quot;</span><span class="p">:</span> <span class="mi">5</span>
 </span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="p">}</span>
 </span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">ContextProviderFactory</span><span class="o">.</span><span class="n">create_provider</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="n">context</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;How does the pipeline work?&quot;</span><span class="p">)</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="n">context</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="s2">&quot;パイプラインの仕組みは？&quot;</span><span class="p">)</span>
 </span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="nb">print</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
-<h2 id="example-yaml-like-multi-provider">Example: YAML-like Multi-provider<a class="headerlink" href="#example-yaml-like-multi-provider" title="Permanent link">&para;</a></h2>
+<h2 id="yaml">使用例: YAMLライクな複数プロバイダー<a class="headerlink" href="#yaml" title="Permanent link">&para;</a></h2>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">conversation_history</span><span class="p">:</span>
 </span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">    </span><span class="nt">max_items</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 </span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source_code</span><span class="p">:</span>
@@ -2508,11 +2013,11 @@
 </span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">    </span><span class="nt">cut_strategy</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">end</span>
 </span></code></pre></div>
 <hr />
-<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="_18">関連ドキュメント<a class="headerlink" href="#_18" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>docs/api_reference_ja.md</code> (Japanese)</li>
-<li><code>docs/context_management.md</code> (Design)</li>
-<li><code>examples/context_management_example.py</code> (Usage)</li>
+<li><code>docs/api_reference.md</code>（英語）</li>
+<li><code>docs/context_management.md</code>（設計）</li>
+<li><code>examples/context_management_example.py</code>（使用例） </li>
 </ul>
 
 

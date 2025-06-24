@@ -1,4 +1,4 @@
-from agents.tracing import TracingProcessor, add_trace_processor
+﻿from agents.tracing import TracingProcessor, add_trace_processor
 from agents.tracing.span_data import GenerationSpanData, ResponseSpanData
 
 def _merge_msgs(msgs, role):  # ユーティリティ
@@ -21,7 +21,7 @@ class UnifiedLogger(TracingProcessor):
 
 add_trace_processor(UnifiedLogger())
 
-from agents_sdk_models import get_llm
+from refinire import get_llm
 
 if __name__ == "__main__":
     llm = get_llm("gpt-4o-mini")
