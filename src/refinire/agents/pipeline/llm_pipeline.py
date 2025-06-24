@@ -16,10 +16,12 @@ from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
 from agents import Agent, Runner
+from agents import FunctionTool
 from pydantic import BaseModel, ValidationError
 
 from ..flow.context import Context
-from ...core.tracing import TraceRegistry
+from ...core.trace_registry import TraceRegistry
+from ...core import PromptReference
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +93,7 @@ class RefinireAgent:
         history_size: int = 10,
         improvement_callback: Optional[Callable[[LLMResult, EvaluationResult], str]] = None,
         locale: str = "en",
-        tools: Optional[List[Dict]] = None,
+        tools: Optional[List[Callable]] = None,
         mcp_servers: Optional[List[str]] = None
     ) -> None:
         """
@@ -163,142 +165,36 @@ class RefinireAgent:
         # Tools and MCP support
         self.tools = tools or []
         self.mcp_servers = mcp_servers or []
-        self.tool_handlers = {}  # Initialize tool handlers dictionary
+        self.tool_handlers = {}
         
-        # Initialize OpenAI Agents SDK Agent
-        # OpenAI Agents SDK Agentを初期化
-        self._sdk_tools = []
-        
-        # Process tools if provided
-        # ツールが提供されている場合は処理
-        if tools:
-            for i, tool in enumerate(tools):
-                if callable(tool) or isinstance(tool, FunctionTool):
-                    self._sdk_tools.append(tool)
-                elif isinstance(tool, dict):
-                    self.add_tool(tool)
-        
-        # Create SDK agent with tools
-        # ツール付きでSDKエージェントを作成
+        # OpenAI Agents SDK Agentを初期化（Study 5と同じ方法）
         self._sdk_agent = Agent(
             name=f"{name}_sdk_agent",
             instructions=self.generation_instructions,
-            tools=self._sdk_tools
+            tools=self.tools
         )
-        
-        # Initialize OpenAI clients for fallback
-        # フォールバック用のOpenAIクライアントを初期化
-        self.sync_client = OpenAI()
-        self.async_client = AsyncOpenAI()
     
     def run(self, user_input: str) -> LLMResult:
         """
         Run the agent synchronously by waiting for async completion
         非同期完了を待ってエージェントを同期的に実行する
-        
-        Args:
-            user_input: User input / ユーザー入力
-            
-        Returns:
-            LLMResult: Generation result / 生成結果
         """
         try:
             # Check if we're already in an event loop
             try:
                 loop = asyncio.get_running_loop()
                 # If we're in a loop, use nest_asyncio or fallback
-                try:
-                    import nest_asyncio
-                    nest_asyncio.apply()
-                    future = asyncio.ensure_future(self.run_async(user_input))
-                    return loop.run_until_complete(future)
-                except ImportError:
-                    # Fallback to direct API if nest_asyncio not available
-                    return self._generate_content_fallback_with_retries(user_input)
+                import nest_asyncio
+                nest_asyncio.apply()
+                future = asyncio.ensure_future(self.run_async(user_input))
+                return loop.run_until_complete(future)
             except RuntimeError:
                 # No running loop, we can create one
                 return asyncio.run(self.run_async(user_input))
         except Exception as e:
-            # Fallback to direct API if async method fails
-            warnings.warn(f"Async execution failed, falling back to direct API: {e}")
-            return self._generate_content_fallback_with_retries(user_input)
-    
-    def _generate_content_fallback_with_retries(self, user_input: str) -> LLMResult:
-        """
-        Fallback generation with retries using direct API
-        直接APIを使用したリトライ付きフォールバック生成
-        """
-        full_prompt = self._build_prompt(user_input)
-        
-        for attempt in range(1, self.max_retries + 1):
-            try:
-                generation_result = self._generate_content_fallback(full_prompt)
-                
-                # Output validation
-                if not self._validate_output(generation_result):
-                    if attempt < self.max_retries:
-                        continue
-                    return LLMResult(
-                        content=None,
-                        success=False,
-                        metadata={"error": "Output validation failed", "attempts": attempt, "fallback": True}
-                    )
-                
-                # Parse structured output if model specified
-                parsed_content = self._parse_structured_output(generation_result)
-                
-                # Evaluate if evaluation instructions provided
-                evaluation_result = None
-                if self.evaluation_instructions:
-                    evaluation_result = self._evaluate_content(user_input, parsed_content)
-                    
-                    # Check if evaluation passed
-                    if not evaluation_result.passed and attempt < self.max_retries:
-                        # Generate improvement if callback provided
-                        if self.improvement_callback:
-                            improvement = self.improvement_callback(
-                                LLMResult(content=parsed_content, success=True),
-                                evaluation_result
-                            )
-                            full_prompt = f"{full_prompt}\n\nImprovement needed: {improvement}"
-                        continue
-                
-                # Success - store in history and return
-                metadata = {
-                    "model": self.model,
-                    "temperature": self.temperature,
-                    "attempts": attempt,
-                    "fallback": True
-                }
-                
-                result = LLMResult(
-                    content=parsed_content,
-                    success=True,
-                    metadata=metadata,
-                    evaluation_score=evaluation_result.score if evaluation_result else None,
-                    attempts=attempt
-                )
-                self._store_in_history(user_input, result)
-                return result
-                
-            except Exception as e:
-                if attempt == self.max_retries:
-                    return LLMResult(
-                        content=None,
-                        success=False,
-                        metadata={"error": str(e), "attempts": attempt, "fallback": True}
-                    )
-                continue
-        
-        # Should not reach here
-        return LLMResult(
-            content=None,
-            success=False,
-            metadata={"error": "Maximum retries exceeded", "fallback": True}
-        )
+            raise RuntimeError(f"Async execution failed: {e}")
     
     async def run_async(self, user_input: str) -> LLMResult:
-        # Input validation
         if not self._validate_input(user_input):
             return LLMResult(
                 content=None,
@@ -306,34 +202,20 @@ class RefinireAgent:
                 metadata={"error": "Input validation failed", "input": user_input}
             )
         
-        # Build prompt with history
-        if self._sdk_tools:
-            # If tools are available, use only user input (instructions are in Agent)
-            # ツールが利用可能な場合、ユーザー入力のみを使用（指示文はAgentに含まれる）
-            full_prompt = user_input
-        else:
-            # For non-tool agents, include history but not instructions (Agent already has them)
-            # ツールなしエージェントの場合は履歴を含めるが指示文は除く（Agentは既に持っている）
-            full_prompt = self._build_prompt(user_input, include_instructions=False)
+        # 会話履歴とユーザー入力を含むプロンプトを構築（指示文は除く）
+        full_prompt = self._build_prompt(user_input, include_instructions=False)
         
-        # Generation with retries using OpenAI Agents SDK
         for attempt in range(1, self.max_retries + 1):
             try:
-                # Use OpenAI Agents SDK Runner
+                # full_promptを使用してRunner.runを呼び出し
                 result = await Runner.run(self._sdk_agent, full_prompt)
-                
-                # Extract content from result
                 content = result.final_output
                 if not content and hasattr(result, 'output') and result.output:
                     content = result.output
-                
-                # Parse structured output if model specified
                 if self.output_model and content:
                     parsed_content = self._parse_structured_output(content)
                 else:
                     parsed_content = content
-                
-                # Output validation
                 if not self._validate_output(parsed_content):
                     if attempt < self.max_retries:
                         continue
@@ -342,49 +224,25 @@ class RefinireAgent:
                         success=False,
                         metadata={"error": "Output validation failed", "attempts": attempt}
                     )
-                
-                # Evaluate if evaluation instructions provided
-                evaluation_result = None
-                if self.evaluation_instructions:
-                    evaluation_result = self._evaluate_content(user_input, parsed_content)
-                    
-                    # Check if evaluation passed
-                    if not evaluation_result.passed and attempt < self.max_retries:
-                        # Generate improvement if callback provided
-                        if self.improvement_callback:
-                            improvement = self.improvement_callback(
-                                LLMResult(content=parsed_content, success=True),
-                                evaluation_result
-                            )
-                            full_prompt = f"{full_prompt}\n\nImprovement needed: {improvement}"
-                        continue
-                
-                # Success - store in history and return
                 metadata = {
                     "model": self.model,
                     "temperature": self.temperature,
                     "attempts": attempt,
                     "sdk": True
                 }
-                
-                # Add prompt metadata if available
                 if self._generation_prompt_metadata:
                     metadata.update(self._generation_prompt_metadata)
-                
                 if self._evaluation_prompt_metadata:
                     metadata["evaluation_prompt"] = self._evaluation_prompt_metadata
-                
                 llm_result = LLMResult(
                     content=parsed_content,
                     success=True,
                     metadata=metadata,
-                    evaluation_score=evaluation_result.score if evaluation_result else None,
+                    evaluation_score=None,
                     attempts=attempt
                 )
                 self._store_in_history(user_input, llm_result)
-                
                 return llm_result
-                
             except Exception as e:
                 if attempt == self.max_retries:
                     return LLMResult(
@@ -393,8 +251,6 @@ class RefinireAgent:
                         metadata={"error": str(e), "attempts": attempt, "sdk": True}
                     )
                 continue
-        
-        # Should not reach here
         return LLMResult(
             content=None,
             success=False,
@@ -440,272 +296,6 @@ class RefinireAgent:
         prompt_parts.append(f"User input: {user_input}")
         
         return "\n\n".join(prompt_parts)
-    
-    def _generate_content_with_sdk(self, prompt: str) -> str:
-        """
-        Generate content using OpenAI Agents SDK Runner
-        OpenAI Agents SDK Runnerを使用したコンテンツ生成
-        
-        Args:
-            prompt: Input prompt / 入力プロンプト
-            
-        Returns:
-            str: Generated content / 生成されたコンテンツ
-        """
-        try:
-            # Create new event loop for SDK
-            # SDK用に新しいイベントループを作成
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            try:
-                result = loop.run_until_complete(Runner.run(self._sdk_agent, prompt))
-                return result.final_output or ""
-            finally:
-                loop.close()
-                
-        except Exception as e:
-            # Fallback to original implementation if SDK fails
-            # SDKが失敗した場合は元の実装にフォールバック
-            warnings.warn(f"OpenAI Agents SDK failed, falling back to direct API: {e}")
-            return self._generate_content_fallback(prompt)
-    
-    def _generate_content(self, prompt: str) -> str:
-        """Generate content using OpenAI Agents SDK / OpenAI Agents SDKを使用したコンテンツ生成"""
-        try:
-            # Use OpenAI Agents SDK Agent for generation
-            # OpenAI Agents SDK Agentを使用して生成
-            # Check if we're already in an event loop
-            # 既にイベントループ内にいるかチェック
-            try:
-                loop = asyncio.get_running_loop()
-                # If we're in a loop, use the fallback
-                # ループ内にいる場合はフォールバックを使用
-                return self._generate_content_fallback(prompt)
-            except RuntimeError:
-                # No running loop, we can create one
-                # 実行中のループがない場合、作成可能
-                pass
-            
-            # Create new event loop for SDK
-            # SDK用に新しいイベントループを作成
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            try:
-                result = loop.run_until_complete(Runner.run(self._sdk_agent, prompt))
-                return result.final_output or ""
-            finally:
-                loop.close()
-                
-        except Exception as e:
-            # Fallback to original implementation if SDK fails
-            # SDKが失敗した場合は元の実装にフォールバック
-            warnings.warn(f"OpenAI Agents SDK failed, falling back to direct API: {e}")
-            return self._generate_content_fallback(prompt)
-    
-    def _generate_content_fallback(self, prompt: str) -> str:
-        """Fallback content generation using direct OpenAI API / 直接OpenAI APIを使用したフォールバックコンテンツ生成"""
-        messages = [{"role": "user", "content": prompt}]
-        
-        # Tools/function calling loop
-        # Tools/function calling ループ
-        max_tool_iterations = 10  # Prevent infinite loops / 無限ループを防ぐ
-        iteration = 0
-        
-        while iteration < max_tool_iterations:
-            # Prepare API call parameters
-            # API呼び出しパラメータを準備
-            params = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": self.temperature,
-                "timeout": self.timeout
-            }
-            
-            if self.max_tokens:
-                params["max_tokens"] = self.max_tokens
-            
-            # Add tools if available
-            # toolsが利用可能な場合は追加
-            if self.tools:
-                # Convert tools to OpenAI API format
-                # toolsをOpenAI API形式に変換
-                openai_tools = []
-                for tool in self.tools:
-                    if tool.get("type") == "function" and "function" in tool:
-                        # Ensure all parameters have type information
-                        # すべてのパラメータに型情報があることを確認
-                        function_def = tool["function"].copy()
-                        if "parameters" in function_def:
-                            parameters = function_def["parameters"]
-                            if "properties" in parameters:
-                                for prop_name, prop_info in parameters["properties"].items():
-                                    if "type" not in prop_info:
-                                        # Default to string if type is missing
-                                        # 型が不足している場合はデフォルトでstring
-                                        prop_info["type"] = "string"
-                        openai_tools.append({
-                            "type": "function",
-                            "function": function_def
-                        })
-            
-            params["tools"] = openai_tools
-            params["tool_choice"] = "auto"
-            
-            # Add structured output if model specified
-            # 構造化出力が指定されている場合は追加
-            if self.output_model:
-                params["response_format"] = {"type": "json_object"}
-                
-            response = self.sync_client.chat.completions.create(**params)
-            message = response.choices[0].message
-            
-            # Add assistant message to conversation
-            # アシスタントメッセージを対話に追加
-            messages.append({
-                "role": "assistant",
-                "content": message.content,
-                "tool_calls": [
-                    {
-                        "id": tc.id,
-                        "type": tc.type,
-                        "function": {
-                            "name": tc.function.name,
-                            "arguments": tc.function.arguments
-                        }
-                    }
-                    for tc in (message.tool_calls or [])
-                ]
-            })
-            
-            # If no tool calls, we're done
-            # tool呼び出しがない場合は完了
-            if not message.tool_calls:
-                return message.content or ""
-            
-            # Execute tool calls
-            # tool呼び出しを実行
-            for tool_call in message.tool_calls:
-                try:
-                    # Execute the tool function
-                    # tool関数を実行
-                    tool_result = self._execute_tool(tool_call)
-                    
-                    # Add tool result to conversation
-                    # tool結果を対話に追加
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": str(tool_result)
-                    })
-                    
-                except Exception as e:
-                    # Handle tool execution errors
-                    # tool実行エラーを処理
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": f"Error executing tool: {str(e)}"
-                    })
-            
-            iteration += 1
-        
-        # If we reach here, we hit the iteration limit
-        # ここに到達した場合は反復制限に達した
-        return "Maximum tool iteration limit reached. Please try a simpler request."
-    
-    def _execute_tool(self, tool_call) -> Any:
-        """Execute a tool function call / tool関数呼び出しを実行"""
-        function_name = tool_call.function.name
-        arguments = json.loads(tool_call.function.arguments)
-        
-        # Find the tool by name
-        # 名前でtoolを検索
-        for tool in self.tools:
-            if tool.get("function", {}).get("name") == function_name:
-                # Check if tool has a callable function
-                # toolに呼び出し可能な関数があるかチェック
-                if "callable" in tool:
-                    return tool["callable"](**arguments)
-                elif "handler" in tool:
-                    return tool["handler"](**arguments)
-                else:
-                    # Try to find a Python function with the same name
-                    # 同じ名前のPython関数を検索
-                    import inspect
-                    frame = inspect.currentframe()
-                    while frame:
-                        if function_name in frame.f_globals:
-                            func = frame.f_globals[function_name]
-                            if callable(func):
-                                return func(**arguments)
-                        frame = frame.f_back
-                    
-                    raise ValueError(f"No callable implementation found for tool: {function_name}")
-        
-        raise ValueError(f"Tool not found: {function_name}")
-    
-    def add_tool(self, tool_definition: Dict, handler: Optional[callable] = None) -> None:
-        """Add a tool definition / tool定義を追加"""
-        self.tools.append(tool_definition)
-        if handler:
-            self.tool_handlers[tool_definition.get("function", {}).get("name", "unknown")] = handler
-    
-    def add_mcp_server(self, server_config: Dict) -> None:
-        """
-        Add MCP server configuration (placeholder for future implementation)
-        MCPサーバー設定を追加（将来の実装のためのプレースホルダー）
-        
-        Args:
-            server_config: MCP server configuration / MCPサーバー設定
-        """
-        # Placeholder for MCP integration
-        # MCP統合のためのプレースホルダー
-        logger.info(f"MCP server configured: {server_config.get('name', 'unnamed')}")
-        logger.info("Note: Full MCP integration is planned for future release")
-    
-    def remove_tool(self, tool_name: str) -> bool:
-        """Remove a tool by name / 名前でtoolを削除"""
-        removed = False
-        # Remove from self.tools
-        new_tools = []
-        for tool in self.tools:
-            name = None
-            if isinstance(tool, dict):
-                name = tool.get("function", {}).get("name")
-            elif hasattr(tool, 'name'):
-                name = tool.name
-            elif hasattr(tool, '__name__'):
-                name = tool.__name__
-            if name == tool_name:
-                removed = True
-                continue
-            new_tools.append(tool)
-        self.tools = new_tools
-        # Remove from _sdk_tools
-        self._sdk_tools = [t for t in self._sdk_tools if not (hasattr(t, 'name') and t.name == tool_name)]
-        # Remove from tool_handlers if present
-        if hasattr(self, 'tool_handlers') and tool_name in self.tool_handlers:
-            del self.tool_handlers[tool_name]
-        return removed
-    
-    def list_tools(self) -> List[str]:
-        """List all available tool names / 利用可能なtool名をリスト"""
-        tool_names = []
-        # SDK tools (FunctionTool objects)
-        for tool in self._sdk_tools:
-            if hasattr(tool, 'name'):
-                tool_names.append(tool.name)
-            elif hasattr(tool, '__name__'):
-                tool_names.append(tool.__name__)
-        # Legacy dictionary tools
-        for tool in self.tools:
-            if isinstance(tool, dict):
-                name = tool.get("function", {}).get("name")
-                if name and name not in tool_names:
-                    tool_names.append(name)
-        return tool_names
     
     def _parse_structured_output(self, content: str) -> Any:
         """Parse structured output if model specified / モデルが指定されている場合は構造化出力を解析"""

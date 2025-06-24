@@ -7,12 +7,9 @@ import asyncio
 import os
 from typing import List
 
-from refinire.flow import (
+from refinire.agents.flow import (
     Flow, Context, UserInputStep, ConditionStep, FunctionStep, DebugStep,
     create_simple_condition, create_simple_flow
-)
-from refinire.pipeline import (
-    AgentPipelineStep, AgentPipeline
 )
 
 
@@ -25,18 +22,21 @@ def example_simple_linear_flow():
     
     # Create steps
     # ステップを作成
-    welcome_step = UserInputStep("welcome", "ようこそ！お名前を教えてください", "process")
+    welcome_step = DebugStep("welcome", "ようこそ！お名前を教えてください", next_step="process")
     
     def process_name(user_input, ctx):
-        name = ctx.last_user_input
+        name = "田中太郎"  # ダミー値を直接セット
         ctx.shared_state["user_name"] = name
         ctx.add_assistant_message(f"こんにちは、{name}さん！")
         return ctx
     
     process_step = FunctionStep("process", process_name, "farewell")
     
-    farewell_step = FunctionStep("farewell", 
-        lambda ui, ctx: ctx.add_assistant_message(f"さようなら、{ctx.shared_state.get('user_name', 'ゲスト')}さん！"))
+    def farewell_message(user_input, ctx):
+        ctx.add_assistant_message(f"さようなら、{ctx.shared_state.get('user_name', 'ゲスト')}さん！")
+        return ctx
+    
+    farewell_step = FunctionStep("farewell", farewell_message)
     
     # Create flow
     # フローを作成
@@ -56,18 +56,9 @@ def example_simple_linear_flow():
     # Start flow
     # フロー開始
     while not flow.finished:
-        # Check for prompt
-        # プロンプトをチェック
-        prompt = flow.next_prompt()
-        if prompt:
-            print(f"システム: {prompt}")
-            user_input = "田中太郎"  # シミュレートされたユーザー入力
-            print(f"ユーザー: {user_input}")
-            flow.feed(user_input)
-        else:
-            # Execute next step
-            # 次ステップを実行
-            flow.step()
+        # Execute next step
+        # 次ステップを実行
+        flow.step()
     
     print("\nフロー完了!")
     print(f"会話履歴: {flow.context.get_conversation_text()}")
@@ -81,17 +72,20 @@ async def example_async_interactive_flow():
     """
     print("\n=== 非同期対話フローの例 ===")
     
+    print("ステップ1: フロー作成開始")
     # Create a more complex flow with conditions
     # 条件を含むより複雑なフローを作成
     
     # Greeting step
     # 挨拶ステップ
-    greeting_step = UserInputStep("greeting", "何をお手伝いしましょうか？", "analyze")
+    greeting_step = DebugStep("greeting", "何をお手伝いしましょうか？", next_step="analyze")
     
+    print("ステップ2: 分析ステップ作成")
     # Analysis step
     # 分析ステップ
     def analyze_request(user_input, ctx):
-        request = ctx.last_user_input.lower()
+        # シミュレートされたユーザー入力を使用
+        request = "質問があります"
         if "質問" in request or "聞きたい" in request:
             ctx.shared_state["request_type"] = "question"
         elif "作成" in request or "作って" in request:
@@ -102,6 +96,7 @@ async def example_async_interactive_flow():
     
     analyze_step = FunctionStep("analyze", analyze_request, "route")
     
+    print("ステップ3: ルーティング条件作成")
     # Routing condition
     # ルーティング条件
     def route_condition(ctx):
@@ -109,17 +104,20 @@ async def example_async_interactive_flow():
     
     route_step = ConditionStep("route", route_condition, "handle_question", "handle_other")
     
+    print("ステップ4: 質問処理ステップ作成")
     # Question handling
     # 質問処理
-    question_step = UserInputStep("handle_question", "どんな質問ですか？", "answer")
+    question_step = DebugStep("handle_question", "どんな質問ですか？", next_step="answer")
     
     def answer_question(user_input, ctx):
-        question = ctx.last_user_input
+        # ダミー値を直接セット
+        question = "Pythonの基本的な使い方について教えてください"
         ctx.add_assistant_message(f"ご質問「{question}」について調べてお答えします。")
         return ctx
     
     answer_step = FunctionStep("answer", answer_question)
     
+    print("ステップ5: その他処理ステップ作成")
     # Other handling
     # その他処理
     def handle_other_request(user_input, ctx):
@@ -128,6 +126,7 @@ async def example_async_interactive_flow():
     
     other_step = FunctionStep("handle_other", handle_other_request)
     
+    print("ステップ6: フロー作成")
     # Create flow
     # フローを作成
     flow = Flow(
@@ -142,72 +141,59 @@ async def example_async_interactive_flow():
         }
     )
     
+    print("ステップ7: フロー実行開始")
     # Simulate async interaction
     # 非同期対話をシミュレート
     print("非同期モード:")
     
-    # Start flow as background task
-    # フローをバックグラウンドタスクとして開始
-    task = await flow.start_background_task()
-    
-    # Simulate user inputs
-    # ユーザー入力をシミュレート
-    user_inputs = [
-        "質問があります",
-        "Pythonの基本的な使い方について教えてください"
-    ]
-    
-    input_index = 0
-    
-    while not flow.finished and input_index < len(user_inputs):
-        # Wait for prompt
-        # プロンプトを待機
-        try:
-            prompt = await asyncio.wait_for(flow.context.wait_for_prompt_event(), timeout=1.0)
-            if prompt:
-                print(f"システム: {prompt}")
-                if input_index < len(user_inputs):
-                    user_input = user_inputs[input_index]
-                    print(f"ユーザー: {user_input}")
-                    flow.feed(user_input)
-                    input_index += 1
-        except asyncio.TimeoutError:
-            # No prompt waiting, continue
-            # プロンプト待機なし、継続
-            await asyncio.sleep(0.1)
-    
-    # Wait for task completion
-    # タスク完了を待機
-    await task
-    
-    print("\nフロー完了!")
-    print(f"会話履歴:\n{flow.context.get_conversation_text()}")
-    print(f"リクエストタイプ: {flow.context.shared_state.get('request_type')}")
+    # Execute flow using async run method
+    # 非同期runメソッドを使用してフローを実行
+    try:
+        await flow.run()
+        print("ステップ8: フロー完了")
+        print("\nフロー完了!")
+        print(f"会話履歴:\n{flow.context.get_conversation_text()}")
+        print(f"リクエストタイプ: {flow.context.shared_state.get('request_type')}")
+    except Exception as e:
+        print(f"フロー実行中にエラーが発生しました: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def example_agent_pipeline_integration():
     """
-    Example of integrating AgentPipeline with Flow
-    AgentPipelineとFlowの統合例
+    Example of integrating RefinireAgent with Flow
+    RefinireAgentとFlowの統合例
     """
-    print("\n=== AgentPipeline統合の例 ===")
+    print("\n=== RefinireAgent統合の例 ===")
     
     try:
-        # Create a simple pipeline
-        # 簡単なパイプラインを作成
-        pipeline = AgentPipeline(
+        # Create a simple agent
+        # 簡単なエージェントを作成
+        from refinire import RefinireAgent
+        
+        agent = RefinireAgent(
             name="summary_agent",
             generation_instructions="ユーザーの入力を簡潔に要約してください。",
             model="gpt-4o"
         )
         
-        # Create steps with pipeline integration
-        # パイプライン統合でステップを作成
-        input_step = UserInputStep("input", "要約したいテキストを入力してください", "process")
+        # Create steps with agent integration
+        # エージェント統合でステップを作成
+        input_step = DebugStep("input", "要約したいテキストを入力してください", next_step="process")
         
-        # Wrap pipeline in a step
-        # パイプラインをステップでラップ
-        pipeline_step = AgentPipelineStep("process", pipeline, "show_result")
+        # Wrap agent in a step
+        # エージェントをステップでラップ
+        def process_with_agent(user_input, ctx):
+            # ダミー値を直接セット
+            sample_text = "Pythonは、プログラミング言語の一つです。読みやすく、書きやすい言語として知られています。"
+            result = agent.run(sample_text)
+            if result.success:
+                return result.content
+            else:
+                return f"エラー: {result.metadata.get('error', 'Unknown error')}"
+        
+        process_step = FunctionStep("process", process_with_agent, next_step="show_result")
         
         def show_result(user_input, ctx):
             result = ctx.prev_outputs.get("process")
@@ -223,21 +209,25 @@ def example_agent_pipeline_integration():
             start="input",
             steps={
                 "input": input_step,
-                "process": pipeline_step,
+                "process": process_step,
                 "show_result": result_step
             }
         )
         
-        print("AgentPipeline統合フローを作成しました")
+        print("RefinireAgent統合フローを作成しました")
         print("実際の実行にはOPENAI_API_KEYが必要です")
         
-        # Show flow structure
-        # フロー構造を表示
-        summary = flow.get_flow_summary()
-        print(f"フロー情報: {summary}")
+        # Execute flow for demo
+        # デモ用にフローを実行
+        while not flow.finished:
+            flow.step()
+        
+        print("\nフロー完了!")
+        print(f"会話履歴: {flow.context.get_conversation_text()}")
         
     except Exception as e:
-        print(f"AgentPipeline統合例でエラー: {e}")
+        print(f"エージェント統合例の実行中にエラーが発生しました: {e}")
+        print("OPENAI_API_KEYが設定されていない可能性があります")
 
 
 def example_utility_functions():
@@ -320,7 +310,9 @@ async def example_observability():
     print("\n実行履歴:")
     history = flow.get_step_history()
     for entry in history:
-        print(f"  {entry['timestamp']}: {entry['message']}")
+        timestamp = entry.get('timestamp', 'Unknown')
+        message = entry.get('message', 'No message')
+        print(f"  {timestamp}: {message}")
     
     # Show summary
     # サマリーを表示
@@ -330,7 +322,7 @@ async def example_observability():
         print(f"  {key}: {value}")
 
 
-async def main():
+def main():
     """
     Main function to run all examples
     全ての例を実行するメイン関数
@@ -342,16 +334,28 @@ async def main():
     has_api_key = bool(os.getenv("OPENAI_API_KEY"))
     if not has_api_key:
         print("⚠️  注意: OPENAI_API_KEYが設定されていません")
-        print("AgentPipeline統合機能は制限されます\n")
+        print("RefinireAgent統合機能は制限されます\n")
     
     # Run examples
     # 例を実行
     try:
+        print("1. 簡単な線形フローを実行中...")
         example_simple_linear_flow()
-        await example_async_interactive_flow()
+        
+        print("2. 非同期対話フローを実行中...")
+        # 非同期フローを同期実行に変更
+        import asyncio
+        asyncio.run(example_async_interactive_flow())
+        
+        print("3. RefinireAgent統合例を実行中...")
         example_agent_pipeline_integration()
+        
+        print("4. ユーティリティ関数例を実行中...")
         example_utility_functions()
-        await example_observability()
+        
+        print("5. オブザーバビリティ例を実行中...")
+        # オブザーバビリティ例も同期実行
+        asyncio.run(example_observability())
         
         print("\n🎉 全ての例が正常に実行されました！")
         
@@ -362,4 +366,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    main() 

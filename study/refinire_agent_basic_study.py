@@ -23,7 +23,6 @@ from typing import Dict, Any
 from refinire import RefinireAgent, create_simple_agent, create_evaluated_agent, enable_console_tracing
 from agents import Agent, Runner, function_tool
 
-
 # ============================================================================
 # Tool Functions for OpenAI Agents SDK
 # OpenAI Agents SDK用のツール関数
@@ -43,7 +42,6 @@ def get_weather_sdk(location: str) -> str:
         "Paris": "Partly Cloudy, 20°C"
     }
     return weather_data.get(location, f"Weather data not available for {location}")
-
 
 @function_tool
 def calculate_sdk(expression: str) -> str:
@@ -135,7 +133,6 @@ async def study_basic_generation():
     print(f"Metadata: {result.metadata}")
 
 
-
 # ============================================================================
 # Tool Integration Study
 # ツール統合学習
@@ -171,6 +168,8 @@ async def study_tool_integration():
         print(f"Input: What's the weather like in Tokyo?")
         print(f"Output: {result.content}")
         print(f"Success: {result.success}")
+        if not result.success:
+            print(f"Error metadata: {result.metadata}")
     except Exception as e:
         print(f"Error in weather tool test: {e}")
         import traceback
@@ -183,18 +182,19 @@ async def study_tool_integration():
         print(f"Input: Calculate 15 * 24 + 100")
         print(f"Output: {result.content}")
         print(f"Success: {result.success}")
+        if not result.success:
+            print(f"Error metadata: {result.metadata}")
     except Exception as e:
         print(f"Error in calculator tool test: {e}")
         import traceback
         traceback.print_exc()
-
 
 # ============================================================================
 # Error Handling Study
 # エラーハンドリング学習
 # ============================================================================
 
-def study_error_handling():
+async def study_error_handling():
     """
     Study error handling in RefinireAgent
     RefinireAgentでのエラーハンドリングを学習する
@@ -209,8 +209,7 @@ def study_error_handling():
         name="error_handling_agent",
         generation_instructions="You are a helpful assistant. If you encounter errors or unclear requests, explain the issue clearly and suggest alternatives.",
         model="gpt-4o-mini",
-        temperature=0.1,
-        max_retries=2
+        temperature=0.1
     )
     
     # Test with unclear request
@@ -220,9 +219,6 @@ def study_error_handling():
     print(f"Input: (empty)")
     print(f"Output: {result.content}")
     print(f"Success: {result.success}")
-    
-
-
 
 # =========================================================================
 # OpenAI Agents SDK Tool Call Study
@@ -264,7 +260,6 @@ async def study_open_ai_tool_call():
     print(f"Output: {result.final_output}")
     print(f"Success: {hasattr(result, 'final_output') and result.final_output is not None}")
 
-
 # ============================================================================
 # Main Study Function
 # メイン学習関数
@@ -289,7 +284,7 @@ async def main():
         await study_basic_generation()
         # study_factory_functions()
         await study_tool_integration()
-        study_error_handling()
+        await study_error_handling()
         await study_open_ai_tool_call()
         # study_configuration_options()
         
@@ -314,4 +309,5 @@ async def main():
         raise
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())
+ 

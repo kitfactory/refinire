@@ -230,9 +230,12 @@ class FunctionStep(Step):
             # 関数を実行（非同期の可能性あり）
             result = self.function(user_input, ctx)
             if asyncio.iscoroutine(result):
-                ctx = await result
+                result_ctx = await result
+                if result_ctx is not None:
+                    ctx = result_ctx
             else:
-                ctx = result
+                if result is not None:
+                    ctx = result
         except Exception as e:
             ctx.add_system_message(f"Function execution error in {self.name}: {e}")
         

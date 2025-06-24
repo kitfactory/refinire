@@ -1,71 +1,67 @@
-﻿"""
-RefinireAgent example with tools for enhanced generation
-ツールを使用した拡張生成のRefinireAgentの例
+﻿#!/usr/bin/env python3
+"""
+Pipeline with Tools Example - Using RefinireAgent with tools
+ツール付きパイプライン例 - ツール付きRefinireAgentを使用
+
+This example shows how to use tools with RefinireAgent.
+この例は、RefinireAgentでツールを使用する方法を示します。
 """
 
+import asyncio
 from refinire import RefinireAgent
 from agents import function_tool
 
-@function_tool
-def search_web(query: str) -> str:
-    """
-    Search the web for information.
-    Webで情報を検索します。
-
-    Args:
-        query: The search query / 検索クエリ
-    """
-    # 実際のWeb検索APIを呼ぶ場合はここを実装
-    return f"Search results for: {query}"
 
 @function_tool
 def get_weather(location: str) -> str:
-    """
-    Get current weather for a location.
-    指定した場所の現在の天気を取得します。
+    """Get weather information for a location"""
+    weather_data = {
+        "Tokyo": "Sunny, 22°C",
+        "New York": "Cloudy, 18°C",
+        "London": "Rainy, 15°C",
+        "Paris": "Partly Cloudy, 20°C"
+    }
+    return weather_data.get(location, f"Weather data not available for {location}")
 
-    Args:
-        location: The location to get weather for / 天気を取得する場所
-    """
-    # 実際の天気APIを呼ぶ場合はここを実装
-    return f"Weather in {location}: Sunny, 25°C"
 
-def main():
-    # パイプライン用のツールを定義
-    tools = [search_web, get_weather]
+@function_tool
+def search_web(query: str) -> str:
+    """Search for information on the web"""
+    return f"Search results for '{query}': Found relevant information about {query}"
 
-    pipeline = RefinireAgent(
-        name="tooled_generator",
-        generation_instructions="""
-        You are a helpful assistant that can use tools to gather information.
-        あなたは情報を収集するためにツールを使用できる役立つアシスタントです。
 
-        You have access to the following tools:
-        以下のツールにアクセスできます：
-
-        1. search_web: Search the web for information
-           search_web: 情報をWebで検索する
-        2. get_weather: Get current weather for a location
-           get_weather: 場所の現在の天気を取得する
-
-        Please use these tools when appropriate to provide accurate information.
-        適切な場合は、これらのツールを使用して正確な情報を提供してください。
-        """,
-        evaluation_instructions=None,  # No evaluation
-        model="gpt-4o",
-        generation_tools=tools
+async def main():
+    # RefinireAgentを使用してエージェントを作成（refinire_agent_basic_study.pyと同じ方法）
+    agent = RefinireAgent(
+        name="tool_agent",
+        generation_instructions=(
+            "You are a helpful assistant with access to weather and search tools. "
+            "For any question about weather or search, you MUST use the appropriate tool. "
+            "Do not answer directly, always call the tool for those topics."
+        ),
+        model="gpt-4o-mini",
+        tools=[get_weather, search_web]
     )
 
-    test_inputs = [
+    # テストクエリ
+    test_queries = [
         "What's the weather like in Tokyo?",
         "Search for information about the latest AI developments"
     ]
 
-    for user_input in test_inputs:
-        print(f"\nInput: {user_input}")
-        result = pipeline.run(user_input)
-        print("Response:")
-        print(result)
+    for query in test_queries:
+        print(f"\nInput: {query}")
+        try:
+            result = await agent.run_async(query)
+            print(f"Output: {result.content}")
+            print(f"Success: {result.success}")
+            if not result.success:
+                print(f"Error metadata: {result.metadata}")
+        except Exception as e:
+            print(f"Exception: {e}")
+            import traceback
+            traceback.print_exc()
+
 
 if __name__ == "__main__":
-    main() 
+    asyncio.run(main()) 
