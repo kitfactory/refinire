@@ -20,6 +20,7 @@ from agents import FunctionTool
 from pydantic import BaseModel, ValidationError
 
 from ..flow.context import Context
+from ..context_provider_factory import ContextProviderFactory
 from ...core.trace_registry import TraceRegistry
 from ...core import PromptReference
 
@@ -94,7 +95,8 @@ class RefinireAgent:
         improvement_callback: Optional[Callable[[LLMResult, EvaluationResult], str]] = None,
         locale: str = "en",
         tools: Optional[List[Callable]] = None,
-        mcp_servers: Optional[List[str]] = None
+        mcp_servers: Optional[List[str]] = None,
+        context_providers_config: Optional[Dict[str, Any]] = None
     ) -> None:
         """
         Initialize Refinire Agent
@@ -120,6 +122,7 @@ class RefinireAgent:
             locale: Locale for messages / メッセージ用ロケール
             tools: OpenAI function tools / OpenAI関数ツール
             mcp_servers: MCP server identifiers / MCPサーバー識別子
+            context_providers_config: Configuration for context providers / コンテキストプロバイダーの設定
         """
         # Basic configuration
         self.name = name
@@ -173,6 +176,9 @@ class RefinireAgent:
             instructions=self.generation_instructions,
             tools=self.tools
         )
+        
+        # Context providers
+        self.context_providers = ContextProviderFactory.create_providers(context_providers_config)
     
     def run(self, user_input: str) -> LLMResult:
         """
