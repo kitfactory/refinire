@@ -3,7 +3,7 @@
 [![PyPI Downloads](https://static.pepy.tech/badge/refinire)](https://pepy.tech/projects/refinire)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![OpenAI Agents 0.0.17](https://img.shields.io/badge/OpenAI-Agents_0.0.17-green.svg)](https://github.com/openai/openai-agents-python)
-[![Coverage](https://img.shields.io/badge/coverage-77%25-brightgreen.svg)]
+[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)]
 
 **Transform ideas into working AI agents—intuitive agent framework**
 
@@ -661,76 +661,41 @@ MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/
 
 ---
 
-## Release Notes - v0.2.7
+## Release Notes - v0.2.8
 
-### 🎯 Enhanced Flow Architecture
-- **Improved Flow Context Management**: Enhanced context handling for complex workflow scenarios
-- **Better Error Handling**: More robust error management across flow execution
-- **Performance Optimizations**: Streamlined flow execution for better performance
-- **Enhanced Debugging**: Improved debugging capabilities for flow troubleshooting
+### 🛠️ Revolutionary Tool Integration
+- **New @tool Decorator**: Introduced intuitive `@tool` decorator for seamless tool creation
+- **Simplified Imports**: Clean `from refinire import tool` replaces complex external SDK knowledge
+- **Enhanced Debugging**: Added `get_tool_info()` and `list_tools()` for better tool introspection
+- **Backward Compatibility**: Full support for existing `function_tool` decorated functions
+- **Simplified Tool Development**: Streamlined tool creation process with intuitive decorator syntax
 
-### 🔧 Developer Experience Improvements
-- **Better Type Hints**: Enhanced type annotations for better IDE support
-- **Improved Documentation**: Updated API documentation with more examples
-- **Code Quality**: Enhanced code quality and maintainability
-- **Testing Improvements**: Better test coverage and reliability
+### 📚 Documentation Revolution
+- **Concept-Driven Explanations**: READMEs now focus on Challenge-Solution-Benefits structure
+- **Tutorial Integration**: Every feature section links to step-by-step tutorials
+- **Improved Clarity**: Reduced cognitive load with clear explanations before code examples
+- **Bilingual Enhancement**: Both English and Japanese documentation significantly improved
+- **User-Centric Approach**: Documentation redesigned from developer perspective
 
-### ✅ Stability & Compatibility
-- **Bug Fixes**: Various bug fixes and stability improvements
-- **Compatibility**: Maintained compatibility with existing APIs
-- **Performance**: General performance improvements across the framework
+### 🔄 Developer Experience Transformation
+- **Unified Import Strategy**: All tool functionality available from single `refinire` package
+- **Future-Proof Architecture**: Tool system insulated from external SDK changes
+- **Enhanced Metadata**: Rich tool information for debugging and development
+- **Intelligent Error Handling**: Better error messages and troubleshooting guidance
+- **Streamlined Workflow**: From idea to working tool in under 5 minutes
 
----
+### 🚀 Quality & Performance
+- **Context-Based Evaluation**: New `ctx.evaluation_result` for workflow integration
+- **Comprehensive Testing**: 100% test coverage for all new tool functionality
+- **Migration Examples**: Complete migration guides and comparison demonstrations
+- **API Consistency**: Unified patterns across all Refinire components
+- **Zero Breaking Changes**: Existing code continues to work while new features enhance capability
 
-## Release Notes - v0.2.5
+### 💡 Key Benefits for Users
+- **Faster Tool Development**: Significantly reduced tool creation time with streamlined workflow
+- **Reduced Learning Curve**: No need to understand external SDK complexities
+- **Better Debugging**: Rich metadata and introspection capabilities
+- **Future Compatibility**: Protected from external SDK breaking changes
+- **Intuitive Development**: Natural Python decorator patterns familiar to all developers
 
-### 🎯 Complete Migration to RefinireAgent
-- **LLMPipeline Deprecated**: Fully replaced deprecated `LLMPipeline` with modern `RefinireAgent` architecture
-- **Unified Agent System**: All specialized agents (ExtractorAgent, RouterAgent, ClarifyAgent) now use RefinireAgent internally
-- **Breaking Change**: `LLMPipeline` and related factory functions completely removed - use `RefinireAgent` instead
-- **Migration Guide**: All examples and documentation updated to reflect RefinireAgent usage
-
-### 🔧 Code Modernization
-- **Import Updates**: Removed deprecated `agents.models` imports, updated to use `agents` package directly
-- **Example Refresh**: All 30+ example files updated from `AgentPipeline` to `RefinireAgent`
-- **Test Suite Cleanup**: Removed deprecated AgentPipeline tests, updated 453 tests to use RefinireAgent
-- **API Consistency**: Unified function naming (e.g., `create_simple_agent` vs `create_simple_llm_pipeline`)
-
-### ✅ Quality & Compatibility
-- **100% Test Pass Rate**: All 453 tests passing after comprehensive migration
-- **Zero Breaking Changes**: Migration maintains functionality while modernizing architecture
-- **Enhanced Stability**: Removed legacy code reduces maintenance burden and improves reliability
-- **Future-Proof**: Modern architecture foundation for upcoming features
-
-### 📖 Documentation & Examples
-- **Complete Documentation Update**: All guides now use RefinireAgent patterns
-- **Modernized Examples**: Pipeline examples converted to demonstrate RefinireAgent capabilities
-- **Clear Migration Path**: Legacy users can seamlessly upgrade to RefinireAgent
-- **Improved Clarity**: Consistent naming and patterns across all components
-
-### 🚀 Developer Experience
-- **Simplified Mental Model**: Single agent system reduces cognitive load
-- **Consistent API**: Uniform interface across all agent types and use cases
-- **Better Performance**: Optimized architecture with reduced legacy overhead
-- **Enhanced Maintainability**: Cleaner codebase structure and organization
-
-### 🧠 Context Management System
-- **Intelligent Memory**: Built-in conversation history and file context management
-- **Context Providers**: Modular system for conversation history, fixed files, and source code analysis
-- **Chain Processing**: Context providers can build upon each other for sophisticated memory
-- **Easy Configuration**: Simple YAML-like configuration for context providers
-- **Default Behavior**: Automatic conversation history (max 10 items) when no providers specified
-
----
-
-## Previous Release Notes
-
-### v0.2.4
-- **Import Fixes**: Resolved `agents.models` import issues and updated to use `agents` package directly
-- **Enhanced Stability**: Improved reliability with better error handling and compatibility fixes
-- **Test Coverage**: Maintained 100% test pass rate with 453 tests
-
-### v0.2.1
-- **P() Function**: Convenient shorthand `P("name")` for `PromptStore.get("name")`
-- **Single Package Structure**: Unified package architecture for better maintenance
-- **Enhanced Compatibility**: Fixed Pydantic v2 compatibility and improved test coverage to 77%
+**This release represents a major step forward in making Refinire the most developer-friendly AI agent platform available.**
