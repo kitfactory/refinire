@@ -64,6 +64,16 @@ print(f"Content: {result.content}")
 
 ## Flow Architecture: Orchestrate Complex Workflows
 
+**The Challenge**: Building complex AI workflows requires managing multiple agents, conditional logic, parallel processing, and error handling. Traditional approaches lead to rigid, hard-to-maintain code.
+
+**The Solution**: Refinire's Flow Architecture lets you compose workflows from reusable steps. Each step can be a function, condition, parallel execution, or AI agent. Flows handle routing, error recovery, and state management automatically.
+
+**Key Benefits**:
+- **Composable Design**: Build complex workflows from simple, reusable components
+- **Visual Logic**: Workflow structure is immediately clear from the code
+- **Automatic Orchestration**: Flow engine handles execution order and data passing
+- **Built-in Parallelization**: Dramatic performance improvements with simple syntax
+
 ### Simple Yet Powerful
 
 ```python
@@ -90,9 +100,15 @@ result = await flow.run("Complex user request")
 
 ## 1. Unified LLM Interface
 
-RefinireAgent supports a wide range of LLM providers, including OpenAI, Anthropic, Google, and Ollama.
+**The Challenge**: Switching between AI providers requires different SDKs, APIs, and authentication methods. Managing multiple provider integrations creates vendor lock-in and complexity.
 
-Simply specify the model name in the `model` argument of `RefinireAgent`, and the optimal provider will be automatically selected based on environment variables (e.g., `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.).
+**The Solution**: RefinireAgent provides a single, consistent interface across all major LLM providers. Provider selection happens automatically based on your environment configuration, eliminating the need to manage multiple SDKs or rewrite code when switching providers.
+
+**Key Benefits**:
+- **Provider Freedom**: Switch between OpenAI, Anthropic, Google, and Ollama without code changes
+- **Zero Vendor Lock-in**: Your agent logic remains independent of provider specifics
+- **Automatic Resolution**: Environment variables determine the optimal provider automatically
+- **Consistent API**: Same method calls work across all providers
 
 ```python
 from refinire import RefinireAgent
@@ -126,11 +142,19 @@ agent4 = RefinireAgent(
 
 This makes switching between providers and managing API keys extremely simple, greatly increasing development flexibility.
 
-**📖 Details:** [Unified LLM Interface](docs/unified-llm-interface.md)
+**📖 Tutorial:** [Quickstart Guide](docs/tutorials/quickstart.md) | **Details:** [Unified LLM Interface](docs/unified-llm-interface.md)
 
 ## 2. Autonomous Quality Assurance
 
-RefinireAgent's built-in evaluation ensures output quality:
+**The Challenge**: AI outputs can be inconsistent, requiring manual review and regeneration. Quality control becomes a bottleneck in production systems.
+
+**The Solution**: RefinireAgent includes built-in evaluation that automatically assesses output quality and regenerates content when it falls below your standards. This creates a self-improving system that maintains consistent quality without manual intervention.
+
+**Key Benefits**:
+- **Automatic Quality Control**: Set thresholds and let the system maintain standards
+- **Self-Improving**: Failed outputs trigger regeneration with improved prompts
+- **Production Ready**: Consistent quality without manual oversight
+- **Configurable Standards**: Define your own evaluation criteria and thresholds
 
 ```python
 from refinire import RefinireAgent
@@ -148,26 +172,42 @@ agent = RefinireAgent(
 result = agent.run("Explain quantum computing")
 print(f"Evaluation Score: {result.evaluation_score}")
 print(f"Content: {result.content}")
+
+# With Context for workflow integration
+from refinire import Context
+ctx = Context()
+result_ctx = agent.run("Explain quantum computing", ctx)
+print(f"Evaluation Result: {result_ctx.evaluation_result}")
+print(f"Score: {result_ctx.evaluation_result['score']}")
+print(f"Passed: {result_ctx.evaluation_result['passed']}")
+print(f"Feedback: {result_ctx.evaluation_result['feedback']}")
 ```
 
 If evaluation falls below threshold, content is automatically regenerated for consistent high quality.
 
-**📖 Details:** [Autonomous Quality Assurance](docs/autonomous-quality-assurance.md)
+**📖 Tutorial:** [Advanced Features](docs/tutorials/advanced.md) | **Details:** [Autonomous Quality Assurance](docs/autonomous-quality-assurance.md)
 
 ## 3. Tool Integration - Automated Function Calling
 
-RefinireAgent automatically executes function tools:
+**The Challenge**: AI agents often need to interact with external systems, APIs, or perform calculations. Manual tool integration is complex and error-prone.
+
+**The Solution**: RefinireAgent automatically detects when to use tools and executes them seamlessly. Simply provide decorated functions, and the agent handles tool selection, parameter extraction, and execution automatically.
+
+**Key Benefits**:
+- **Zero Configuration**: Decorated functions are automatically available as tools
+- **Intelligent Selection**: Agent chooses appropriate tools based on user requests
+- **Error Handling**: Built-in retry and error recovery for tool execution
+- **Extensible**: Easy to add custom tools for your specific use cases
 
 ```python
-from refinire import RefinireAgent
-from agents import function_tool
+from refinire import RefinireAgent, tool
 
-@function_tool
+@tool
 def calculate(expression: str) -> float:
     """Calculate mathematical expressions"""
     return eval(expression)
 
-@function_tool
+@tool
 def get_weather(city: str) -> str:
     """Get weather for a city"""
     return f"Weather in {city}: Sunny, 22°C"
@@ -184,9 +224,19 @@ result = agent.run("What's the weather in Tokyo? Also, what's 15 * 23?")
 print(result.content)  # Automatically answers both questions
 ```
 
-**📖 Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
+**📖 Tutorial:** [Advanced Features](docs/tutorials/advanced.md) | **Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
 
 ## 4. Automatic Parallel Processing: Dramatic Performance Boost
+
+**The Challenge**: Sequential processing of independent tasks creates unnecessary bottlenecks. Manual async implementation is complex and error-prone.
+
+**The Solution**: Refinire's parallel processing automatically identifies independent operations and executes them simultaneously. Simply wrap operations in a `parallel` block, and the system handles all async coordination.
+
+**Key Benefits**:
+- **Automatic Optimization**: System identifies parallelizable operations
+- **Dramatic Speedup**: 4x+ performance improvements are common
+- **Zero Complexity**: No async/await or thread management required
+- **Scalable**: Configurable worker pools adapt to your workload
 
 Dramatically improve performance with parallel execution:
 
@@ -216,7 +266,7 @@ result = await flow.run("Analyze this comprehensive text...")
 
 Run complex analysis tasks simultaneously without manual async implementation.
 
-**📖 Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
+**📖 Tutorial:** [Advanced Features](docs/tutorials/advanced.md) | **Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
 
 ### Conditional Intelligence
 
@@ -422,10 +472,9 @@ agent = RefinireAgent(
 ### Custom Tool Integration
 
 ```python
-from refinire import RefinireAgent
-from agents import function_tool
+from refinire import RefinireAgent, tool
 
-@function_tool
+@tool
 def web_search(query: str) -> str:
     """Search the web for information"""
     # Your search implementation
@@ -440,6 +489,16 @@ agent = RefinireAgent(
 ```
 
 ### Context Management - Intelligent Memory
+
+**The Challenge**: AI agents lose context between conversations and lack awareness of relevant files or code. This leads to repetitive questions and less helpful responses.
+
+**The Solution**: RefinireAgent's context management automatically maintains conversation history, analyzes relevant files, and searches your codebase for pertinent information. The agent builds a comprehensive understanding of your project and maintains it across conversations.
+
+**Key Benefits**:
+- **Persistent Memory**: Conversations build upon previous interactions
+- **Code Awareness**: Automatic analysis of relevant source files
+- **Dynamic Context**: Context adapts based on current conversation topics
+- **Intelligent Filtering**: Only relevant information is included to avoid token limits
 
 RefinireAgent provides sophisticated context management for enhanced conversations:
 
@@ -479,7 +538,59 @@ result = agent.run("How can I improve the error handling?")
 print(result.content)
 ```
 
-**📖 Details:** [Context Management](docs/context_management.md)
+**📖 Tutorial:** [Context Management](docs/tutorials/context_management.md) | **Details:** [Context Management](docs/context_management.md)
+
+### Context-Based Result Access
+
+**The Challenge**: Chaining multiple AI agents requires complex data passing and state management. Results from one agent need to flow seamlessly to the next.
+
+**The Solution**: Refinire's Context system automatically tracks agent results, evaluation data, and shared state. Agents can access previous results, evaluation scores, and custom data without manual state management.
+
+**Key Benefits**:
+- **Automatic State Management**: Context handles data flow between agents
+- **Rich Result Access**: Access not just outputs but also evaluation scores and metadata
+- **Flexible Data Storage**: Store custom data for complex workflow requirements
+- **Seamless Integration**: No boilerplate code for agent communication
+
+Access agent results and evaluation data through Context for seamless workflow integration:
+
+```python
+from refinire import RefinireAgent, Context, create_evaluated_agent
+
+# Create agent with evaluation
+agent = create_evaluated_agent(
+    name="analyzer",
+    generation_instructions="Analyze the input thoroughly",
+    evaluation_instructions="Rate analysis quality 0-100",
+    threshold=80
+)
+
+# Run with Context
+ctx = Context()
+result_ctx = agent.run("Analyze this data", ctx)
+
+# Simple result access
+print(f"Result: {result_ctx.result}")
+
+# Evaluation result access
+if result_ctx.evaluation_result:
+    score = result_ctx.evaluation_result["score"]
+    passed = result_ctx.evaluation_result["passed"]
+    feedback = result_ctx.evaluation_result["feedback"]
+    
+# Agent chain data passing
+next_agent = create_simple_agent("summarizer", "Create summaries")
+summary_ctx = next_agent.run(f"Summarize: {result_ctx.result}", result_ctx)
+
+# Access previous agent outputs
+analyzer_output = summary_ctx.prev_outputs["analyzer"]
+summarizer_output = summary_ctx.prev_outputs["summarizer"]
+
+# Custom data storage
+result_ctx.shared_state["custom_data"] = {"key": "value"}
+```
+
+**Seamless data flow between agents with automatic result tracking.**
 
 ---
 
@@ -575,7 +686,7 @@ MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/
 
 ### 🎯 Complete Migration to RefinireAgent
 - **LLMPipeline Deprecated**: Fully replaced deprecated `LLMPipeline` with modern `RefinireAgent` architecture
-- **Unified Agent System**: All specialized agents (ExtractorAgent, GenAgent, RouterAgent, ClarifyAgent) now use RefinireAgent internally
+- **Unified Agent System**: All specialized agents (ExtractorAgent, RouterAgent, ClarifyAgent) now use RefinireAgent internally
 - **Breaking Change**: `LLMPipeline` and related factory functions completely removed - use `RefinireAgent` instead
 - **Migration Guide**: All examples and documentation updated to reflect RefinireAgent usage
 

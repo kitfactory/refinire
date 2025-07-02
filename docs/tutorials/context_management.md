@@ -219,7 +219,7 @@ context_config = [
 ```
 
 agent = RefinireAgent(
-    name="DocGenAgent",
+    name="DocRefinireAgent",
     generation_instructions="Generate comprehensive documentation based on source code and existing documentation.",
     model="gpt-4",
     context_providers_config=context_config

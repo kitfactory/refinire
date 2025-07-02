@@ -226,7 +226,7 @@ class RouterConfig(BaseModel):
         return v
 
 
-class RouterAgent(Step):
+class RouterAgent(RefinireAgent):
     """
     Router agent that classifies input and routes to appropriate next steps.
     入力を分類して適切な次のステップにルーティングするルーターエージェント。
@@ -247,7 +247,14 @@ class RouterAgent(Step):
             llm_pipeline: Optional LLM pipeline for LLM-based classification
                          LLMベース分類用のオプションのLLMパイプライン
         """
-        super().__init__(name=config.name)
+        # Initialize RefinireAgent base class
+        # RefinireAgent基底クラスを初期化
+        default_instructions = f"You are a routing agent that classifies input into categories: {', '.join(config.routes.keys())}"
+        super().__init__(
+            name=config.name,
+            generation_instructions=config.classification_prompt or default_instructions,
+            model="gpt-4o-mini"
+        )
         self.config = config
         
         # Initialize classifier based on type
@@ -295,7 +302,7 @@ Available routes: {', '.join(self.config.routes.keys())}
 Choose the route that best matches the input's intent, content, or characteristics.
 """
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute the routing logic.
         ルーティングロジックを実行します。
@@ -368,6 +375,50 @@ Choose the route that best matches the input's intent, content, or characteristi
             logger.info(f"RouterAgent '{self.name}' using fallback route '{fallback_route}' -> '{fallback_step}'")
             
             return ctx
+    
+    async def run_as_agent(self, user_input: Optional[str], ctx: Context) -> Context:
+        """
+        Execute RouterAgent using parent RefinireAgent functionality
+        親のRefinireAgent機能を使用してRouterAgentを実行
+        
+        This method allows RouterAgent to be used as a regular RefinireAgent
+        when routing features are not needed.
+        このメソッドは、ルーティング機能が不要な場合にRouterAgentを
+        通常のRefinireAgentとして使用可能にします。
+        
+        Args:
+            user_input: User input for the agent / エージェント用ユーザー入力
+            ctx: Current workflow context / 現在のワークフローコンテキスト
+        
+        Returns:
+            Context: Updated context with agent results / エージェント結果付き更新済みコンテキスト
+        """
+        # Use parent RefinireAgent's run_async method for standard agent functionality
+        # 標準エージェント橜能については親のRefinireAgentのrun_asyncメソッドを使用
+        return await super().run_async(user_input, ctx)
+    
+    def route(self, input_text: str, context: Optional[Context] = None) -> str:
+        """
+        Direct routing method without Flow integration
+        Flow統合なしの直接ルーティングメソッド
+        
+        Args:
+            input_text: Text to classify and route / 分類・ルーティングするテキスト
+            context: Optional context for classification / 分類用オプションコンテキスト
+        
+        Returns:
+            str: Route destination / ルート先
+        """
+        if context is None:
+            from .flow.context import Context
+            context = Context()
+        
+        route_key = self.classifier.classify(input_text, context)
+        
+        if route_key is None or route_key not in self.config.routes:
+            route_key = self.config.default_route or next(iter(self.config.routes.keys()))
+        
+        return self.config.routes[route_key]
 
 
 # Utility functions for creating common router configurations

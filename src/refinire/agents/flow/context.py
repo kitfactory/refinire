@@ -52,6 +52,8 @@ class Context(BaseModel):
     # Core state / コア状態
     last_user_input: Optional[str] = None  # Most recent user input / 直近のユーザー入力
     messages: List[Message] = Field(default_factory=list)  # Conversation history / 会話履歴
+    result: Any = None  # Latest execution result / 最新の実行結果
+    evaluation_result: Optional[Dict[str, Any]] = None  # Latest evaluation result / 最新の評価結果
     
     # External data / 外部データ
     knowledge: Dict[str, Any] = Field(default_factory=dict)  # External knowledge (RAG, etc.) / 外部知識（RAGなど）

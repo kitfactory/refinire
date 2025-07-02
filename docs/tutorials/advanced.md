@@ -40,14 +40,14 @@ from agents_sdk_models import create_simple_gen_agent, Flow
 def get_weather(location: str) -> str:
     return f"Weather in {location}: Sunny, 25°C"
 
-# GenAgent + Flow方式（推奨）
-weather_agent = create_simple_gen_agent(
+# RefinireAgent + Flow方式（推奨）
+weather_agent = create_simple_agent(
     name="weather_bot",
     instructions="""
     あなたは天気情報を提供するアシスタントです。必要に応じてget_weatherツールを使ってください。
     """,
     model="gpt-4o-mini",
-    generation_tools=[get_weather]
+    tools=[get_weather]
 )
 
 flow = Flow(steps=weather_agent)  # 超シンプル！
@@ -123,10 +123,10 @@ print(result)
 
 ## 4. リトライ＆自己改善（新推奨方法）
 ```python
-from agents_sdk_models import create_evaluated_gen_agent, Flow
+from refinire import create_evaluated_agent, Flow
 
-# 評価付きGenAgent + Flow方式（推奨）
-smart_agent = create_evaluated_gen_agent(
+# 評価付きRefinireAgent + Flow方式（推奨）
+smart_agent = create_evaluated_agent(
     name="smart_writer",
     generation_instructions="文章を生成してください。",
     evaluation_instructions="分かりやすさで評価し、コメントも返してください。",
@@ -160,18 +160,18 @@ print(result)
 ## 5. 複雑なワークフロー（マルチステップ）
 ```python
 from agents_sdk_models import (
-    create_simple_gen_agent, create_evaluated_gen_agent, 
+    create_simple_agent, create_evaluated_agent, 
     Flow, DebugStep, UserInputStep, ConditionStep
 )
 
-# 複数のGenAgentを組み合わせ
-idea_generator = create_simple_gen_agent(
+# 複数のRefinireAgentを組み合わせ
+idea_generator = create_simple_agent(
     name="idea_gen", 
     instructions="創造的なアイデアを生成してください", 
     model="gpt-4o-mini"
 )
 
-content_writer = create_evaluated_gen_agent(
+content_writer = create_evaluated_agent(
     name="writer",
     generation_instructions="提供されたアイデアを基に詳細な記事を書いてください",
     evaluation_instructions="記事の質を評価してください",
@@ -179,7 +179,7 @@ content_writer = create_evaluated_gen_agent(
     threshold=75
 )
 
-reviewer = create_simple_gen_agent(
+reviewer = create_simple_agent(
     name="reviewer",
     instructions="記事をレビューして改善提案をしてください",
     model="claude-3-5-sonnet-latest"
@@ -232,5 +232,5 @@ result = await complex_flow.run(input_data="技術的な内容について書い
 - **新機能：** `Flow(steps=[step1, step2])` で自動シーケンシャル接続
 - **新機能：** `Flow(steps=single_step)` で単一ステップも超シンプル
 - ツールやガードレール、動的プロンプト、自己改善を柔軟に組み合わせ可能
-- 旧 `AgentPipeline` から `GenAgent + Flow` への移行は簡単
+- 旧 `AgentPipeline` から `RefinireAgent + Flow` への移行は簡単
 - 複雑なワークフローも数行で構築可能

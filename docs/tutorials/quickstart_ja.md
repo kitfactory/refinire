@@ -54,18 +54,18 @@ result = Runner.run_sync(agent, "こんにちは！")
 print(result.final_output)
 ```
 
-## 3. GenAgent + Flow で高度なワークフロー（推奨）
+## 3. RefinireAgent + Flow で高度なワークフロー（推奨）
 
 自動評価と品質向上機能を含む高度なエージェントを作成します。
 
 ```python
-from refinire import create_simple_gen_agent, Flow, Context
+from refinire import create_evaluated_agent, Flow, Context
 import asyncio
 
-# 自動評価機能付きGenAgentを作成
-gen_agent = create_simple_gen_agent(
+# 自動評価機能付きRefinireAgentを作成
+agent = create_evaluated_agent(
     name="ai_expert",
-    instructions="""
+    generation_instructions="""
     あなたは専門知識豊富なAIアシスタントです。
     ユーザーの要望に応じて、正確で分かりやすい文章を生成してください。
     専門用語を使う場合は、必ず説明を付けてください。
@@ -83,7 +83,7 @@ gen_agent = create_simple_gen_agent(
 )
 
 # 超シンプルなFlowを作成
-flow = Flow(steps=gen_agent)
+flow = Flow(steps=agent)
 
 # 実行
 async def main():
@@ -91,9 +91,11 @@ async def main():
     print("生成結果:")
     print(result.shared_state["ai_expert_result"])
     
-    # 評価スコアも確認可能
-    if "ai_expert_evaluation" in result.shared_state:
-        print(f"\n品質スコア: {result.shared_state['ai_expert_evaluation']}")
+    # 評価結果も確認可能
+    if result.evaluation_result:
+        print(f"\n品質スコア: {result.evaluation_result['score']}")
+        print(f"合格: {result.evaluation_result['passed']}")
+        print(f"フィードバック: {result.evaluation_result['feedback']}")
 
 # 実行
 asyncio.run(main())
@@ -193,9 +195,10 @@ print(result)
 
 ### ✅ 推奨されるアプローチ
 - **`get_llm`** で主要なLLMを簡単取得
-- **`GenAgent + Flow`** で生成・評価・自己改善まで一気通貫
-- **`Flow(steps=gen_agent)`** だけで複雑なワークフローも**超シンプル**に実現
+- **`RefinireAgent + Flow`** で生成・評価・自己改善まで一気通貫
+- **`Flow(steps=agent)`** だけで複雑なワークフローも**超シンプル**に実現
 - **自動品質管理**: threshold設定で品質を自動維持
+- **コンテキストベース結果アクセス**: エージェント間のシームレスなデータフロー
 
 ### ⚠️ 注意事項
 - 旧 `AgentPipeline` は v0.1.0 で削除予定（移行は簡単です）

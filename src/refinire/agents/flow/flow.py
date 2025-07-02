@@ -625,7 +625,7 @@ class Flow:
         try:
             # Execute step
             # ステップを実行
-            result = await step.run(user_input, self.context)
+            result = await step.run_async(user_input, self.context)
             if result != self.context:
                 # Step returned a new context, use it
                 # ステップが新しいコンテキストを返した場合、それを使用

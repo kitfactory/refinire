@@ -7,7 +7,7 @@ import pytest
 import asyncio
 from typing import Optional
 
-from refinire import Flow, Step, UserInputStep, DebugStep, Context, create_simple_gen_agent
+from refinire import Flow, Step, UserInputStep, DebugStep, Context, create_simple_agent
 
 
 class DummyStep(Step):
@@ -17,7 +17,7 @@ class DummyStep(Step):
         super().__init__(name)
         self.next_step = next_step
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         ctx.update_step_info(self.name)
         ctx.add_system_message(f"DummyStep {self.name} executed")
         if self.next_step:
@@ -184,7 +184,7 @@ class TestFlowConstructor:
         
         GenAgentを単一ステップとして使用することをテスト。
         """
-        gen_agent = create_simple_gen_agent(
+        gen_agent = create_simple_agent(
             name="story_generator",
             instructions="Generate creative stories",
             model="gpt-4o-mini"
@@ -202,11 +202,11 @@ class TestFlowConstructor:
         
         GenAgentリストを使用することをテスト。
         """
-        gen_agent1 = create_simple_gen_agent(
+        gen_agent1 = create_simple_agent(
             name="brainstormer",
             instructions="Generate ideas"
         )
-        gen_agent2 = create_simple_gen_agent(
+        gen_agent2 = create_simple_agent(
             name="writer",
             instructions="Write content"
         )
@@ -227,7 +227,7 @@ class TestFlowConstructor:
         
         リスト内で異なるステップタイプを混合することをテスト。
         """
-        gen_agent = create_simple_gen_agent(
+        gen_agent = create_simple_agent(
             name="generator",
             instructions="Generate content"
         )

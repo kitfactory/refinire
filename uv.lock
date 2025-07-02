@@ -1290,7 +1290,7 @@ wheels = [
 
 [[package]]
 name = "refinire"
-version = "0.2.5"
+version = "0.2.7"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
@@ -1328,6 +1328,9 @@ ollama = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "mkdocs-material" },
+    { name = "mkdocstrings" },
+    { name = "mkdocstrings-python" },
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
@@ -1358,6 +1361,9 @@ provides-extras = ["anthropic", "google", "ollama", "dev", "all"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "mkdocs-material", specifier = ">=9.6.14" },
+    { name = "mkdocstrings", specifier = ">=0.29.1" },
+    { name = "mkdocstrings-python", specifier = ">=1.16.10" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-cov", specifier = ">=6.1.1" },
 ]

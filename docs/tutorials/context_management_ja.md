@@ -219,7 +219,7 @@ context_config = [
 ```
 
 agent = RefinireAgent(
-    name="DocGenAgent",
+    name="DocRefinireAgent",
     generation_instructions="提供されたソースコードと既存のドキュメントに基づいて、包括的で構造化されたドキュメントを生成してください。",
     model="gpt-4",
     context_providers_config=context_config

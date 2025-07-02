@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="OpenAI Agents SDKを拡張するモデルアダプター＆ワークフロー集">
+        <meta name="description" content="複数のLLMプロバイダーに対応した統一インターフェースライブラリ">
       
       
         <meta name="author" content="kitfactory">
       
       
-        <link rel="canonical" href="https://kitfactory.github.io/agents-sdk-models/">
+        <link rel="canonical" href="https://kitfactory.github.io/refinire/">
       
       
       
-        <link rel="next" href="api_reference/">
+        <link rel="next" href="minimal_example/">
       
       
       <link rel="icon" href="assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Agents SDK Models</title>
+        <title>Refinire</title>
       
     
     
@@ -68,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#agents-sdk-models" class="md-skip">
+        <a href="#welcome-to-refinire" class="md-skip">
           コンテンツにスキップ
         </a>
       
@@ -80,11 +80,9 @@
     
       
 
-  
-
-<header class="md-header md-header--shadow" data-md-component="header">
+<header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="ヘッダー">
-    <a href="." title="Agents SDK Models" class="md-header__button md-logo" aria-label="Agents SDK Models" data-md-component="logo">
+    <a href="." title="Refinire" class="md-header__button md-logo" aria-label="Refinire" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -98,7 +96,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            Agents SDK Models
+            Refinire
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -135,6 +133,11 @@
       </label>
       <nav class="md-search__options" aria-label="検索">
         
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="共有" aria-label="共有" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
         <button type="reset" class="md-search__icon md-icon" title="クリア" aria-label="クリア" tabindex="-1">
           
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -158,13 +161,13 @@
     
     
       <div class="md-header__source">
-        <a href="https://github.com/kitfactory/agents-sdk-models" title="リポジトリへ" class="md-source" data-md-component="source">
+        <a href="https://github.com/kitfactory/refinire" title="リポジトリへ" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
   </div>
   <div class="md-source__repository">
-    kitfactory/agents-sdk-models
+    kitfactory/refinire
   </div>
 </a>
       </div>
@@ -177,6 +180,115 @@
       
       
         
+          
+            
+<nav class="md-tabs" aria-label="タブ" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="." class="md-tabs__link">
+        
+  
+  
+    
+  
+  はじめに
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="minimal_example/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  最小使用例
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="api_reference/" class="md-tabs__link">
+          
+  
+  
+  APIリファレンス
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="tutorials/quickstart/" class="md-tabs__link">
+          
+  
+  
+  チュートリアル
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="developer/ai_completion/" class="md-tabs__link">
+          
+  
+  
+  開発者向け
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
           
         
       
@@ -191,26 +303,28 @@
                     
 
 
+  
 
-<nav class="md-nav md-nav--primary" aria-label="ナビゲーション" data-md-level="0">
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="ナビゲーション" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Agents SDK Models" class="md-nav__button md-logo" aria-label="Agents SDK Models" data-md-component="logo">
+    <a href="." title="Refinire" class="md-nav__button md-logo" aria-label="Refinire" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
 
     </a>
-    Agents SDK Models
+    Refinire
   </label>
   
     <div class="md-nav__source">
-      <a href="https://github.com/kitfactory/agents-sdk-models" title="リポジトリへ" class="md-source" data-md-component="source">
+      <a href="https://github.com/kitfactory/refinire" title="リポジトリへ" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
   </div>
   <div class="md-source__repository">
-    kitfactory/agents-sdk-models
+    kitfactory/refinire
   </div>
 </a>
     </div>
@@ -274,37 +388,37 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#key-features" class="md-nav__link">
     <span class="md-ellipsis">
-      主な特徴
+      Key Features
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
-      インストール
+      Installation
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="インストール">
+    <nav class="md-nav" aria-label="Installation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pypi" class="md-nav__link">
+  <a href="#from-pypi" class="md-nav__link">
     <span class="md-ellipsis">
-      PyPI から
+      From PyPI
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#uv" class="md-nav__link">
+  <a href="#using-uv" class="md-nav__link">
     <span class="md-ellipsis">
-      uv を使う場合
+      Using uv
     </span>
   </a>
   
@@ -316,27 +430,45 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#development-recommended" class="md-nav__link">
     <span class="md-ellipsis">
-      開発用（推奨）
+      Development (Recommended)
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#supported-environments" class="md-nav__link">
     <span class="md-ellipsis">
-      サポート環境
+      Supported Environments
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#tracing" class="md-nav__link">
     <span class="md-ellipsis">
-      トレーシング
+      Tracing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learning-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Learning Resources
     </span>
   </a>
   
@@ -357,12 +489,12 @@
   
   
     <li class="md-nav__item">
-      <a href="api_reference/" class="md-nav__link">
+      <a href="minimal_example/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    APIリファレンス
+    最小使用例
     
   </span>
   
@@ -382,15 +514,235 @@
     
     
     
+      
+      
+        
+      
+    
     
     <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    APIリファレンス
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            APIリファレンス
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    概要
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/pipeline.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/llm.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LLM
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/context.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Context
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/flow.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Flow
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/step.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Step
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="api/agents.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Agents
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
             
   
   
@@ -403,8 +755,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             チュートリアル
           </label>
@@ -456,6 +808,127 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tutorials/doctest_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Doctest例
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    開発者向け
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            開発者向け
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="developer/ai_completion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    AI補完設定
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="developer/type_checking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    型チェック
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -490,37 +963,37 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#_1" class="md-nav__link">
+  <a href="#key-features" class="md-nav__link">
     <span class="md-ellipsis">
-      主な特徴
+      Key Features
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
-      インストール
+      Installation
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="インストール">
+    <nav class="md-nav" aria-label="Installation">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#pypi" class="md-nav__link">
+  <a href="#from-pypi" class="md-nav__link">
     <span class="md-ellipsis">
-      PyPI から
+      From PyPI
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#uv" class="md-nav__link">
+  <a href="#using-uv" class="md-nav__link">
     <span class="md-ellipsis">
-      uv を使う場合
+      Using uv
     </span>
   </a>
   
@@ -532,27 +1005,45 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#_3" class="md-nav__link">
+  <a href="#development-recommended" class="md-nav__link">
     <span class="md-ellipsis">
-      開発用（推奨）
+      Development (Recommended)
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_4" class="md-nav__link">
+  <a href="#supported-environments" class="md-nav__link">
     <span class="md-ellipsis">
-      サポート環境
+      Supported Environments
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#_5" class="md-nav__link">
+  <a href="#tracing" class="md-nav__link">
     <span class="md-ellipsis">
-      トレーシング
+      Tracing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Documentation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learning-resources" class="md-nav__link">
+    <span class="md-ellipsis">
+      Learning Resources
     </span>
   </a>
   
@@ -577,41 +1068,53 @@
   
 
 
-<h1 id="agents-sdk-models">Agents SDK Models へようこそ<a class="headerlink" href="#agents-sdk-models" title="Permanent link">&para;</a></h1>
-<p>OpenAI Agents SDK を拡張し、複数のLLMプロバイダーを統一インターフェースで扱えるモデルアダプター＆ワークフロー拡張集です。</p>
-<h2 id="_1">主な特徴<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<h1 id="welcome-to-refinire">Welcome to Refinire<a class="headerlink" href="#welcome-to-refinire" title="Permanent link">&para;</a></h1>
+<p>A comprehensive extension for OpenAI Agents SDK that provides unified interfaces for multiple LLM providers and advanced workflow capabilities.</p>
+<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
 <ul>
-<li>OpenAI, Gemini, Claude, Ollama など主要LLMを簡単切替</li>
-<li><strong>🚀 新機能：</strong> <code>Flow(steps=gen_agent)</code> で超シンプルなワークフロー作成</li>
-<li><strong>🚀 新機能：</strong> <code>Flow(steps=[step1, step2])</code> で自動シーケンシャル実行</li>
-<li>生成・評価・ツール・ガードレールを1つのパイプラインで統合</li>
-<li>モデル名とプロンプトだけで自己改善サイクルも実現</li>
-<li>Pydanticによる構造化出力対応</li>
-<li>Python 3.9+ / Windows, Linux, MacOS対応</li>
+<li>Easy switching between OpenAI, Gemini, Claude, Ollama and other major LLMs</li>
+<li><strong>🚀 New Feature:</strong> Ultra-simple workflow creation with <code>Flow(steps=gen_agent)</code></li>
+<li><strong>🚀 New Feature:</strong> Automatic sequential execution with <code>Flow(steps=[step1, step2])</code></li>
+<li>Integrated pipeline combining generation, evaluation, tools, and guardrails</li>
+<li>Self-improvement cycles with just model names and prompts</li>
+<li>Pydantic-based structured output support</li>
+<li>Python 3.9+ / Windows, Linux, MacOS support</li>
 </ul>
-<h2 id="_2">インストール<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
-<h3 id="pypi">PyPI から<a class="headerlink" href="#pypi" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>agents-sdk-models
-</code></pre></div>
-<h3 id="uv">uv を使う場合<a class="headerlink" href="#uv" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>agents-sdk-models
-</code></pre></div>
-<h2 id="_3">開発用（推奨）<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/kitfactory/agents-sdk-models.git
-<span class="nb">cd</span><span class="w"> </span>agents-sdk-models
-python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
-.venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">  </span><span class="c1"># Windows</span>
-<span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">  </span><span class="c1"># Linux/Mac</span>
-uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev<span class="o">]</span>
-</code></pre></div>
-<h2 id="_4">サポート環境<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<h3 id="from-pypi">From PyPI<a class="headerlink" href="#from-pypi" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pip<span class="w"> </span>install<span class="w"> </span>refinire
+</span></code></pre></div>
+<h3 id="using-uv">Using uv<a class="headerlink" href="#using-uv" title="Permanent link">&para;</a></h3>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>refinire
+</span></code></pre></div>
+<h2 id="development-recommended">Development (Recommended)<a class="headerlink" href="#development-recommended" title="Permanent link">&para;</a></h2>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/kitfactory/refinire.git
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>refinire
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>.venv
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>.venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">  </span><span class="c1"># Windows</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nb">source</span><span class="w"> </span>.venv/bin/activate<span class="w">  </span><span class="c1"># Linux/Mac</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev<span class="o">]</span>
+</span></code></pre></div>
+<h2 id="supported-environments">Supported Environments<a class="headerlink" href="#supported-environments" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Python 3.9+</li>
 <li>OpenAI Agents SDK 0.0.9+</li>
 <li>Windows, Linux, MacOS </li>
 </ul>
-<h2 id="_5">トレーシング<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
-<p>本ライブラリでは OpenAI Agents SDK のトレーシング機能をサポートしています。詳細は <a href="tracing/">トレーシング</a> を参照してください。 </p>
+<h2 id="tracing">Tracing<a class="headerlink" href="#tracing" title="Permanent link">&para;</a></h2>
+<p>This library supports OpenAI Agents SDK tracing features. For details, see <a href="tracing/">Tracing</a>.</p>
+<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="api_reference/">API Reference</a> - Detailed class and function documentation</li>
+<li><a href="tutorials/quickstart/">Quick Start</a> - Get started immediately</li>
+<li><a href="composable-flow-architecture/">Composable Flow Architecture</a> - Advanced workflow construction</li>
+</ul>
+<h2 id="learning-resources">Learning Resources<a class="headerlink" href="#learning-resources" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="tutorials/">Tutorials</a> - Step-by-step learning content</li>
+<li><a href="../examples/">Examples</a> - Practical use cases  </li>
+<li><a href="developer/">Developer Guide</a> - Information for contributors </li>
+</ul>
 
 
 
@@ -631,6 +1134,12 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
           
 <script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  ページトップへ戻る
+</button>
         
       </main>
       
@@ -660,7 +1169,7 @@ uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </s
     
     
       
-      <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f", "clipboard.copy": "\u30af\u30ea\u30c3\u30d7\u30dc\u30fc\u30c9\u3078\u30b3\u30d4\u30fc", "search.result.more.one": "\u3053\u306e\u30da\u30fc\u30b8\u5185\u306b\u3082\u30461\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.more.other": "\u3053\u306e\u30da\u30fc\u30b8\u5185\u306b\u3042\u3068#\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.none": "\u4f55\u3082\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f", "search.result.one": "1\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.other": "#\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.placeholder": "\u691c\u7d22\u30ad\u30fc\u30ef\u30fc\u30c9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044", "search.result.term.missing": "\u691c\u7d22\u306b\u542b\u307e\u308c\u306a\u3044", "select.version": "\u30d0\u30fc\u30b8\u30e7\u30f3\u5207\u308a\u66ff\u3048"}, "version": null}</script>
+      <script id="__config" type="application/json">{"base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.code.annotate"], "search": "assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f", "clipboard.copy": "\u30af\u30ea\u30c3\u30d7\u30dc\u30fc\u30c9\u3078\u30b3\u30d4\u30fc", "search.result.more.one": "\u3053\u306e\u30da\u30fc\u30b8\u5185\u306b\u3082\u30461\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.more.other": "\u3053\u306e\u30da\u30fc\u30b8\u5185\u306b\u3042\u3068#\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.none": "\u4f55\u3082\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f", "search.result.one": "1\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.other": "#\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.placeholder": "\u691c\u7d22\u30ad\u30fc\u30ef\u30fc\u30c9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044", "search.result.term.missing": "\u691c\u7d22\u306b\u542b\u307e\u308c\u306a\u3044", "select.version": "\u30d0\u30fc\u30b8\u30e7\u30f3\u5207\u308a\u66ff\u3048"}, "version": null}</script>
     
     
       <script src="assets/javascripts/bundle.13a4f30d.min.js"></script>

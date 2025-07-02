@@ -46,12 +46,6 @@ from .pipeline import (
 )
 
 # Import implemented agents
-from .gen_agent import (
-    GenAgent,
-    create_simple_gen_agent,
-    create_evaluated_gen_agent
-)
-
 from .clarify_agent import (
     ClarifyAgent,
     ClarificationResult,
@@ -161,11 +155,6 @@ __all__ = [
     "create_tool_enabled_agent",
     "create_simple_interactive_agent",
     "create_evaluated_interactive_agent",
-    
-    # Generation Agents
-    "GenAgent",
-    "create_simple_gen_agent", 
-    "create_evaluated_gen_agent",
     
     # Clarification Agents
     "ClarifyAgent",

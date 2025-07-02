@@ -15,43 +15,43 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Testing
 ```bash
 # Run all tests
-python -m pytest
+source .venv/bin/activate && python -m pytest
 
 # Run tests with coverage
-python -m pytest --cov=src/refinire --cov-report=html
+source .venv/bin/activate && python -m pytest --cov=src/refinire --cov-report=html
 
 # Run specific test file
-python -m pytest tests/test_anthropic.py
+source .venv/bin/activate && python -m pytest tests/test_anthropic.py
 
 # Run tests for specific module
-python -m pytest tests/test_flow.py -v
+source .venv/bin/activate && python -m pytest tests/test_flow.py -v
 ```
 
 ### Type Checking
 ```bash
 # Run mypy type checking (strict mode enabled)
-python -m mypy src/refinire
+source .venv/bin/activate && python -m mypy src/refinire
 ```
 
 ### Building and Installation
 ```bash
 # Install in development mode
-pip install -e .
+source .venv/bin/activate && pip install -e .
 
 # Install with development dependencies
-pip install -e .[dev]
+source .venv/bin/activate && pip install -e .[dev]
 
 # Build package
-python -m build
+source .venv/bin/activate && python -m build
 ```
 
 ### Documentation
 ```bash
 # Serve documentation locally (MkDocs)
-mkdocs serve
+source .venv/bin/activate && mkdocs serve
 
 # Build documentation
-mkdocs build
+source .venv/bin/activate && mkdocs build
 ```
 
 ## Code Architecture

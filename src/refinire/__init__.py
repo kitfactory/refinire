@@ -79,7 +79,6 @@ from .agents.pipeline import (
 
 # Specialized agents
 from .agents import (
-    GenAgent,
     ClarifyAgent,
     ClarificationResult,
     ClarificationQuestion,
@@ -87,10 +86,16 @@ from .agents import (
     ValidatorAgent,
     RouterAgent,
     NotificationAgent,
-    create_simple_gen_agent,
-    create_evaluated_gen_agent,
     create_simple_clarify_agent,
     create_evaluated_clarify_agent
+)
+
+# Tool decorators and utilities
+from .tools import (
+    tool,
+    function_tool_compat,
+    get_tool_info,
+    list_tools
 )
 
 # Environment variable templates
@@ -146,7 +151,6 @@ __all__ = [
     "create_evaluated_interactive_agent",
     
     # Specialized agents
-    "GenAgent",
     "ClarifyAgent",
     "ClarificationResult",
     "ClarificationQuestion",
@@ -154,10 +158,14 @@ __all__ = [
     "ValidatorAgent",
     "RouterAgent",
     "NotificationAgent",
-    "create_simple_gen_agent",
-    "create_evaluated_gen_agent",
     "create_simple_clarify_agent",
     "create_evaluated_clarify_agent",
+    
+    # Tool decorators and utilities
+    "tool",
+    "function_tool_compat",
+    "get_tool_info",
+    "list_tools",
     
     # Tracing
     "enable_console_tracing",

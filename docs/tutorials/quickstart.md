@@ -54,18 +54,18 @@ result = Runner.run_sync(agent, "Hello!")
 print(result.final_output)
 ```
 
-## 3. GenAgent + Flow for Advanced Workflows (Recommended)
+## 3. RefinireAgent + Flow for Advanced Workflows (Recommended)
 
 Create advanced agents with automatic evaluation and quality improvement features.
 
 ```python
-from refinire import create_simple_gen_agent, Flow, Context
+from refinire import create_evaluated_agent, Flow, Context
 import asyncio
 
-# Create GenAgent with automatic evaluation
-gen_agent = create_simple_gen_agent(
+# Create RefinireAgent with automatic evaluation
+agent = create_evaluated_agent(
     name="ai_expert",
-    instructions="""
+    generation_instructions="""
     You are an AI assistant with deep expertise.
     Generate accurate and clear content based on user requests.
     Always provide explanations when using technical terms.
@@ -83,7 +83,7 @@ gen_agent = create_simple_gen_agent(
 )
 
 # Create ultra-simple Flow
-flow = Flow(steps=gen_agent)
+flow = Flow(steps=agent)
 
 # Execute
 async def main():
@@ -91,9 +91,11 @@ async def main():
     print("Generated result:")
     print(result.shared_state["ai_expert_result"])
     
-    # Check evaluation score
-    if "ai_expert_evaluation" in result.shared_state:
-        print(f"\nQuality Score: {result.shared_state['ai_expert_evaluation']}")
+    # Check evaluation score and result
+    if result.evaluation_result:
+        print(f"\nQuality Score: {result.evaluation_result['score']}")
+        print(f"Passed: {result.evaluation_result['passed']}")
+        print(f"Feedback: {result.evaluation_result['feedback']}")
 
 # Run
 asyncio.run(main())
@@ -193,9 +195,10 @@ print(result)
 
 ### ✅ Recommended Approaches
 - **`get_llm`** for easy access to major LLMs
-- **`GenAgent + Flow`** for end-to-end generation, evaluation, and self-improvement
-- **`Flow(steps=gen_agent)`** makes complex workflows **ultra-simple**
+- **`RefinireAgent + Flow`** for end-to-end generation, evaluation, and self-improvement
+- **`Flow(steps=agent)`** makes complex workflows **ultra-simple**
 - **Automatic quality management**: maintain quality with threshold settings
+- **Context-based result access**: seamless data flow between agents
 
 ### ⚠️ Important Notes
 - Legacy `AgentPipeline` will be removed in v0.1.0 (migration is easy)

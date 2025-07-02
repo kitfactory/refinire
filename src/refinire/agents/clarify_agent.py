@@ -3,7 +3,7 @@
 """ClarifyAgent — Interactive Requirements Clarification Agent for Flow workflows.
 
 ClarifyAgentはユーザーとの対話を通じて必要なデータモデルクラスの情報を収集するStepクラスです。
-GenAgentを参考に作成されており、Flowワークフロー内で使用できます。
+RefinireAgentを参考に作成されており、Flowワークフロー内で使用できます。
 """
 
 import asyncio
@@ -133,7 +133,7 @@ class ClarifyPipeline:
             evaluation_model: Evaluation model name / 評価モデル名
             threshold: Evaluation threshold / 評価閾値
             retries: Number of retries / リトライ回数
-            **kwargs: Additional arguments for GenAgent / GenAgent用追加引数
+            **kwargs: Additional arguments for RefinireAgent / RefinireAgent用追加引数
         """
         
         # English: Store original output data type before wrapping
@@ -462,7 +462,7 @@ class ClarificationResult:
     remaining_turns: int  # Remaining turns / 残りターン数
 
 
-class ClarifyAgent(Step):
+class ClarifyAgent(RefinireAgent):
     """
     Step implementation for interactive requirements clarification
     対話的要件明確化のためのStep実装
@@ -529,15 +529,31 @@ class ClarifyAgent(Step):
             store_result_key: Key to store result in context shared_state / コンテキスト共有状態に結果を格納するキー
             conversation_key: Key to store conversation state / 会話状態を格納するキー
         """
-        # Initialize Step base class
-        # Step基底クラスを初期化
-        super().__init__(name)
+        # Initialize RefinireAgent base class
+        # RefinireAgent基底クラスを初期化
+        super().__init__(
+            name=name,
+            generation_instructions=generation_instructions,
+            evaluation_instructions=evaluation_instructions,
+            model=model or "gpt-4o-mini",
+            evaluation_model=evaluation_model,
+            threshold=threshold,
+            max_retries=retries,
+            input_guardrails=input_guardrails,
+            output_guardrails=output_guardrails,
+            session_history=session_history,
+            history_size=history_size,
+            improvement_callback=improvement_callback,
+            locale=locale,
+            next_step=next_step,
+            store_result_key=store_result_key or f"{name}_result"
+        )
         
-        # Store flow-specific configuration
-        # フロー固有の設定を保存
-        self.next_step = next_step
-        self.store_result_key = store_result_key or f"{name}_result"
+        # Store clarification-specific configuration
+        # 明確化固有の設定を保存
         self.conversation_key = conversation_key or f"{name}_conversation"
+        self.clerify_max_turns = clerify_max_turns
+        self.output_data = output_data
         
         # Create internal ClarifyPipeline instance
         # 内部ClarifyPipelineインスタンスを作成
@@ -564,7 +580,7 @@ class ClarifyAgent(Step):
             locale=locale,
         )
 
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute ClarifyAgent step using ClarifyPipeline
         ClarifyPipelineを使用してClarifyAgentステップを実行する
@@ -600,8 +616,8 @@ class ClarifyAgent(Step):
                 # 日本語: 既存の会話の継続かを確認
                 existing_conversation = ctx.shared_state.get(self.conversation_key)
                 
-                # English: Execute clarification using GenAgent-based pipeline
-                # 日本語: GenAgentベースのパイプラインを使用して明確化を実行
+                # English: Execute clarification using RefinireAgent-based pipeline
+                # 日本語: RefinireAgentベースのパイプラインを使用して明確化を実行
                 if existing_conversation and not self.pipeline.is_complete:
                     # English: Continue existing clarification
                     # 日本語: 既存の明確化を継続
@@ -759,6 +775,27 @@ class ClarifyAgent(Step):
 
     def __repr__(self) -> str:
         return self.__str__()
+    
+    async def run_as_agent(self, user_input: Optional[str], ctx: Context) -> Context:
+        """
+        Execute ClarifyAgent using parent RefinireAgent functionality
+        親のRefinireAgent機能を使用してClarifyAgentを実行
+        
+        This method allows ClarifyAgent to be used as a regular RefinireAgent
+        when clarification features are not needed.
+        このメソッドは、明確化機能が不要な場合にClarifyAgentを
+        通常のRefinireAgentとして使用可能にします。
+        
+        Args:
+            user_input: User input for the agent / エージェント用ユーザー入力
+            ctx: Current workflow context / 現剈のワークフローコンテキスト
+        
+        Returns:
+            Context: Updated context with agent results / エージェント結果付き更新済みコンテキスト
+        """
+        # Use parent RefinireAgent's run_async method for standard agent functionality
+        # 標準エージェント機能については親のRefinireAgentのrun_asyncメソッドを使用
+        return await super().run_async(user_input, ctx)
 
 
 def create_simple_clarify_agent(

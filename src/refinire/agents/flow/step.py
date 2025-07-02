@@ -40,10 +40,10 @@ class Step(ABC):
         self.name = name
     
     @abstractmethod
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
-        Execute step and return updated context
-        ステップを実行し、更新されたコンテキストを返す
+        Execute step asynchronously and return updated context
+        ステップを非同期実行し、更新されたコンテキストを返す
         
         Args:
             user_input: User input if any / ユーザー入力（あれば）
@@ -86,7 +86,7 @@ class UserInputStep(Step):
         self.prompt = prompt
         self.next_step = next_step
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute user input step
         ユーザー入力ステップを実行
@@ -149,7 +149,7 @@ class ConditionStep(Step):
         self.if_true = if_true
         self.if_false = if_false
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute condition step
         条件ステップを実行
@@ -211,7 +211,7 @@ class FunctionStep(Step):
         self.function = function
         self.next_step = next_step
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute function step
         関数ステップを実行
@@ -272,7 +272,7 @@ class ForkStep(Step):
         self.branches = branches
         self.join_step = join_step
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute fork step
         フォークステップを実行
@@ -325,7 +325,7 @@ class JoinStep(Step):
         self.join_type = join_type
         self.next_step = next_step
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute join step
         ジョインステップを実行
@@ -385,7 +385,7 @@ class DebugStep(Step):
         self.print_context = print_context
         self.next_step = next_step
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute debug step
         デバッグステップを実行
@@ -518,7 +518,7 @@ class ParallelStep(Step):
             if not hasattr(step, 'name') or not step.name:
                 raise ValueError(f"All parallel steps must have valid names: {step}")
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute parallel steps
         並列ステップを実行
@@ -546,7 +546,7 @@ class ParallelStep(Step):
         async def run_parallel_step(step_and_ctx):
             step, step_ctx = step_and_ctx
             try:
-                result_ctx = await step.run(user_input, step_ctx)
+                result_ctx = await step.run_async(user_input, step_ctx)
                 return step.name, result_ctx, None
             except Exception as e:
                 return step.name, step_ctx, e
