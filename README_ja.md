@@ -86,6 +86,45 @@ flow = Flow({
 result = await flow.run("複雑なユーザーリクエスト")
 ```
 
+**🎯 Flow完全ガイド**: ワークフロー構築の包括的な学習には、詳細なステップバイステップガイドをご覧ください：
+
+**📖 日本語**: [Flow完全ガイド](docs/tutorials/flow_complete_guide_ja.md) - 基本から高度な並列処理まで完全解説  
+**📖 English**: [Complete Flow Guide](docs/tutorials/flow_complete_guide_en.md) - Comprehensive workflow construction
+
+### Flow設計パターン
+
+**シンプルなルーティング**:
+```python
+# ユーザーの言語に基づく自動ルーティング
+def detect_language(ctx):
+    return "japanese" if any(char in ctx.user_input for char in "あいうえお") else "english"
+
+flow = Flow({
+    "detect": ConditionStep("detect", detect_language, "jp_agent", "en_agent"),
+    "jp_agent": RefinireAgent(name="jp", generation_instructions="日本語で丁寧に回答"),
+    "en_agent": RefinireAgent(name="en", generation_instructions="Respond in English professionally")
+})
+```
+
+**高性能並列分析**:
+```python
+# 複数の分析を同時実行
+flow = Flow(start="preprocess", steps={
+    "preprocess": FunctionStep("preprocess", clean_data),
+    "analysis": {
+        "parallel": [
+            RefinireAgent(name="sentiment", generation_instructions="感情分析を実行"),
+            RefinireAgent(name="keywords", generation_instructions="キーワード抽出"),
+            RefinireAgent(name="summary", generation_instructions="要約作成"),
+            RefinireAgent(name="classification", generation_instructions="カテゴリ分類")
+        ],
+        "next_step": "report",
+        "max_workers": 4
+    },
+    "report": FunctionStep("report", generate_final_report)
+})
+```
+
 ## 1. Unified LLM Interface（統一LLMインターフェース）
 
 **課題**: AIプロバイダーの切り替えには、異なるSDK、API、認証方法が必要です。複数のプロバイダー統合の管理は、ベンダーロックインと複雑さを生み出します。
@@ -130,7 +169,7 @@ agent4 = RefinireAgent(
 
 これにより、プロバイダー間の切り替えやAPIキーの管理が非常に簡単になり、開発の柔軟性が大幅に向上します。
 
-**📖 チュートリアル:** [クイックスタートガイド](docs/tutorials/quickstart_ja.md) | **詳細:** [統一LLMインターフェース](docs/unified-llm-interface.md)
+**📖 チュートリアル:** [クイックスタートガイド](docs/tutorials/quickstart_ja.md) | **詳細:** [統一LLMインターフェース](docs/unified-llm-interface_ja.md)
 
 ## 2. Autonomous Quality Assurance（自律品質保証）
 
@@ -175,7 +214,7 @@ print(f"フィードバック: {result_ctx.evaluation_result['feedback']}")
 
 評価が閾値を下回った場合、自動的に再生成されるため、常に高品質な出力が保証されます。
 
-**📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [自律品質保証](docs/autonomous-quality-assurance.md)
+**📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [自律品質保証](docs/autonomous-quality-assurance_ja.md)
 
 ## 3. Tool Integration - 関数呼び出しの自動化
 
@@ -216,7 +255,7 @@ result = agent.run("東京の天気は？あと、15 * 23は？")
 print(result.content)  # 両方の質問に自動的に答えます
 ```
 
-**📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture.md)
+**📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture_ja.md)
 
 ## 4. 自動並列処理: 劇的なパフォーマンス向上
 
@@ -258,7 +297,7 @@ result = await flow.run("この包括的なテキストを分析...")
 
 この機能により、複雑な分析タスクを複数同時実行でき、開発者が手動で非同期処理を実装する必要がありません。
 
-**📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture.md)
+**📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture_ja.md)
 
 ## 5. コンテキスト管理 - インテリジェントメモリ
 
@@ -310,7 +349,40 @@ result = agent.run("エラーハンドリングをどのように改善できま
 print(result.content)
 ```
 
-**📖 チュートリアル:** [コンテキスト管理](docs/tutorials/context_management_ja.md) | **詳細:** [コンテキスト管理](docs/context_management.md)
+**📖 チュートリアル:** [コンテキスト管理](docs/tutorials/context_management_ja.md) | **詳細:** [コンテキスト管理設計書](docs/context_management.md)
+
+### 動的プロンプト生成 - 変数埋め込み機能
+
+RefinireAgentの新しい変数埋め込み機能により、コンテキストに基づいた動的なプロンプト生成が可能になりました：
+
+```python
+from refinire import RefinireAgent, Context
+
+# 変数埋め込み対応エージェント
+agent = RefinireAgent(
+    name="dynamic_responder",
+    generation_instructions="あなたは{{agent_role}}として、{{user_type}}ユーザーに{{response_style}}で対応してください。前回の結果: {{RESULT}}",
+    model="gpt-4o-mini"
+)
+
+# コンテキスト設定
+ctx = Context()
+ctx.shared_state = {
+    "agent_role": "カスタマーサポート専門家",
+    "user_type": "プレミアム",
+    "response_style": "迅速かつ詳細"
+}
+ctx.result = "問い合わせ内容を確認済み"
+
+# 動的プロンプトで実行
+result = agent.run("{{user_type}}ユーザーからの{{priority_level}}要求への対応をお願いします", ctx)
+```
+
+**主な変数埋め込み機能:**
+- **`{{RESULT}}`**: 前のステップの実行結果
+- **`{{EVAL_RESULT}}`**: 評価結果の詳細情報
+- **`{{カスタム変数}}`**: `ctx.shared_state`からの任意の値
+- **リアルタイム置換**: 実行時の動的プロンプト生成
 
 ### コンテキストベース結果アクセス
 
@@ -375,7 +447,72 @@ Refinire は、複雑さを洗練されたシンプルさに変えることで�
 
 ---
 
-## リリースノート - v0.2.8
+## リリースノート
+
+### v0.2.9 - 変数埋め込みと高度なFlow機能
+
+### 🎯 動的変数埋め込みシステム
+- **`{{変数名}}` 構文**: ユーザー入力とgeneration_instructionsで動的変数置換をサポート
+- **予約変数**: `{{RESULT}}`と`{{EVAL_RESULT}}`で前のステップの結果と評価にアクセス
+- **コンテキストベース**: `ctx.shared_state`から任意の変数を動的に参照
+- **リアルタイム置換**: 実行時にプロンプトを動的に生成・カスタマイズ
+- **エージェント柔軟性**: 同一エージェントでコンテキストに応じた異なる動作が可能
+
+```python
+# 動的プロンプト生成の例
+agent = RefinireAgent(
+    name="dynamic_agent",
+    generation_instructions="あなたは{{agent_role}}として{{target_audience}}向けに{{response_style}}で回答してください。前の結果: {{RESULT}}",
+    model="gpt-4o-mini"
+)
+
+ctx = Context()
+ctx.shared_state = {
+    "agent_role": "技術専門家",
+    "target_audience": "開発者",
+    "response_style": "詳細な技術説明"
+}
+result = agent.run("{{user_type}}ユーザーからの{{service_level}}要求に{{response_time}}対応してください", ctx)
+```
+
+### 📚 Flow完全ガイドの提供
+- **ステップバイステップガイド**: [Flow完全ガイド](docs/tutorials/flow_complete_guide_ja.md)で包括的なワークフロー構築
+- **日英両言語対応**: [English Guide](docs/tutorials/flow_complete_guide_en.md)も提供
+- **実践的例**: 基本的なフローから複雑な並列処理まで段階的に学習
+- **ベストプラクティス**: 効率的なフロー設計とパフォーマンス最適化のガイドライン
+- **トラブルシューティング**: よくある問題とその解決方法
+
+### 🔧 コンテキスト管理の強化
+- **変数埋め込み統合**: [コンテキスト管理ガイド](docs/tutorials/context_management_ja.md)に変数埋め込み例を追加
+- **動的プロンプト生成**: コンテキストの状態に基づいてエージェントの動作を変更
+- **ワークフロー統合**: Flowとコンテキストプロバイダーの連携パターン
+- **メモリ管理**: 効率的なコンテキスト使用のためのベストプラクティス
+
+### 🛠️ 開発者体験の向上
+- **Step互換性修正**: `run()`から`run_async()`への移行に伴うテスト環境の整備
+- **テスト組織化**: プロジェクトルートのテストファイルをtests/ディレクトリに整理
+- **パフォーマンス検証**: 変数埋め込み機能の包括的テストとパフォーマンス最適化
+- **エラーハンドリング**: 変数置換における堅牢なエラー処理とフォールバック
+
+### 🚀 技術的改善
+- **正規表現最適化**: 効率的な変数パターンマッチングとコンテキスト置換
+- **型安全性**: 変数埋め込みでの適切な型変換と例外処理
+- **メモリ効率**: 大規模コンテキストでの最適化された変数処理
+- **後方互換性**: 既存のRefinireAgentとFlowの完全な互換性維持
+
+### 💡 実用的な利点
+- **開発効率向上**: 動的プロンプト生成により同一エージェントで複数の役割を実現
+- **保守性向上**: 変数を使ったテンプレート化により、プロンプトの管理と更新が容易
+- **柔軟性向上**: 実行時の状態に応じたエージェントの動作カスタマイズ
+- **再利用性向上**: 汎用的なプロンプトテンプレートの作成と共有
+
+**📖 詳細ガイド:**
+- [Flow完全ガイド](docs/tutorials/flow_complete_guide_ja.md) - ワークフロー構築の完全ガイド
+- [コンテキスト管理](docs/tutorials/context_management_ja.md) - 変数埋め込みを含む包括的なコンテキスト管理
+
+---
+
+### v0.2.8 - 革新的なツール統合
 
 ### 🛠️ 革新的なツール統合
 - **新しい @tool デコレータ**: シームレスなツール作成のための直感的な `@tool` デコレータを導入

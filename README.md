@@ -97,6 +97,45 @@ flow = Flow({
 result = await flow.run("Complex user request")
 ```
 
+**🎯 Complete Flow Guide**: For comprehensive workflow construction learning, explore our detailed step-by-step guides:
+
+**📖 English**: [Complete Flow Guide](docs/tutorials/flow_complete_guide_en.md) - From basics to advanced parallel processing  
+**📖 日本語**: [Flow完全ガイド](docs/tutorials/flow_complete_guide_ja.md) - 包括的なワークフロー構築ガイド
+
+### Flow Design Patterns
+
+**Simple Routing**:
+```python
+# Automatic routing based on user language
+def detect_language(ctx):
+    return "japanese" if any(char in ctx.user_input for char in "あいうえお") else "english"
+
+flow = Flow({
+    "detect": ConditionStep("detect", detect_language, "jp_agent", "en_agent"),
+    "jp_agent": RefinireAgent(name="jp", generation_instructions="日本語で丁寧に回答"),
+    "en_agent": RefinireAgent(name="en", generation_instructions="Respond in English professionally")
+})
+```
+
+**High-Performance Parallel Analysis**:
+```python
+# Execute multiple analyses simultaneously
+flow = Flow(start="preprocess", steps={
+    "preprocess": FunctionStep("preprocess", clean_data),
+    "analysis": {
+        "parallel": [
+            RefinireAgent(name="sentiment", generation_instructions="Perform sentiment analysis"),
+            RefinireAgent(name="keywords", generation_instructions="Extract keywords"),
+            RefinireAgent(name="summary", generation_instructions="Create summary"),
+            RefinireAgent(name="classification", generation_instructions="Classify content")
+        ],
+        "next_step": "report",
+        "max_workers": 4
+    },
+    "report": FunctionStep("report", generate_final_report)
+})
+```
+
 **Compose steps like building blocks. Each step can be a function, condition, parallel execution, or LLM pipeline.**
 
 ---
@@ -541,7 +580,40 @@ result = agent.run("How can I improve the error handling?")
 print(result.content)
 ```
 
-**📖 Tutorial:** [Context Management](docs/tutorials/context_management.md) | **Details:** [Context Management](docs/context_management.md)
+**📖 Tutorial:** [Context Management](docs/tutorials/context_management.md) | **Details:** [Context Management Design](docs/context_management.md)
+
+### Dynamic Prompt Generation - Variable Embedding
+
+RefinireAgent's new variable embedding feature enables dynamic prompt generation based on context:
+
+```python
+from refinire import RefinireAgent, Context
+
+# Variable embedding capable agent
+agent = RefinireAgent(
+    name="dynamic_responder",
+    generation_instructions="You are a {{agent_role}} providing {{response_style}} responses to {{user_type}} users. Previous result: {{RESULT}}",
+    model="gpt-4o-mini"
+)
+
+# Context setup
+ctx = Context()
+ctx.shared_state = {
+    "agent_role": "customer support expert",
+    "user_type": "premium",
+    "response_style": "prompt and detailed"
+}
+ctx.result = "Customer inquiry reviewed"
+
+# Execute with dynamic prompt
+result = agent.run("Handle {{user_type}} user {{priority_level}} request", ctx)
+```
+
+**Key Variable Embedding Features:**
+- **`{{RESULT}}`**: Previous step execution result
+- **`{{EVAL_RESULT}}`**: Detailed evaluation information
+- **`{{custom_variables}}`**: Any value from `ctx.shared_state`
+- **Real-time Substitution**: Dynamic prompt generation at runtime
 
 ### Context-Based Result Access
 
@@ -664,7 +736,72 @@ MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/
 
 ---
 
-## Release Notes - v0.2.8
+## Release Notes
+
+### v0.2.9 - Variable Embedding and Advanced Flow Features
+
+### 🎯 Dynamic Variable Embedding System
+- **`{{variable}}` Syntax**: Support for dynamic variable substitution in user input and generation_instructions
+- **Reserved Variables**: Access previous step results and evaluations with `{{RESULT}}` and `{{EVAL_RESULT}}`
+- **Context-Based**: Dynamically reference any variable from `ctx.shared_state`
+- **Real-time Substitution**: Generate and customize prompts dynamically at runtime
+- **Agent Flexibility**: Same agent can behave differently based on context state
+
+```python
+# Dynamic prompt generation example
+agent = RefinireAgent(
+    name="dynamic_agent",
+    generation_instructions="You are a {{agent_role}} providing {{response_style}} responses for {{target_audience}}. Previous result: {{RESULT}}",
+    model="gpt-4o-mini"
+)
+
+ctx = Context()
+ctx.shared_state = {
+    "agent_role": "technical expert",
+    "target_audience": "developers", 
+    "response_style": "detailed technical explanations"
+}
+result = agent.run("Handle {{user_type}} request for {{service_level}} at {{response_time}}", ctx)
+```
+
+### 📚 Complete Flow Guide
+- **Step-by-Step Guide**: [Complete Flow Guide](docs/tutorials/flow_complete_guide_en.md) for comprehensive workflow construction
+- **Bilingual Support**: [Japanese Guide](docs/tutorials/flow_complete_guide_ja.md) also available
+- **Practical Examples**: Progressive learning from basic flows to complex parallel processing
+- **Best Practices**: Guidelines for efficient flow design and performance optimization
+- **Troubleshooting**: Common issues and their solutions
+
+### 🔧 Enhanced Context Management
+- **Variable Embedding Integration**: Added variable embedding examples to [Context Management Guide](docs/tutorials/context_management.md)
+- **Dynamic Prompt Generation**: Change agent behavior based on context state
+- **Workflow Integration**: Patterns for Flow and context provider collaboration
+- **Memory Management**: Best practices for efficient context usage
+
+### 🛠️ Developer Experience Improvements
+- **Step Compatibility Fix**: Test environment preparation for `run()` to `run_async()` migration
+- **Test Organization**: Organized test files from project root to tests/ directory
+- **Performance Validation**: Comprehensive testing and performance optimization for variable embedding
+- **Error Handling**: Robust error handling and fallbacks in variable substitution
+
+### 🚀 Technical Improvements
+- **Regex Optimization**: Efficient variable pattern matching and context substitution
+- **Type Safety**: Proper type conversion and exception handling in variable embedding
+- **Memory Efficiency**: Optimized variable processing for large-scale contexts
+- **Backward Compatibility**: Full compatibility with existing RefinireAgent and Flow implementations
+
+### 💡 Practical Benefits
+- **Development Efficiency**: Dynamic prompt generation enables multiple roles with single agent
+- **Maintainability**: Variable-based templating makes prompt management and updates easier
+- **Flexibility**: Runtime customization of agent behavior based on execution state
+- **Reusability**: Creation and sharing of generic prompt templates
+
+**📖 Detailed Guides:**
+- [Complete Flow Guide](docs/tutorials/flow_complete_guide_en.md) - Comprehensive workflow construction guide
+- [Context Management](docs/tutorials/context_management.md) - Including variable embedding comprehensive context management
+
+---
+
+### v0.2.8 - Revolutionary Tool Integration
 
 ### 🛠️ Revolutionary Tool Integration
 - **New @tool Decorator**: Introduced intuitive `@tool` decorator for seamless tool creation
