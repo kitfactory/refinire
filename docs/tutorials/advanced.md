@@ -1,423 +1,219 @@
 # Advanced Features Tutorial
 
-This tutorial covers advanced features of Refinire for building sophisticated AI workflows.
+This tutorial covers advanced features of Refinire for building sophisticated AI workflows. Each section explains the concepts and implementation approaches rather than focusing on code details.
 
 ## 1. Tool Integration with RefinireAgent
 
-### Modern Tool Integration
-```python
-from refinire import RefinireAgent, tool
+### Understanding Tool Integration
 
+Refinire provides two primary methods for integrating external tools with AI agents: direct function tools and MCP (Model Context Protocol) servers. Tool integration allows your agents to perform actions beyond text generation, such as accessing databases, calling APIs, or executing calculations.
+
+#### Modern Tool Integration Approach
+
+The `@tool` decorator creates function tools that your agents can automatically invoke. When you decorate a function with `@tool`, Refinire handles the automatic discovery, parameter extraction, and execution coordination. Your agent will intelligently decide when to use each tool based on user requests.
+
+**Implementation Requirements:**
+- Define functions with clear type hints and docstrings
+- Use the `@tool` decorator from Refinire
+- Pass tool functions to the `tools` parameter when creating agents
+- Ensure tool functions handle errors gracefully
+
+```python
+# Example: Weather and calculation tools
 @tool
 def get_weather(location: str) -> str:
-    """Get weather information for a location"""
-    return f"Weather in {location}: Sunny, 25°C"
+    """Get current weather information for a location"""
+    # Implement weather API call logic
+    pass
 
-@tool
-def calculate(expression: str) -> float:
-    """Perform mathematical calculations"""
-    return eval(expression)
-
-# Tool-enabled agent
 agent = RefinireAgent(
     name="assistant",
-    generation_instructions="You are a helpful assistant with access to weather and calculation tools.",
-    tools=[get_weather, calculate],
+    generation_instructions="Use available tools to help users",
+    tools=[get_weather],  # Tools automatically discovered
     model="gpt-4o-mini"
 )
-
-result = agent.run("What's the weather in Tokyo and what's 15 * 23?")
-print(result.content)
 ```
 
-### MCP Server Integration
-```python
-from refinire import RefinireAgent
+#### MCP Server Integration
 
-# Agent with MCP server support
-agent = RefinireAgent(
-    name="mcp_agent",
-    generation_instructions="Use MCP server tools to accomplish tasks",
-    mcp_servers=[
-        "stdio://filesystem-server",
-        "http://localhost:8000/mcp",
-        "stdio://database-server --config db.json"
-    ],
-    model="gpt-4o-mini"
-)
+MCP servers provide standardized access to external systems and data sources. Unlike function tools, MCP servers run as separate processes and communicate via defined protocols. This approach is ideal for complex integrations, database access, or when you need to share tools across multiple applications.
 
-result = agent.run("Analyze project files and include database information")
-```
+**Implementation Considerations:**
+- Configure MCP server endpoints in the `mcp_servers` parameter
+- Support stdio, HTTP, and WebSocket server types
+- MCP servers handle their own error recovery and connection management
+- Tools from MCP servers are automatically discovered and integrated
 
 ## 2. Advanced Flow Architectures
 
-### Sequential Processing with Flow
-```python
-from refinire import RefinireAgent, Flow, FunctionStep
+### Sequential Processing Patterns
 
-def preprocess_data(ctx):
-    # Data preprocessing logic
-    ctx.shared_state["processed"] = True
-    return "Data preprocessed"
+Sequential flows process data through multiple stages, where each step builds upon the results of previous steps. This pattern is essential for complex analysis tasks, content creation workflows, or multi-stage data processing.
 
-# Sequential workflow
-writer = RefinireAgent(
-    name="writer",
-    generation_instructions="Write detailed technical content",
-    model="gpt-4o"
-)
+**Design Principles:**
+- Each step should have a single, well-defined responsibility
+- Use the `Context` object to pass data between steps
+- Design steps to be independent and testable
+- Consider error handling and recovery at each stage
 
-reviewer = RefinireAgent(
-    name="reviewer", 
-    generation_instructions="Review and improve the content",
-    model="claude-3-sonnet"
-)
+Sequential flows automatically manage data flow between steps, eliminating the need for manual state management. The Flow engine handles execution order, error propagation, and result aggregation.
 
-flow = Flow(start="preprocess", steps={
-    "preprocess": FunctionStep("preprocess", preprocess_data),
-    "write": writer,
-    "review": reviewer
-})
+### Conditional Workflow Logic
 
-result = await flow.run("Write about AI technology")
-```
+Conditional workflows route execution based on input characteristics, user preferences, or dynamic conditions. This pattern enables adaptive behavior where different processing paths handle different types of requests.
 
-### Conditional Workflows
-```python
-from refinire import ConditionStep
+**Implementation Strategy:**
+- Create condition functions that return routing decisions
+- Use `ConditionStep` to implement branching logic
+- Design separate agents for each processing path
+- Ensure all paths handle similar input types consistently
 
-def check_complexity(ctx):
-    """Route based on input complexity"""
-    user_input = ctx.user_input or ""
-    return "complex" if len(user_input) > 100 else "simple"
-
-# Simple and complex processing agents
-simple_agent = RefinireAgent(
-    name="simple",
-    generation_instructions="Provide a brief, concise response",
-    model="gpt-4o-mini"
-)
-
-complex_agent = RefinireAgent(
-    name="complex",
-    generation_instructions="Provide detailed, comprehensive analysis",
-    model="gpt-4o"
-)
-
-flow = Flow(start="route", steps={
-    "route": ConditionStep("route", check_complexity, "simple", "complex"),
-    "simple": simple_agent,
-    "complex": complex_agent
-})
-
-result = await flow.run("Explain quantum computing in detail")
-```
+Condition functions receive the current context and should return clear routing decisions. Keep condition logic simple and focused on a single decision criterion.
 
 ### Parallel Processing for Performance
-```python
-from refinire import Flow, FunctionStep
 
-def analyze_sentiment(ctx):
-    return "Positive sentiment detected"
+Parallel processing executes independent operations simultaneously, dramatically improving performance for tasks that can be decomposed into separate concerns. This pattern is particularly effective for analysis workflows, data enrichment, or multi-perspective processing.
 
-def extract_keywords(ctx):
-    return "AI, technology, innovation"
+**Performance Considerations:**
+- Identify truly independent operations for parallel execution
+- Configure `max_workers` based on your system resources
+- Design parallel steps to avoid shared state dependencies
+- Aggregate results consistently regardless of execution order
 
-def classify_topic(ctx):
-    return "Technology"
-
-# High-performance parallel analysis
-flow = Flow(start="preprocess", steps={
-    "preprocess": FunctionStep("preprocess", preprocess_data),
-    "analysis": {
-        "parallel": [
-            FunctionStep("sentiment", analyze_sentiment),
-            FunctionStep("keywords", extract_keywords),
-            FunctionStep("topic", classify_topic),
-            RefinireAgent(name="summary", generation_instructions="Create summary")
-        ],
-        "next_step": "aggregate",
-        "max_workers": 4
-    },
-    "aggregate": FunctionStep("aggregate", combine_results)
-})
-
-result = await flow.run("Analyze this comprehensive text...")
-```
+The `{"parallel": [...]}` syntax automatically handles async coordination, worker pool management, and result collection. Focus on designing independent steps rather than managing concurrency details.
 
 ## 3. Quality Assurance and Evaluation
 
-### Automatic Quality Control
-```python
-from refinire import RefinireAgent
+### Automatic Quality Control Systems
 
-# Agent with automatic evaluation and retry
-agent = RefinireAgent(
-    name="quality_writer",
-    generation_instructions="Generate high-quality technical content",
-    evaluation_instructions="Rate the content quality from 0-100 based on accuracy, clarity, and completeness",
-    threshold=85.0,  # Automatically retry if score < 85
-    max_retries=3,
-    model="gpt-4o-mini"
-)
+Quality assurance in AI workflows requires systematic evaluation and automatic improvement mechanisms. Refinire's evaluation system allows you to define quality criteria, set thresholds, and automatically retry failed attempts with improved prompts.
 
-result = agent.run("Explain machine learning algorithms")
-print(f"Quality Score: {result.evaluation_score}")
-print(f"Attempts: {result.attempts}")
-```
+**Evaluation Design Principles:**
+- Define clear, measurable quality criteria
+- Set realistic thresholds based on your application requirements
+- Design evaluation instructions that provide actionable feedback
+- Balance quality requirements with performance considerations
 
-### Custom Guardrails
-```python
-def content_safety_check(content: str) -> bool:
-    """Check content for safety"""
-    prohibited = ["harmful", "dangerous", "illegal"]
-    return not any(word in content.lower() for word in prohibited)
+When evaluation scores fall below thresholds, the system automatically retries with enhanced prompts incorporating the evaluation feedback. This creates a self-improving loop that maintains quality standards without manual intervention.
 
-def input_validation(input_text: str) -> bool:
-    """Validate input format"""
-    return len(input_text.strip()) > 0
+### Custom Guardrails Implementation
 
-agent = RefinireAgent(
-    name="safe_assistant",
-    generation_instructions="Provide helpful and safe responses",
-    input_guardrails=[input_validation],
-    output_guardrails=[content_safety_check],
-    model="gpt-4o-mini"
-)
-```
+Guardrails provide safety and compliance controls for AI agent behavior. Input guardrails validate requests before processing, while output guardrails ensure generated content meets your standards.
+
+**Guardrail Design Strategies:**
+- Create specific validation functions for different types of content
+- Implement early validation to prevent unnecessary processing
+- Design clear error messages for failed validations
+- Consider performance impact of validation logic
+
+Guardrails should be lightweight, focused functions that return boolean results. Complex validation logic should be modularized for maintainability and testing.
 
 ## 4. Dynamic Prompt Generation with Variable Embedding
 
-### Basic Variable Embedding
-```python
-from refinire import RefinireAgent, Context
+### Variable Embedding Concepts
 
-# Agent with variable embedding capability
-agent = RefinireAgent(
-    name="dynamic_assistant",
-    generation_instructions="You are a {{role}} providing {{style}} responses to {{audience}} users. Context: {{RESULT}}",
-    model="gpt-4o-mini"
-)
+Variable embedding enables dynamic prompt construction using context-aware substitution. The `{{variable}}` syntax allows you to create flexible, reusable prompts that adapt based on execution context, previous results, or user-specific data.
 
-# Setup context with variables
-ctx = Context()
-ctx.shared_state = {
-    "role": "technical expert",
-    "style": "detailed and practical", 
-    "audience": "developer"
-}
-ctx.result = "Previous analysis completed"
+**Variable Embedding Strategy:**
+- Use descriptive variable names that clarify their purpose
+- Leverage reserved variables `{{RESULT}}` and `{{EVAL_RESULT}}` for workflow integration
+- Store dynamic values in `Context.shared_state` for cross-step access
+- Design prompts that remain coherent with different variable values
 
-# Dynamic prompt generation
-result = agent.run("Help {{audience}} with {{task_type}} implementation", ctx)
-```
+This approach enables single agents to serve multiple roles by changing their behavior based on context variables. It also facilitates prompt maintenance by centralizing common patterns.
 
 ### Complex Variable Workflows
-```python
-# Multi-step workflow with variable embedding
-analyzer = RefinireAgent(
-    name="analyzer",
-    generation_instructions="Analyze {{content_type}} content and provide {{analysis_depth}} insights",
-    evaluation_instructions="Rate analysis quality based on {{quality_criteria}}",
-    threshold=80.0
-)
 
-synthesizer = RefinireAgent(
-    name="synthesizer", 
-    generation_instructions="Synthesize the analysis: {{RESULT}} with evaluation: {{EVAL_RESULT}}",
-    model="gpt-4o"
-)
+Multi-step workflows benefit from variable embedding by maintaining context continuity across different agents and processing stages. Each step can contribute to the shared context, building rich information that subsequent steps can utilize.
 
-# Context setup for workflow
-ctx = Context()
-ctx.shared_state = {
-    "content_type": "technical documentation",
-    "analysis_depth": "comprehensive",
-    "quality_criteria": "accuracy and actionability"
-}
+**Workflow Design Considerations:**
+- Plan your variable namespace to avoid conflicts
+- Use consistent naming conventions across workflow steps
+- Design context variables that provide meaningful information
+- Consider variable scope and lifecycle management
 
-# Execute workflow
-analysis_result = analyzer.run("Analyze this API documentation", ctx)
-synthesis_result = synthesizer.run("Create final recommendations", ctx)
-```
+Variable embedding works seamlessly with evaluation systems, allowing quality criteria and feedback to flow between workflow stages.
 
 ## 5. Context Management and Memory
 
 ### Intelligent Context Providers
-```python
-from refinire import RefinireAgent
 
-# Agent with advanced context management
-agent = RefinireAgent(
-    name="code_assistant",
-    generation_instructions="Help with code analysis using available context",
-    context_providers_config=[
-        {
-            "type": "conversation_history",
-            "max_items": 10
-        },
-        {
-            "type": "fixed_file",
-            "file_path": "src/main.py",
-            "description": "Main application file"
-        },
-        {
-            "type": "source_code",
-            "base_path": "src/",
-            "file_patterns": ["*.py"],
-            "max_files": 5
-        }
-    ],
-    model="gpt-4o-mini"
-)
+Context providers automatically manage relevant information for AI agents, including conversation history, file contents, and dynamic data sources. This system eliminates manual context management while ensuring agents have access to pertinent information.
 
-# Context automatically includes relevant files and conversation history
-result = agent.run("How can I improve error handling in the main module?")
-```
+**Context Provider Configuration:**
+- Configure conversation history limits based on token considerations
+- Specify relevant files and directories for automatic inclusion
+- Set up source code analysis for development assistance scenarios
+- Balance context richness with processing efficiency
+
+Context providers operate transparently, allowing you to focus on agent behavior rather than information management. The system automatically filters and prioritizes context based on relevance and token limits.
 
 ### Context-Based Agent Chaining
-```python
-from refinire import Context
 
-# Create shared context for agent chain
-ctx = Context()
+Agent chaining through shared context enables sophisticated workflows where multiple specialized agents collaborate on complex tasks. Each agent contributes its expertise while building upon previous work.
 
-# First agent: Analysis
-analyzer = RefinireAgent(
-    name="analyzer",
-    generation_instructions="Perform detailed code analysis",
-    model="gpt-4o"
-)
+**Chaining Design Patterns:**
+- Use specialized agents for different aspects of complex problems
+- Design context handoff patterns that preserve important information
+- Implement evaluation at key transition points
+- Consider error recovery and fallback strategies
 
-analysis_result = analyzer.run("Analyze this codebase for improvements", ctx)
-
-# Second agent: Recommendations (uses previous result)
-recommender = RefinireAgent(
-    name="recommender",
-    generation_instructions="Based on the analysis {{RESULT}}, provide specific recommendations",
-    model="gpt-4o-mini"
-)
-
-recommendations = recommender.run("Generate improvement recommendations", ctx)
-
-# Access results and evaluation data
-print(f"Analysis: {ctx.result}")
-print(f"Evaluation: {ctx.evaluation_result}")
-print(f"Recommendations: {recommendations.content}")
-```
+The shared context maintains execution history, evaluation results, and accumulated state, enabling sophisticated coordination between agents.
 
 ## 6. Structured Output and Data Processing
 
 ### Pydantic Model Integration
-```python
-from pydantic import BaseModel
-from typing import List
-from refinire import RefinireAgent
 
-class CodeAnalysis(BaseModel):
-    language: str
-    complexity_score: int
-    issues: List[str]
-    recommendations: List[str]
+Structured output ensures AI-generated content conforms to specific data schemas, enabling reliable integration with other systems. Pydantic models provide type safety, validation, and serialization for AI outputs.
 
-# Agent with structured output
-agent = RefinireAgent(
-    name="code_analyzer",
-    generation_instructions="Analyze code and return structured analysis",
-    output_model=CodeAnalysis,
-    model="gpt-4o-mini"
-)
+**Structured Output Benefits:**
+- Guarantee consistent data formats for downstream processing
+- Enable type-safe integration with existing systems
+- Provide automatic validation of AI-generated content
+- Facilitate testing and debugging with predictable data structures
 
-result = agent.run("Analyze this Python function for issues")
-analysis = result.content  # Typed CodeAnalysis object
-print(f"Complexity: {analysis.complexity_score}")
-print(f"Issues: {analysis.issues}")
-```
+When you specify an `output_model`, Refinire ensures the agent's response conforms to the defined schema, automatically handling parsing and validation.
 
 ## 7. Multi-Provider Workflows
 
-### Provider-Specific Agents in Workflows
-```python
-# Use different providers for different tasks
-flow = Flow(start="analyze", steps={
-    "analyze": RefinireAgent(
-        name="analyzer",
-        generation_instructions="Perform initial analysis",
-        model="gpt-4o"  # OpenAI for analysis
-    ),
-    "creative": RefinireAgent(
-        name="creative",
-        generation_instructions="Generate creative solutions based on: {{RESULT}}",
-        model="claude-3-sonnet"  # Anthropic for creativity
-    ),
-    "technical": RefinireAgent(
-        name="technical",
-        generation_instructions="Provide technical implementation for: {{RESULT}}",
-        model="gemini-pro"  # Google for technical details
-    )
-})
+### Provider-Specific Optimization
 
-result = await flow.run("Design a new feature for our application")
-```
+Different LLM providers excel at different types of tasks. Multi-provider workflows leverage these strengths by routing specific processing steps to optimal providers.
+
+**Provider Selection Strategy:**
+- Use provider strengths for appropriate tasks (analysis, creativity, technical implementation)
+- Consider cost and performance trade-offs for different providers
+- Design workflows that gracefully handle provider-specific behaviors
+- Implement fallback strategies for provider availability issues
+
+Multi-provider approaches require careful consideration of model capabilities, response formats, and integration patterns.
 
 ## 8. Performance Monitoring and Analytics
 
 ### Trace Analysis and Debugging
-```python
-from refinire import get_global_registry, enable_console_tracing
 
-# Enable detailed tracing
-enable_console_tracing()
+Refinire's tracing system automatically captures detailed execution information, enabling performance analysis and debugging. The trace registry provides search and analysis capabilities for understanding system behavior.
 
-# Run your workflow
-result = await flow.run("Complex analysis task")
+**Monitoring Implementation:**
+- Enable tracing for development and debugging scenarios
+- Use trace search capabilities to identify performance patterns
+- Implement custom trace analysis for specific monitoring needs
+- Consider trace data volume and storage implications
 
-# Analyze performance
-registry = get_global_registry()
+Tracing provides insights into execution duration, success rates, and error patterns, enabling data-driven optimization of your AI workflows.
 
-# Search for specific patterns
-recent_flows = registry.search_by_flow_name("analysis_workflow")
-performance_data = registry.complex_search(
-    flow_name_pattern="analysis",
-    status="completed",
-    min_duration=100
-)
+## Best Practices for Production Systems
 
-# Performance insights
-for flow in performance_data:
-    print(f"Flow: {flow.flow_name}")
-    print(f"Duration: {flow.duration}ms")
-    print(f"Success: {flow.status}")
-```
+### Error Handling and Resilience
 
-## Best Practices
+Production AI systems require robust error handling strategies that gracefully manage failures while maintaining user experience. Design your systems to handle network issues, provider limitations, and unexpected input gracefully.
 
-### 1. Error Handling and Resilience
-```python
-try:
-    result = agent.run("Complex task", timeout=60.0)
-except Exception as e:
-    print(f"Task failed: {e}")
-    # Implement fallback logic
-```
+### Resource Management
 
-### 2. Resource Management
-```python
-# Use context managers for resource cleanup
-async with flow.managed_execution() as executor:
-    result = await executor.run("Task")
-```
+Effective resource management ensures consistent performance and cost control. Consider token limits, request rates, and concurrency limitations when designing production workflows.
 
-### 3. Configuration Management
-```python
-# Use environment-based configuration
-agent = RefinireAgent(
-    name="production_agent",
-    generation_instructions="Handle production requests",
-    model=os.getenv("PRODUCTION_MODEL", "gpt-4o-mini"),
-    max_tokens=int(os.getenv("MAX_TOKENS", "2000")),
-    timeout=float(os.getenv("TIMEOUT", "30.0"))
-)
-```
+### Configuration Management
 
-These advanced features enable you to build sophisticated, production-ready AI workflows with Refinire's powerful architecture.
+Use environment-based configuration to manage different deployment scenarios. Separate development, staging, and production configurations while maintaining consistent behavior patterns.
+
+These advanced features enable sophisticated, production-ready AI workflows that adapt to complex requirements while maintaining reliability and performance.
