@@ -292,7 +292,81 @@ result = agent.run("プロジェクトファイルを分析して、データベ
 
 **📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture_ja.md)
 
-## 4. 自動並列処理: 劇的なパフォーマンス向上
+## 4. 包括的可観測性 - 自動トレーシング
+
+**課題**: AIワークフローのデバッグと本番環境でのエージェント動作の理解には、実行フロー、パフォーマンスメトリクス、障害パターンの可視性が必要です。手動ログは複雑なマルチエージェントシステムには不十分です。
+
+**解決策**: Refinireは設定ゼロの包括的なトレーシング機能を提供します。すべてのエージェント実行、ワークフローステップ、評価が自動的にキャプチャされ、Grafana TempoやJaegerなどの業界標準可観測性プラットフォームにエクスポートできます。
+
+**主な利点**:
+- **設定ゼロ**: 組み込みコンソールトレーシングが即座に動作
+- **本番対応**: OpenTelemetry統合とOTLPエクスポート
+- **自動スパン作成**: すべてのエージェントとワークフローステップが自動的にトレース
+- **豊富なメタデータ**: 入力、出力、評価スコア、パフォーマンスメトリクスをキャプチャ
+
+### 組み込みコンソールトレーシング
+
+```python
+from refinire import RefinireAgent
+
+agent = RefinireAgent(
+    name="traced_agent",
+    generation_instructions="あなたは役立つアシスタントです。",
+    model="gpt-4o-mini"
+)
+
+result = agent.run("量子コンピューティングとは？")
+# コンソールに自動表示:
+# 🔵 [Instructions] あなたは役立つアシスタントです。
+# 🟢 [User Input] 量子コンピューティングとは？
+# 🟡 [LLM Output] 量子コンピューティングは革新的な...
+# ✅ [Result] 操作が正常に完了しました
+```
+
+### 本番OpenTelemetry統合
+
+```python
+from refinire import enable_opentelemetry_tracing, disable_opentelemetry_tracing
+
+# 包括的トレーシングを有効化
+enable_opentelemetry_tracing(
+    service_name="my-agent-app",
+    otlp_endpoint="http://localhost:4317"  # Grafana Tempoエンドポイント
+)
+
+# すべてのエージェント実行が自動的にスパンを作成
+agent = RefinireAgent(name="production_agent", model="gpt-4o-mini")
+result = agent.run("機械学習の概念を説明してください")
+
+# 完了時にクリーンアップ
+disable_opentelemetry_tracing()
+```
+
+### 全トレーシングの無効化
+
+すべてのトレーシング（コンソール + OpenTelemetry）を完全に無効化：
+
+```python
+from refinire import disable_tracing
+
+# 全トレーシング出力を無効化
+disable_tracing()
+
+# これで全てのエージェント実行がトレース出力なしで動作
+agent = RefinireAgent(name="silent_agent", model="gpt-4o-mini")
+result = agent.run("これは静寂に実行されます")  # トレース出力なし
+```
+
+**📖 完全ガイド:** [トレーシングと可観測性チュートリアル](docs/tutorials/tracing_ja.md) - 包括的なセットアップと使用方法
+
+**🔗 統合例:**
+- [OpenTelemetry例](examples/opentelemetry_tracing_example.py) - 基本的なOpenTelemetryセットアップ
+- [Grafana Tempo例](examples/grafana_tempo_tracing_example.py) - 完全なTempo統合
+- [環境設定](examples/oneenv_tracing_example.py) - oneenv設定管理
+
+---
+
+## 5. 自動並列処理: 劇的なパフォーマンス向上
 
 **課題**: 独立したタスクの順次処理は不必要なボトルネックを作り出します。手動の非同期実装は複雑でエラーが発生しやすいです。
 

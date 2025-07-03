@@ -777,6 +777,21 @@ result = agent.run("Explain machine learning concepts")
 disable_opentelemetry_tracing()
 ```
 
+### Disabling All Tracing
+
+To completely disable all tracing (both console and OpenTelemetry):
+
+```python
+from refinire import disable_tracing
+
+# Disable all tracing output
+disable_tracing()
+
+# Now all agent executions will run without any trace output
+agent = RefinireAgent(name="silent_agent", model="gpt-4o-mini")
+result = agent.run("This will execute silently")  # No trace output
+```
+
 ### Environment Variable Configuration
 
 Use environment variables for streamlined configuration:

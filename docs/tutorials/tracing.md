@@ -99,6 +99,44 @@ result = await agent.run_async("What is machine learning?", ctx)
 disable_opentelemetry_tracing()
 ```
 
+### Disabling All Tracing
+
+To completely disable all tracing (both console and OpenTelemetry), use the `disable_tracing()` function:
+
+```python
+from refinire import disable_tracing
+
+# Disable all tracing output
+disable_tracing()
+
+# Now all agent executions will run silently without any trace output
+agent = RefinireAgent(
+    name="silent_agent",
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini"
+)
+
+result = agent.run("This will execute silently")
+# No console output, no OpenTelemetry spans created
+```
+
+### Re-enabling Tracing
+
+If you need to re-enable tracing after disabling it:
+
+```python
+from refinire import enable_console_tracing, enable_opentelemetry_tracing
+
+# Re-enable console tracing only
+enable_console_tracing()
+
+# Or re-enable OpenTelemetry tracing
+enable_opentelemetry_tracing(
+    service_name="my-service",
+    otlp_endpoint="http://localhost:4317"
+)
+```
+
 ### Environment Variable Configuration
 
 Refinire supports environment-based configuration using the `REFINIRE_TRACE_*` variables:

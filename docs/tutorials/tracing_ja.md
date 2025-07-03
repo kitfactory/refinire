@@ -99,6 +99,44 @@ result = await agent.run_async("機械学習とは何ですか？", ctx)
 disable_opentelemetry_tracing()
 ```
 
+### 全トレーシングの無効化
+
+すべてのトレーシング（コンソール + OpenTelemetry）を完全に無効化するには、`disable_tracing()`関数を使用します：
+
+```python
+from refinire import disable_tracing
+
+# 全トレーシング出力を無効化
+disable_tracing()
+
+# これで全てのエージェント実行がトレース出力なしで静寂に動作
+agent = RefinireAgent(
+    name="silent_agent",
+    generation_instructions="あなたは役立つアシスタントです。",
+    model="gpt-4o-mini"
+)
+
+result = agent.run("これは静寂に実行されます")
+# コンソール出力なし、OpenTelemetryスパンも作成されません
+```
+
+### トレーシングの再有効化
+
+無効化後にトレーシングを再度有効化する場合：
+
+```python
+from refinire import enable_console_tracing, enable_opentelemetry_tracing
+
+# コンソールトレーシングのみを再有効化
+enable_console_tracing()
+
+# またはOpenTelemetryトレーシングを再有効化
+enable_opentelemetry_tracing(
+    service_name="my-service",
+    otlp_endpoint="http://localhost:4317"
+)
+```
+
 ### 環境変数による設定
 
 Refinireは`REFINIRE_TRACE_*`変数を使用した環境ベースの設定をサポートします：
