@@ -483,6 +483,64 @@ Refinire は、複雑さを洗練されたシンプルさに変えることで�
 
 ## リリースノート
 
+### v0.2.10 - MCPサーバー対応とプロトコル統合
+
+### 🔌 Model Context Protocol（MCP）完全対応
+- **ネイティブMCPサポート**: OpenAI Agents SDKのMCP機能をRefinireAgentで完全統合
+- **多様なサーバータイプ**: stdio、HTTP、WebSocketサーバーに対応
+- **自動ツール検出**: MCPサーバーからツールを自動的に発見・登録
+- **シームレス統合**: 既存のtoolsパラメータと併用可能
+- **エラーハンドリング**: MCPサーバー接続の堅牢な管理
+
+```python
+# MCPサーバー統合の例
+agent = RefinireAgent(
+    name="mcp_integrated_agent",
+    generation_instructions="MCPサーバーとローカルツールを活用してタスクを実行",
+    mcp_servers=[
+        "stdio://filesystem-server",
+        "http://localhost:8000/mcp",
+        "stdio://database-server --config db.json"
+    ],
+    tools=[local_calculator, weather_tool],  # ローカルツールとMCPツールの併用
+    model="gpt-4o-mini"
+)
+```
+
+### 🌐 外部システム連携の標準化
+- **統一プロトコル**: MCPによる外部データソース・ツールへの標準化されたアクセス
+- **業界標準採用**: OpenAI、Anthropic、Block、Replit等が採用するMCP準拠
+- **ベンダーロックイン回避**: 標準プロトコルによる柔軟なツール選択
+- **拡張性**: 新しいMCPサーバーを簡単に追加・統合
+
+**MCPサーバータイプの完全サポート:**
+- **stdio servers**: `stdio://server-name --args` 形式でローカルサブプロセス
+- **HTTP servers**: `http://localhost:port/mcp` 形式でリモートAPI
+- **WebSocket servers**: `ws://host:port/mcp` 形式でリアルタイム通信
+
+### 🔧 実装とテストの強化
+- **包括的テストスイート**: MCP統合の全シナリオをカバー
+- **実例の提供**: `examples/mcp_server_example.py`で詳細な使用例
+- **後方互換性**: 既存のRefinireAgentとClarifyAgentで追加設定なしで利用可能
+- **エラー処理**: MCPサーバー接続失敗時の適切なフォールバック
+
+### 📚 ドキュメント整備
+- **MCPガイド**: README日英両言語でMCP統合の完全解説
+- **設定パターン**: 様々なMCPサーバー設定の実例
+- **ベストプラクティス**: 効率的なMCPサーバー管理のガイドライン
+
+### 💡 開発者への利益
+- **開発効率向上**: 外部システム統合の大幅な簡素化
+- **保守性向上**: 標準プロトコルによる一貫した統合パターン
+- **柔軟性向上**: ツールとMCPサーバーの自由な組み合わせ
+- **将来対応**: 新しいMCPサーバーへの即座な対応
+
+**📖 詳細ガイド:**
+- [MCP統合例](examples/mcp_server_example.py) - 包括的なMCPサーバー統合デモ
+- [高度な機能](docs/tutorials/advanced.md) - MCPとツール統合の詳細
+
+---
+
 ### v0.2.9 - 変数埋め込みと高度なFlow機能
 
 ### 🎯 動的変数埋め込みシステム

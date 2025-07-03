@@ -772,6 +772,53 @@ MIT License. Built with gratitude on the [OpenAI Agents SDK](https://github.com/
 
 ## Release Notes
 
+### v0.2.10 - MCP Server Integration
+
+### 🔌 Model Context Protocol (MCP) Server Support
+- **Native MCP Integration**: RefinireAgent now supports MCP (Model Context Protocol) servers through the `mcp_servers` parameter
+- **Multiple Server Types**: Support for stdio, HTTP, and WebSocket MCP servers
+- **Automatic Tool Discovery**: MCP server tools are automatically discovered and integrated
+- **OpenAI Agents SDK Compatibility**: Leverages OpenAI Agents SDK MCP capabilities with simplified configuration
+
+```python
+# MCP server integrated agent
+agent = RefinireAgent(
+    name="mcp_agent",
+    generation_instructions="Use MCP server tools to accomplish tasks",
+    mcp_servers=[
+        "stdio://filesystem-server",  # Local filesystem access
+        "http://localhost:8000/mcp",  # Remote API server
+        "stdio://database-server --config db.json"  # Database access
+    ],
+    model="gpt-4o-mini"
+)
+
+# MCP tools become automatically available
+result = agent.run("Analyze project files and include database information in your report")
+```
+
+### 🚀 MCP Integration Benefits
+- **Standardized Tool Access**: Use industry-standard MCP protocol for tool integration
+- **Ecosystem Compatibility**: Works with existing MCP server implementations
+- **Scalable Architecture**: Support for multiple concurrent MCP servers
+- **Error Handling**: Built-in retry logic and error management for MCP connections
+- **Context Integration**: MCP servers work seamlessly with RefinireAgent's context management system
+
+### 💡 MCP Server Types and Use Cases
+- **stdio servers**: Local subprocess execution for file system, databases, development tools
+- **HTTP servers**: Remote API endpoints for web services and cloud integrations  
+- **WebSocket servers**: Real-time communication support for streaming data and live updates
+
+### 🔧 Implementation Details
+- **Minimal Code Changes**: Simple `mcp_servers` parameter addition maintains backward compatibility
+- **SDK Pass-through**: Direct integration with OpenAI Agents SDK MCP functionality
+- **Comprehensive Examples**: Complete MCP integration examples in `examples/mcp_server_example.py`
+- **Documentation**: Updated guides showing MCP server configuration and usage patterns
+
+**📖 Detailed Guide:** [MCP Server Example](examples/mcp_server_example.py) - Complete MCP integration demonstration
+
+---
+
 ### v0.2.9 - Variable Embedding and Advanced Flow Features
 
 ### 🎯 Dynamic Variable Embedding System
