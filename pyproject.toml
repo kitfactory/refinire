@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "refinire"
 version = "0.2.10"
-description = "Refinire AI agent platform - Unified LLM interface and composable workflow orchestration"
+description = "Refined simplicity for AI agents - Build intelligent workflows with automatic quality assurance and multi-provider LLM support"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
