@@ -1,6 +1,6 @@
 # Doctest の例
 
-このページでは、agents-sdk-modelsで使用されているdoctestの例を紹介します。
+このページでは、Refinireで使用されているdoctestの例を紹介します。
 
 ## Doctestとは
 
@@ -32,31 +32,71 @@ def add(a: int, b: int) -> int:
     return a + b
 ```
 
-### 2. 型チェックの例
+### 2. RefinireAgent の例
 
 ```python
-def create_basic_llm() -> LLM:
+def create_basic_agent():
     """
-    Create a basic LLM instance
-    基本的なLLMインスタンスを作成します
+    Create a basic RefinireAgent instance
+    基本的なRefinireAgentインスタンスを作成します
     
     Returns:
-        LLM: Configured LLM instance
-        LLM: 設定されたLLMインスタンス
+        RefinireAgent: Configured agent instance
+        RefinireAgent: 設定されたエージェントインスタンス
     
     Examples:
-        >>> llm = create_basic_llm()
-        >>> isinstance(llm, LLM)
-        True
-        >>> llm.provider
-        'openai'
-        >>> llm.model
+        >>> from refinire import RefinireAgent
+        >>> agent = RefinireAgent(
+        ...     name="test_agent",
+        ...     generation_instructions="You are a helpful assistant.",
+        ...     model="gpt-4o-mini"
+        ... )
+        >>> agent.name
+        'test_agent'
+        >>> agent.model
         'gpt-4o-mini'
+        >>> isinstance(agent, RefinireAgent)
+        True
     """
-    return LLM(provider="openai", model="gpt-4o-mini")
+    from refinire import RefinireAgent
+    return RefinireAgent(
+        name="test_agent",
+        generation_instructions="You are a helpful assistant.",
+        model="gpt-4o-mini"
+    )
 ```
 
-### 3. 例外処理の例
+### 3. ツール統合の例
+
+```python
+def create_tool_enabled_agent():
+    """
+    Create an agent with tool integration
+    ツール統合付きエージェントを作成します
+    
+    Returns:
+        RefinireAgent: Agent with tools / ツール付きエージェント
+    
+    Examples:
+        >>> from refinire import RefinireAgent, tool
+        >>> @tool
+        ... def sample_tool(text: str) -> str:
+        ...     return f"Processed: {text}"
+        >>> agent = RefinireAgent(
+        ...     name="tool_agent",
+        ...     generation_instructions="Use tools to help users.",
+        ...     tools=[sample_tool],
+        ...     model="gpt-4o-mini"
+        ... )
+        >>> len(agent.tools) > 0
+        True
+        >>> agent.list_tools()
+        ['sample_tool']
+    """
+    pass
+```
+
+### 4. 例外処理の例
 
 ```python
 def safe_divide(a: float, b: float) -> float:
@@ -94,25 +134,74 @@ def safe_divide(a: float, b: float) -> float:
 APIキーが必要な場合は、`# doctest: +SKIP`を使用します：
 
 ```python
-def generate_text(prompt: str) -> str:
+def test_agent_execution():
     """
-    Generate text using OpenAI API
-    OpenAI APIを使用してテキストを生成します
-    
-    Args:
-        prompt: Input prompt / 入力プロンプト
+    Test agent execution with API calls
+    API呼び出しを含むエージェント実行のテスト
     
     Returns:
-        Generated text response / 生成されたテキストレスポンス
+        Result from agent execution / エージェント実行結果
     
     Examples:
-        >>> result = generate_text("Hello")  # doctest: +SKIP
-        >>> isinstance(result, str)  # doctest: +SKIP
+        >>> from refinire import RefinireAgent
+        >>> agent = RefinireAgent(
+        ...     name="test_agent",
+        ...     generation_instructions="You are a helpful assistant.",
+        ...     model="gpt-4o-mini"
+        ... )
+        >>> result = agent.run("Hello")  # doctest: +SKIP
+        >>> hasattr(result, 'content')  # doctest: +SKIP
         True
-        >>> len(result) > 0  # doctest: +SKIP
+        >>> isinstance(result.content, str)  # doctest: +SKIP
         True
     """
-    # Implementation that calls OpenAI API
+    pass
+```
+
+## Context の使用例
+
+```python
+def context_usage_example():
+    """
+    Demonstrate Context usage patterns
+    Contextの使用パターンを示します
+    
+    Examples:
+        >>> from refinire import Context
+        >>> ctx = Context()
+        >>> ctx.shared_state = {"key": "value"}
+        >>> ctx.shared_state["key"]
+        'value'
+        >>> ctx.result = "test result"
+        >>> ctx.result
+        'test result'
+        >>> len(ctx.messages)
+        0
+    """
+    pass
+```
+
+## Flow の基本例
+
+```python
+def flow_basic_example():
+    """
+    Basic Flow usage example
+    基本的なFlowの使用例
+    
+    Examples:
+        >>> from refinire import Flow, RefinireAgent
+        >>> agent = RefinireAgent(
+        ...     name="test_agent",
+        ...     generation_instructions="Respond helpfully.",
+        ...     model="gpt-4o-mini"
+        ... )
+        >>> flow = Flow(start="agent", steps={"agent": agent})
+        >>> flow.start_step
+        'agent'
+        >>> "agent" in flow.steps
+        True
+    """
     pass
 ```
 
@@ -127,13 +216,13 @@ python -m doctest -v your_module.py
 ### 2. 複数ファイルの実行
 
 ```bash
-python -m doctest -v src/agents_sdk_models/*.py
+python -m doctest -v src/refinire/*.py
 ```
 
 ### 3. Pytestでの実行
 
 ```bash
-pytest --doctest-modules src/agents_sdk_models/
+pytest --doctest-modules src/refinire/
 ```
 
 ## Doctestのオプション
@@ -148,53 +237,70 @@ pytest --doctest-modules src/agents_sdk_models/
 ### 実用的な例
 
 ```python
-def process_data(data: list) -> dict:
+def process_agent_result(result) -> dict:
     """
-    Process input data and return summary
-    入力データを処理して要約を返します
+    Process agent result and return summary
+    エージェント結果を処理して要約を返します
     
     Args:
-        data: List of data items / データ項目のリスト
+        result: Agent execution result / エージェント実行結果
     
     Returns:
         Summary dictionary / 要約辞書
     
     Examples:
-        >>> data = [1, 2, 3, 4, 5]
-        >>> result = process_data(data)
-        >>> result['count']
-        5
-        >>> result['sum']
-        15
-        >>> result['average']  # doctest: +ELLIPSIS
-        3.0
+        >>> class MockResult:
+        ...     def __init__(self, content, success=True):
+        ...         self.content = content
+        ...         self.success = success
+        ...         self.evaluation_score = 85.0
+        ...         self.attempts = 1
+        >>> result = MockResult("Hello world")
+        >>> summary = process_agent_result(result)
+        >>> summary['success']
+        True
+        >>> summary['content_length']
+        11
+        >>> summary['quality_score']  # doctest: +ELLIPSIS
+        85.0
         
-        空のリストの場合:
-        >>> process_data([])
-        {'count': 0, 'sum': 0, 'average': 0}
-        
-        文字列データの場合:
-        >>> process_data(['a', 'b', 'c'])  # doctest: +ELLIPSIS
-        {'count': 3, 'sum': 0, 'average': 0, 'items': [...]}
+        失敗した場合:
+        >>> failed_result = MockResult("", False)
+        >>> process_agent_result(failed_result)
+        {'success': False, 'content_length': 0, 'quality_score': None}
     """
-    if not data:
-        return {'count': 0, 'sum': 0, 'average': 0}
+    if not hasattr(result, 'success') or not result.success:
+        return {'success': False, 'content_length': 0, 'quality_score': None}
     
-    numeric_data = [x for x in data if isinstance(x, (int, float))]
-    count = len(data)
-    total = sum(numeric_data)
-    average = total / len(numeric_data) if numeric_data else 0
-    
-    result = {
-        'count': count,
-        'sum': total,
-        'average': average
+    return {
+        'success': result.success,
+        'content_length': len(result.content) if hasattr(result, 'content') else 0,
+        'quality_score': getattr(result, 'evaluation_score', None)
     }
+```
+
+## 変数埋め込みの例
+
+```python
+def test_variable_embedding():
+    """
+    Test variable embedding functionality
+    変数埋め込み機能のテスト
     
-    if not all(isinstance(x, (int, float)) for x in data):
-        result['items'] = data
-    
-    return result
+    Examples:
+        >>> from refinire import RefinireAgent, Context
+        >>> agent = RefinireAgent(
+        ...     name="dynamic_agent",
+        ...     generation_instructions="You are a {{role}} assistant.",
+        ...     model="gpt-4o-mini"
+        ... )
+        >>> ctx = Context()
+        >>> ctx.shared_state = {"role": "helpful"}
+        >>> # Variable substitution happens during execution
+        >>> "{{role}}" in agent.generation_instructions
+        True
+    """
+    pass
 ```
 
 ## CIでの実行
@@ -205,13 +311,13 @@ GitHub Actionsでdoctestを自動実行する設定：
 - name: Run doctests
   run: |
     # Run doctests for all Python files in src/
-    uv run python -m doctest -v src/agents_sdk_models/*.py
+    uv run python -m doctest -v src/refinire/*.py
     
-    # Run doctests for minimal example
-    uv run python -m doctest -v examples/minimal/minimal_example.py
+    # Run doctests for examples
+    uv run python -m doctest -v examples/*.py
     
     # Run doctests using pytest
-    uv run pytest --doctest-modules src/agents_sdk_models/
+    uv run pytest --doctest-modules src/refinire/
 ```
 
 ## ベストプラクティス
@@ -221,5 +327,7 @@ GitHub Actionsでdoctestを自動実行する設定：
 3. **型チェックを活用** - `isinstance()`でオブジェクトの型を確認
 4. **API呼び出しはスキップ** - 外部APIを使用する場合は`+SKIP`を使用
 5. **日本語コメントを併記** - 英語と日本語両方でドキュメント化
+6. **モックオブジェクトを活用** - 複雑な依存関係にはモックを使用
+7. **簡潔で分かりやすく** - 例は理解しやすく、要点を明確に
 
-これらの例を参考に、あなたのコードにもdoctestを追加してみてください！ 
+これらの例を参考に、あなたのコードにもdoctestを追加してみてください！

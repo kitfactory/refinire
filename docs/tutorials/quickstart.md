@@ -4,208 +4,284 @@ This tutorial introduces minimal LLM usage examples with Refinire. You can creat
 
 ## Prerequisites
 
-- Python 3.9 or higher installed
-- OpenAI API key configured (`OPENAI_API_KEY` environment variable)
+- Python 3.10 or higher installed
+- API keys configured for your chosen provider
 
 ```bash
-# Environment variable setup (Windows)
-set OPENAI_API_KEY=your_api_key_here
-
-# Environment variable setup (Linux/Mac)
+# OpenAI (if using OpenAI models)
 export OPENAI_API_KEY=your_api_key_here
+
+# Anthropic (if using Claude models)
+export ANTHROPIC_API_KEY=your_api_key_here
+
+# Google (if using Gemini models)
+export GOOGLE_API_KEY=your_api_key_here
 ```
 
-## 1. Getting Model Instances
+## Installation
 
-Handle multiple LLM providers with a unified interface.
+```bash
+pip install refinire
+```
+
+## 1. Simple Agent Creation
+
+Create a basic conversational agent with RefinireAgent.
 
 ```python
-from refinire import get_llm
+from refinire import RefinireAgent
+
+# Simple agent
+agent = RefinireAgent(
+    name="assistant",
+    generation_instructions="You are a helpful assistant. Provide clear and understandable responses.",
+    model="gpt-4o-mini"
+)
+
+result = agent.run("Hello! What can you help me with?")
+print(result.content)
+```
+
+## 2. Multi-Provider Support
+
+Use different LLM providers seamlessly.
+
+```python
+from refinire import RefinireAgent
 
 # OpenAI
-llm = get_llm("gpt-4o-mini")
+openai_agent = RefinireAgent(
+    name="openai_assistant",
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini"
+)
 
 # Anthropic Claude
-llm = get_llm("claude-3-sonnet")
+claude_agent = RefinireAgent(
+    name="claude_assistant", 
+    generation_instructions="You are a helpful assistant.",
+    model="claude-3-haiku"
+)
 
 # Google Gemini
-llm = get_llm("gemini-pro")
-
-# Ollama (Local LLM)
-llm = get_llm("llama3.1:8b")
-```
-
-## 2. Simple Agent Creation
-
-Create a basic conversational agent.
-
-```python
-from agents import Agent, Runner
-from refinire import get_llm
-
-llm = get_llm("gpt-4o-mini")
-agent = Agent(
-    name="Assistant",
-    model=llm,
-    instructions="You are a helpful assistant. Provide clear and understandable responses."
+gemini_agent = RefinireAgent(
+    name="gemini_assistant",
+    generation_instructions="You are a helpful assistant.",
+    model="gemini-1.5-flash"
 )
 
-result = Runner.run_sync(agent, "Hello!")
-print(result.final_output)
+# Ollama (Local)
+ollama_agent = RefinireAgent(
+    name="ollama_assistant",
+    generation_instructions="You are a helpful assistant.",
+    model="llama3.1:8b"
+)
 ```
 
-## 3. RefinireAgent + Flow for Advanced Workflows (Recommended)
+## 3. Automatic Quality Assurance
 
-Create advanced agents with automatic evaluation and quality improvement features.
+Create agents with built-in evaluation and automatic improvement.
 
 ```python
-from refinire import create_evaluated_agent, Flow, Context
-import asyncio
+from refinire import RefinireAgent
 
-# Create RefinireAgent with automatic evaluation
-agent = create_evaluated_agent(
-    name="ai_expert",
-    generation_instructions="""
-    You are an AI assistant with deep expertise.
-    Generate accurate and clear content based on user requests.
-    Always provide explanations when using technical terms.
-    """,
+# Agent with automatic quality control
+agent = RefinireAgent(
+    name="quality_assistant",
+    generation_instructions="Generate accurate and clear content about technology topics.",
     evaluation_instructions="""
-    Evaluate the generated content on a 100-point scale based on:
-    - Accuracy (40 points)
-    - Clarity (30 points)
-    - Completeness (30 points)
-    
-    Provide specific improvement suggestions if any issues are found.
+    Evaluate the generated content on accuracy, clarity, and completeness.
+    Rate from 0-100 and provide specific feedback for improvement.
     """,
-    model="gpt-4o-mini",
-    threshold=75  # Regenerate if score < 75
+    threshold=80.0,  # Automatically retry if score < 80
+    max_retries=2,
+    model="gpt-4o-mini"
 )
 
-# Create ultra-simple Flow
-flow = Flow(steps=agent)
-
-# Execute
-async def main():
-    result = await flow.run(input_data="Explain the difference between machine learning and deep learning")
-    print("Generated result:")
-    print(result.shared_state["ai_expert_result"])
-    
-    # Check evaluation score and result
-    if result.evaluation_result:
-        print(f"\nQuality Score: {result.evaluation_result['score']}")
-        print(f"Passed: {result.evaluation_result['passed']}")
-        print(f"Feedback: {result.evaluation_result['feedback']}")
-
-# Run
-asyncio.run(main())
+result = agent.run("Explain machine learning in simple terms")
+print(f"Content: {result.content}")
+print(f"Quality Score: {result.evaluation_score}")
+print(f"Attempts: {result.attempts}")
 ```
 
-## 4. Tool-Enabled Agents
+## 4. Tool Integration
 
 Create agents that can use external functions.
 
 ```python
-from refinire import create_simple_gen_agent, Flow
-import asyncio
+from refinire import RefinireAgent, tool
 
+@tool
 def get_weather(city: str) -> str:
-    """Get weather for the specified city"""
-    # Return dummy data instead of calling actual API
+    """Get current weather for a city"""
+    # Implement your weather API logic here
     return f"Weather in {city}: Sunny, 22°C"
 
+@tool
 def calculate(expression: str) -> float:
-    """Calculate mathematical expressions"""
+    """Calculate mathematical expressions safely"""
     try:
-        return eval(expression)
+        # Simple calculator - implement proper parsing in production
+        return eval(expression.replace("^", "**"))
     except:
         return 0.0
 
-# Tool-enabled agent
-tool_agent = create_simple_gen_agent(
+# Agent with tools
+agent = RefinireAgent(
     name="tool_assistant",
-    instructions="Answer user questions using tools when necessary.",
-    model="gpt-4o-mini",
-    tools=[get_weather, calculate]
+    generation_instructions="Help users by using available tools when needed.",
+    tools=[get_weather, calculate],
+    model="gpt-4o-mini"
 )
 
-flow = Flow(steps=tool_agent)
-
-async def main():
-    result = await flow.run(input_data="What's the weather in Tokyo and what's 15 * 23?")
-    print(result.shared_state["tool_assistant_result"])
-
-asyncio.run(main())
+result = agent.run("What's the weather in Tokyo and what's 15 * 23?")
+print(result.content)
 ```
 
-## 5. Multi-Step Workflows
+## 5. Context Management and Memory
 
-Create complex workflows combining multiple steps easily.
+Use context for stateful conversations and data sharing.
 
 ```python
-from refinire import Flow, FunctionStep, Context
+from refinire import RefinireAgent, Context
+
+# Agent with context management
+agent = RefinireAgent(
+    name="context_assistant",
+    generation_instructions="You are a helpful assistant. Use previous context to provide relevant responses.",
+    context_providers_config=[
+        {
+            "type": "conversation_history",
+            "max_items": 5
+        }
+    ],
+    model="gpt-4o-mini"
+)
+
+# Create shared context
+ctx = Context()
+
+# First interaction
+result1 = agent.run("My name is Alice and I'm interested in machine learning", ctx)
+print(f"Response 1: {result1.content}")
+
+# Second interaction (remembers previous conversation)
+result2 = agent.run("What topics should I start with?", ctx)
+print(f"Response 2: {result2.content}")
+```
+
+## 6. Variable Embedding for Dynamic Prompts
+
+Use dynamic variable substitution in prompts.
+
+```python
+from refinire import RefinireAgent, Context
+
+# Agent with variable embedding
+agent = RefinireAgent(
+    name="dynamic_assistant",
+    generation_instructions="You are a {{role}} helping {{audience}} with {{task_type}} questions. Style: {{response_style}}",
+    model="gpt-4o-mini"
+)
+
+# Setup context with variables
+ctx = Context()
+ctx.shared_state = {
+    "role": "technical expert",
+    "audience": "beginner developers",
+    "task_type": "programming",
+    "response_style": "step-by-step explanations"
+}
+
+result = agent.run("How do I start learning {{task_type}}?", ctx)
+print(result.content)
+```
+
+## 7. Advanced Workflows with Flow
+
+Create complex multi-step workflows.
+
+```python
+from refinire import RefinireAgent, Flow, FunctionStep
 import asyncio
 
-def analyze_input(user_input: str, ctx: Context) -> Context:
-    """Analyze user input"""
-    ctx.shared_state["analysis"] = f"Analyzed input: '{user_input}'"
-    return ctx
+def preprocess_data(ctx):
+    """Preprocess user input"""
+    ctx.shared_state["processed"] = True
+    return "Data preprocessed successfully"
 
-def generate_response(user_input: str, ctx: Context) -> Context:
-    """Generate response"""
-    analysis = ctx.shared_state.get("analysis", "")
-    ctx.shared_state["response"] = f"Generated response based on {analysis}"
-    ctx.finish()  # End workflow
-    return ctx
+# Multi-step workflow
+analyzer = RefinireAgent(
+    name="analyzer",
+    generation_instructions="Analyze the given topic and provide key insights.",
+    model="gpt-4o-mini"
+)
 
-# Multi-step Flow
-flow = Flow([
-    ("analyze", FunctionStep("analyze", analyze_input)),
-    ("respond", FunctionStep("respond", generate_response))
-])
+summarizer = RefinireAgent(
+    name="summarizer",
+    generation_instructions="Create a concise summary based on the analysis: {{RESULT}}",
+    model="gpt-4o-mini"
+)
+
+# Create flow
+flow = Flow(start="preprocess", steps={
+    "preprocess": FunctionStep("preprocess", preprocess_data),
+    "analyze": analyzer,
+    "summarize": summarizer
+})
 
 async def main():
-    result = await flow.run(input_data="Tell me about AI")
-    print(result.shared_state["response"])
+    result = await flow.run("Artificial Intelligence trends")
+    print(f"Analysis: {result.shared_state.get('analyzer_result', 'N/A')}")
+    print(f"Summary: {result.shared_state.get('summarizer_result', 'N/A')}")
 
+# Run async workflow
 asyncio.run(main())
 ```
 
-## 6. Legacy AgentPipeline (Deprecated)
+## 8. MCP Server Integration
+
+Integrate with Model Context Protocol servers for advanced tool capabilities.
 
 ```python
-# Warning: AgentPipeline will be removed in v0.1.0
-from refinire import AgentPipeline
+from refinire import RefinireAgent
 
-pipeline = AgentPipeline(
-    name="eval_example",
-    generation_instructions="You are a helpful assistant.",
-    evaluation_instructions="Evaluate the generated text for clarity on a 100-point scale.",
-    model="gpt-4o-mini",
-    threshold=70
+# Agent with MCP server support
+agent = RefinireAgent(
+    name="mcp_assistant",
+    generation_instructions="Use MCP server tools to help users with their requests.",
+    mcp_servers=[
+        "stdio://filesystem-server",
+        "http://localhost:8000/mcp"
+    ],
+    model="gpt-4o-mini"
 )
 
-result = pipeline.run("Tell me about AI use cases")
-print(result)
+result = agent.run("Analyze the project files in the current directory")
+print(result.content)
 ```
 
 ---
 
 ## Key Points
 
-### ✅ Recommended Approaches
-- **`get_llm`** for easy access to major LLMs
-- **`RefinireAgent + Flow`** for end-to-end generation, evaluation, and self-improvement
-- **`Flow(steps=agent)`** makes complex workflows **ultra-simple**
-- **Automatic quality management**: maintain quality with threshold settings
-- **Context-based result access**: seamless data flow between agents
+### ✅ Current Best Practices
+- **RefinireAgent**: Unified interface for all LLM providers
+- **Built-in Quality Assurance**: Automatic evaluation and retry mechanisms
+- **Tool Integration**: Easy function calling with `@tool` decorator
+- **Context Management**: Intelligent memory and conversation handling
+- **Variable Embedding**: Dynamic prompt generation with `{{variable}}` syntax
+- **Flow Architecture**: Complex workflows with simple declarative syntax
+- **MCP Integration**: Standardized tool access via Model Context Protocol
 
-### ⚠️ Important Notes
-- Legacy `AgentPipeline` will be removed in v0.1.0 (migration is easy)
-- Asynchronous processing (`asyncio`) is recommended
-- Set API keys properly via environment variables
+### 🚀 Performance Features
+- **Multi-Provider Support**: OpenAI, Anthropic, Google, Ollama
+- **Automatic Parallelization**: Built-in parallel processing capabilities
+- **Smart Context**: Automatic context filtering and optimization
+- **Structured Output**: Type-safe responses with Pydantic models
 
 ### 🔗 Next Steps
-- [API Reference](../api_reference.md) - Detailed feature documentation
-- [Composable Flow Architecture](../composable-flow-architecture.md) - Advanced workflows
-- [Examples](../../examples/) - Practical use cases
+- [Advanced Features](advanced.md) - Complex workflows and patterns
+- [Context Management](context_management.md) - Memory and state management
+- [Flow Guide](flow_complete_guide_en.md) - Comprehensive workflow construction
+- [Examples](../../examples/) - Practical implementation examples

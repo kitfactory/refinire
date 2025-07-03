@@ -1,211 +1,287 @@
 # クイックスタート
 
-このチュートリアルでは、Refinire を使った最小限のLLM活用例を紹介します。数分で動作するAIエージェントを作成できます。
+このチュートリアルでは、Refinireを使った最小限のLLM活用例を紹介します。数分で動作するAIエージェントを作成できます。
 
 ## 前提条件
 
-- Python 3.9以上がインストールされていること
-- OpenAIのAPIキーが設定されていること（`OPENAI_API_KEY`環境変数）
+- Python 3.10以上がインストールされていること
+- 使用するプロバイダーのAPIキーが設定されていること
 
 ```bash
-# 環境変数の設定例（Windows）
-set OPENAI_API_KEY=your_api_key_here
-
-# 環境変数の設定例（Linux/Mac）
+# OpenAI（OpenAIモデルを使用する場合）
 export OPENAI_API_KEY=your_api_key_here
+
+# Anthropic（Claudeモデルを使用する場合）
+export ANTHROPIC_API_KEY=your_api_key_here
+
+# Google（Geminiモデルを使用する場合）
+export GOOGLE_API_KEY=your_api_key_here
 ```
 
-## 1. モデルインスタンスの取得
+## インストール
 
-複数のLLMプロバイダーを統一インターフェースで扱えます。
+```bash
+pip install refinire
+```
+
+## 1. シンプルなエージェント作成
+
+RefinireAgentで基本的な対話エージェントを作成します。
 
 ```python
-from refinire import get_llm
+from refinire import RefinireAgent
+
+# シンプルなエージェント
+agent = RefinireAgent(
+    name="assistant",
+    generation_instructions="あなたは親切なアシスタントです。明確で理解しやすい回答を提供してください。",
+    model="gpt-4o-mini"
+)
+
+result = agent.run("こんにちは！何をお手伝いできますか？")
+print(result.content)
+```
+
+## 2. マルチプロバイダー対応
+
+異なるLLMプロバイダーをシームレスに使用できます。
+
+```python
+from refinire import RefinireAgent
 
 # OpenAI
-llm = get_llm("gpt-4o-mini")
+openai_agent = RefinireAgent(
+    name="openai_assistant",
+    generation_instructions="あなたは親切なアシスタントです。",
+    model="gpt-4o-mini"
+)
 
 # Anthropic Claude
-llm = get_llm("claude-3-sonnet")
+claude_agent = RefinireAgent(
+    name="claude_assistant", 
+    generation_instructions="あなたは親切なアシスタントです。",
+    model="claude-3-haiku"
+)
 
 # Google Gemini
-llm = get_llm("gemini-pro")
-
-# Ollama（ローカルLLM）
-llm = get_llm("llama3.1:8b")
-```
-
-## 2. シンプルなAgent作成
-
-基本的な対話エージェントを作成します。
-
-```python
-from agents import Agent, Runner
-from refinire import get_llm
-
-llm = get_llm("gpt-4o-mini")
-agent = Agent(
-    name="Assistant",
-    model=llm,
-    instructions="あなたは親切なアシスタントです。丁寧で分かりやすい回答を心がけてください。"
+gemini_agent = RefinireAgent(
+    name="gemini_assistant",
+    generation_instructions="あなたは親切なアシスタントです。",
+    model="gemini-1.5-flash"
 )
 
-result = Runner.run_sync(agent, "こんにちは！")
-print(result.final_output)
+# Ollama（ローカル）
+ollama_agent = RefinireAgent(
+    name="ollama_assistant",
+    generation_instructions="あなたは親切なアシスタントです。",
+    model="llama3.1:8b"
+)
 ```
 
-## 3. RefinireAgent + Flow で高度なワークフロー（推奨）
+## 3. 自動品質保証
 
-自動評価と品質向上機能を含む高度なエージェントを作成します。
+組み込み評価と自動改善機能付きのエージェントを作成します。
 
 ```python
-from refinire import create_evaluated_agent, Flow, Context
-import asyncio
+from refinire import RefinireAgent
 
-# 自動評価機能付きRefinireAgentを作成
-agent = create_evaluated_agent(
-    name="ai_expert",
-    generation_instructions="""
-    あなたは専門知識豊富なAIアシスタントです。
-    ユーザーの要望に応じて、正確で分かりやすい文章を生成してください。
-    専門用語を使う場合は、必ず説明を付けてください。
-    """,
+# 自動品質管理付きエージェント
+agent = RefinireAgent(
+    name="quality_assistant",
+    generation_instructions="技術トピックに関して正確で明確なコンテンツを生成してください。",
     evaluation_instructions="""
-    生成された文章を以下の観点で100点満点で評価してください：
-    - 正確性（40点）
-    - 分かりやすさ（30点）
-    - 完全性（30点）
-    
-    評価とともに改善点があれば具体的に指摘してください。
+    生成されたコンテンツを正確性、明確性、完全性で評価してください。
+    0-100で評価し、改善のための具体的なフィードバックを提供してください。
     """,
-    model="gpt-4o-mini",
-    threshold=75  # 75点未満の場合は自動で再生成
+    threshold=80.0,  # スコアが80未満の場合自動的に再試行
+    max_retries=2,
+    model="gpt-4o-mini"
 )
 
-# 超シンプルなFlowを作成
-flow = Flow(steps=agent)
-
-# 実行
-async def main():
-    result = await flow.run(input_data="機械学習と深層学習の違いを教えて")
-    print("生成結果:")
-    print(result.shared_state["ai_expert_result"])
-    
-    # 評価結果も確認可能
-    if result.evaluation_result:
-        print(f"\n品質スコア: {result.evaluation_result['score']}")
-        print(f"合格: {result.evaluation_result['passed']}")
-        print(f"フィードバック: {result.evaluation_result['feedback']}")
-
-# 実行
-asyncio.run(main())
+result = agent.run("機械学習を分かりやすく説明してください")
+print(f"内容: {result.content}")
+print(f"品質スコア: {result.evaluation_score}")
+print(f"試行回数: {result.attempts}")
 ```
 
-## 4. ツール使用可能なエージェント
+## 4. ツール統合
 
-外部機能を使えるエージェントを作成します。
+外部機能を使用できるエージェントを作成します。
 
 ```python
-from refinire import create_simple_gen_agent, Flow
-import asyncio
+from refinire import RefinireAgent, tool
 
+@tool
 def get_weather(city: str) -> str:
-    """指定された都市の天気を取得します"""
-    # 実際のAPIを呼ぶ代わりにダミーデータを返す
+    """都市の現在の天気を取得"""
+    # ここに天気APIロジックを実装
     return f"{city}の天気: 晴れ、気温22度"
 
+@tool
 def calculate(expression: str) -> float:
-    """数式を計算します"""
+    """数式を安全に計算"""
     try:
-        return eval(expression)
+        # シンプルな計算機 - 本番では適切なパーシングを実装
+        return eval(expression.replace("^", "**"))
     except:
         return 0.0
 
-# ツール使用可能なエージェント
-tool_agent = create_simple_gen_agent(
+# ツール付きエージェント
+agent = RefinireAgent(
     name="tool_assistant",
-    instructions="ユーザーの質問に対して、必要に応じてツールを使って回答してください。",
-    model="gpt-4o-mini",
-    tools=[get_weather, calculate]
+    generation_instructions="必要に応じて利用可能なツールを使ってユーザーを支援してください。",
+    tools=[get_weather, calculate],
+    model="gpt-4o-mini"
 )
 
-flow = Flow(steps=tool_agent)
-
-async def main():
-    result = await flow.run(input_data="東京の天気と、15 * 23の計算結果を教えて")
-    print(result.shared_state["tool_assistant_result"])
-
-asyncio.run(main())
+result = agent.run("東京の天気と15 * 23の計算結果を教えて")
+print(result.content)
 ```
 
-## 5. 複数ステップのワークフロー
+## 5. コンテキスト管理とメモリ
 
-複数のステップを組み合わせた複雑なワークフローも簡単に作成できます。
+ステートフルな会話とデータ共有にコンテキストを使用します。
 
 ```python
-from refinire import Flow, FunctionStep, Context
+from refinire import RefinireAgent, Context
+
+# コンテキスト管理付きエージェント
+agent = RefinireAgent(
+    name="context_assistant",
+    generation_instructions="あなたは親切なアシスタントです。以前のコンテキストを使って関連性のある回答を提供してください。",
+    context_providers_config=[
+        {
+            "type": "conversation_history",
+            "max_items": 5
+        }
+    ],
+    model="gpt-4o-mini"
+)
+
+# 共有コンテキストを作成
+ctx = Context()
+
+# 最初のやり取り
+result1 = agent.run("私の名前はアリスで、機械学習に興味があります", ctx)
+print(f"回答1: {result1.content}")
+
+# 二番目のやり取り（前の会話を記憶）
+result2 = agent.run("どのトピックから始めるべきでしょうか？", ctx)
+print(f"回答2: {result2.content}")
+```
+
+## 6. 動的プロンプトのための変数埋め込み
+
+プロンプトで動的変数置換を使用します。
+
+```python
+from refinire import RefinireAgent, Context
+
+# 変数埋め込み対応エージェント
+agent = RefinireAgent(
+    name="dynamic_assistant",
+    generation_instructions="あなたは{{role}}として{{audience}}の{{task_type}}に関する質問を支援します。スタイル: {{response_style}}",
+    model="gpt-4o-mini"
+)
+
+# 変数付きコンテキストを設定
+ctx = Context()
+ctx.shared_state = {
+    "role": "技術専門家",
+    "audience": "初心者開発者",
+    "task_type": "プログラミング",
+    "response_style": "段階的な説明"
+}
+
+result = agent.run("{{task_type}}の学習を始めるにはどうすればよいですか？", ctx)
+print(result.content)
+```
+
+## 7. Flowを使った高度なワークフロー
+
+複雑な複数ステップのワークフローを作成します。
+
+```python
+from refinire import RefinireAgent, Flow, FunctionStep
 import asyncio
 
-def analyze_input(user_input: str, ctx: Context) -> Context:
-    """ユーザー入力を分析"""
-    ctx.shared_state["analysis"] = f"入力「{user_input}」を分析しました"
-    return ctx
+def preprocess_data(ctx):
+    """ユーザー入力の前処理"""
+    ctx.shared_state["processed"] = True
+    return "データの前処理が正常に完了しました"
 
-def generate_response(user_input: str, ctx: Context) -> Context:
-    """回答を生成"""
-    analysis = ctx.shared_state.get("analysis", "")
-    ctx.shared_state["response"] = f"{analysis}に基づいて回答を生成しました"
-    ctx.finish()  # ワークフロー終了
-    return ctx
+# 複数ステップワークフロー
+analyzer = RefinireAgent(
+    name="analyzer",
+    generation_instructions="与えられたトピックを分析し、重要な洞察を提供してください。",
+    model="gpt-4o-mini"
+)
 
-# 複数ステップのFlow
-flow = Flow([
-    ("analyze", FunctionStep("analyze", analyze_input)),
-    ("respond", FunctionStep("respond", generate_response))
-])
+summarizer = RefinireAgent(
+    name="summarizer",
+    generation_instructions="分析結果に基づいて簡潔な要約を作成してください: {{RESULT}}",
+    model="gpt-4o-mini"
+)
+
+# フローを作成
+flow = Flow(start="preprocess", steps={
+    "preprocess": FunctionStep("preprocess", preprocess_data),
+    "analyze": analyzer,
+    "summarize": summarizer
+})
 
 async def main():
-    result = await flow.run(input_data="AIについて教えて")
-    print(result.shared_state["response"])
+    result = await flow.run("人工知能のトレンド")
+    print(f"分析: {result.shared_state.get('analyzer_result', 'N/A')}")
+    print(f"要約: {result.shared_state.get('summarizer_result', 'N/A')}")
 
+# 非同期ワークフローを実行
 asyncio.run(main())
 ```
 
-## 6. 旧AgentPipeline（非推奨）
+## 8. MCPサーバー統合
+
+高度なツール機能のためのModel Context Protocolサーバーとの統合。
 
 ```python
-# 注意：AgentPipelineはv0.1.0で削除予定です
-from refinire import AgentPipeline
+from refinire import RefinireAgent
 
-pipeline = AgentPipeline(
-    name="eval_example",
-    generation_instructions="あなたは役立つアシスタントです。",
-    evaluation_instructions="生成された文章を分かりやすさで100点満点評価してください。",
-    model="gpt-4o-mini",
-    threshold=70
+# MCPサーバー対応エージェント
+agent = RefinireAgent(
+    name="mcp_assistant",
+    generation_instructions="MCPサーバーツールを使用してユーザーのリクエストを支援してください。",
+    mcp_servers=[
+        "stdio://filesystem-server",
+        "http://localhost:8000/mcp"
+    ],
+    model="gpt-4o-mini"
 )
 
-result = pipeline.run("AIの活用事例を教えて")
-print(result)
+result = agent.run("現在のディレクトリのプロジェクトファイルを分析してください")
+print(result.content)
 ```
 
 ---
 
 ## 重要なポイント
 
-### ✅ 推奨されるアプローチ
-- **`get_llm`** で主要なLLMを簡単取得
-- **`RefinireAgent + Flow`** で生成・評価・自己改善まで一気通貫
-- **`Flow(steps=agent)`** だけで複雑なワークフローも**超シンプル**に実現
-- **自動品質管理**: threshold設定で品質を自動維持
-- **コンテキストベース結果アクセス**: エージェント間のシームレスなデータフロー
+### ✅ 現在のベストプラクティス
+- **RefinireAgent**: すべてのLLMプロバイダーの統一インターフェース
+- **組み込み品質保証**: 自動評価と再試行メカニズム
+- **ツール統合**: `@tool`デコレータによる簡単な関数呼び出し
+- **コンテキスト管理**: インテリジェントなメモリと会話処理
+- **変数埋め込み**: `{{variable}}`構文による動的プロンプト生成
+- **Flowアーキテクチャ**: シンプルな宣言的構文による複雑なワークフロー
+- **MCP統合**: Model Context Protocolによる標準化されたツールアクセス
 
-### ⚠️ 注意事項
-- 旧 `AgentPipeline` は v0.1.0 で削除予定（移行は簡単です）
-- 非同期処理（`asyncio`）の使用を推奨
-- 環境変数でAPIキーを適切に設定
+### 🚀 パフォーマンス機能
+- **マルチプロバイダー対応**: OpenAI、Anthropic、Google、Ollama
+- **自動並列化**: 組み込み並列処理機能
+- **スマートコンテキスト**: 自動コンテキストフィルタリングと最適化
+- **構造化出力**: Pydanticモデルによる型安全なレスポンス
 
 ### 🔗 次のステップ
-- [API リファレンス](../api_reference_ja.md) - 詳細な機能説明
-- [組み合わせ可能なフローアーキテクチャ](../composable-flow-architecture_ja.md) - 高度なワークフロー
-- [サンプル集](../../examples/) - 実用的な使用例 
+- [高度機能](advanced_ja.md) - 複雑なワークフローとパターン
+- [コンテキスト管理](context_management_ja.md) - メモリと状態管理
+- [Flowガイド](flow_complete_guide.md) - 包括的なワークフロー構築
+- [サンプル集](../../examples/) - 実践的な実装例
