@@ -266,6 +266,40 @@ result = agent.run("What's the weather in Tokyo? Also, what's 15 * 23?")
 print(result.content)  # Automatically answers both questions
 ```
 
+### MCP Server Integration - Model Context Protocol
+
+RefinireAgent natively supports **MCP (Model Context Protocol) servers**, providing standardized access to external data sources and tools:
+
+```python
+from refinire import RefinireAgent
+
+# MCP server integrated agent
+agent = RefinireAgent(
+    name="mcp_agent",
+    generation_instructions="Use MCP server tools to accomplish tasks",
+    mcp_servers=[
+        "stdio://filesystem-server",  # Local filesystem access
+        "http://localhost:8000/mcp",  # Remote API server
+        "stdio://database-server --config db.json"  # Database access
+    ],
+    model="gpt-4o-mini"
+)
+
+# MCP tools become automatically available
+result = agent.run("Analyze project files and include database information in your report")
+```
+
+**MCP Server Types:**
+- **stdio servers**: Run as local subprocess
+- **HTTP servers**: Remote HTTP endpoints  
+- **WebSocket servers**: Real-time communication support
+
+**Automatic Features:**
+- Tool auto-discovery from MCP servers
+- Dynamic tool registration and execution
+- Error handling and retry logic
+- Parallel management of multiple servers
+
 **📖 Tutorial:** [Advanced Features](docs/tutorials/advanced.md) | **Details:** [Composable Flow Architecture](docs/composable-flow-architecture.md)
 
 ## 4. Automatic Parallel Processing: Dramatic Performance Boost

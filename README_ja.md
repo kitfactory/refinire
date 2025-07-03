@@ -255,6 +255,40 @@ result = agent.run("東京の天気は？あと、15 * 23は？")
 print(result.content)  # 両方の質問に自動的に答えます
 ```
 
+### MCPサーバー統合 - Model Context Protocol
+
+RefinireAgentは**MCP（Model Context Protocol）サーバー**をネイティブサポートし、外部データソースやツールへの標準化されたアクセスを提供します：
+
+```python
+from refinire import RefinireAgent
+
+# MCPサーバー統合エージェント
+agent = RefinireAgent(
+    name="mcp_agent",
+    generation_instructions="MCPサーバーのツールを活用してタスクを実行してください",
+    mcp_servers=[
+        "stdio://filesystem-server",  # ローカルファイルシステムアクセス
+        "http://localhost:8000/mcp",  # リモートAPIサーバー
+        "stdio://database-server --config db.json"  # データベースアクセス
+    ],
+    model="gpt-4o-mini"
+)
+
+# MCPツールが自動的に利用可能になります
+result = agent.run("プロジェクトファイルを分析して、データベースの情報も含めて報告してください")
+```
+
+**MCPサーバータイプ:**
+- **stdio servers**: ローカルサブプロセスとして実行
+- **HTTP servers**: リモートHTTPエンドポイント  
+- **WebSocket servers**: リアルタイム通信対応
+
+**自動機能:**
+- MCPサーバーからのツール自動検出
+- ツールの動的登録と実行
+- エラーハンドリングと再試行
+- 複数サーバーの並列管理
+
 **📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [組み合わせ可能なフローアーキテクチャ](docs/composable-flow-architecture_ja.md)
 
 ## 4. 自動並列処理: 劇的なパフォーマンス向上

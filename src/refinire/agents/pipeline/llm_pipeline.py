@@ -213,6 +213,11 @@ class RefinireAgent(Step):
             "tools": sdk_tools
         }
         
+        # Add MCP servers support if specified
+        # MCPサーバーが指定されている場合は追加
+        if self.mcp_servers:
+            agent_kwargs["mcp_servers"] = self.mcp_servers
+        
         # Add structured output support if output_model is specified
         # output_modelが指定されている場合は構造化出力サポートを追加
         if self.output_model:

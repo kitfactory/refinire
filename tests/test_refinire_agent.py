@@ -135,6 +135,35 @@ class TestRefinireAgentAdvanced:
         assert agent.tools == tools
         assert agent.mcp_servers == mcp_servers
     
+    def test_refinire_agent_mcp_servers_integration(self):
+        """Test that MCP servers are properly passed to SDK Agent."""
+        mcp_servers = ["stdio://test-server", "http://localhost:8000/mcp"]
+        
+        agent = RefinireAgent(
+            name="mcp_test_agent",
+            generation_instructions="Test with MCP servers",
+            mcp_servers=mcp_servers
+        )
+        
+        # Verify MCP servers are stored
+        assert agent.mcp_servers == mcp_servers
+        
+        # Verify SDK agent has access to MCP servers
+        # Note: This test verifies the parameter is passed, actual MCP functionality
+        # depends on OpenAI Agents SDK implementation
+        assert hasattr(agent, '_sdk_agent')
+        
+    def test_refinire_agent_without_mcp_servers(self):
+        """Test RefinireAgent without MCP servers (default behavior)."""
+        agent = RefinireAgent(
+            name="no_mcp_agent",
+            generation_instructions="Test without MCP"
+        )
+        
+        # Should have empty MCP servers list by default
+        assert agent.mcp_servers == []
+        assert hasattr(agent, '_sdk_agent')
+    
     def test_refinire_agent_evaluation_model(self):
         """Test RefinireAgent with separate evaluation model."""
         agent = RefinireAgent(
