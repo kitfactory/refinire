@@ -66,17 +66,20 @@ print(f"生成内容: {result.content}")
 - **組み込み並列化**: シンプルな構文で劇的なパフォーマンス向上
 
 ```python
-from refinire import Flow, FunctionStep, ConditionStep, ParallelStep
+from refinire import Flow, FunctionStep, ConditionStep
 
 # 条件分岐と並列処理を含むフロー
 flow = Flow({
     "analyze": FunctionStep("analyze", analyze_input),
     "route": ConditionStep("route", check_complexity, "simple", "complex"),
     "simple": RefinireAgent(name="simple", generation_instructions="簡潔に回答"),
-    "complex": ParallelStep("experts", [
-        RefinireAgent(name="expert1", generation_instructions="詳細な分析"),
-        RefinireAgent(name="expert2", generation_instructions="別の視点から分析")
-    ]),
+    "complex": {
+        "parallel": [
+            RefinireAgent(name="expert1", generation_instructions="詳細な分析"),
+            RefinireAgent(name="expert2", generation_instructions="別の視点から分析")
+        ],
+        "next_step": "combine"
+    },
     "combine": FunctionStep("combine", aggregate_results)
 })
 

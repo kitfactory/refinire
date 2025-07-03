@@ -21,7 +21,7 @@ class DummyStep(Step):
         self.next_step = next_step
         self.executed = False
     
-    async def run(self, user_input: str, ctx: Context) -> Context:
+    async def run_async(self, user_input: str, ctx: Context) -> Context:
         """
         Execute dummy step
         ダミーステップを実行
@@ -77,7 +77,7 @@ class TestStepBase:
         step = DummyStep("test_step", "next_step")
         ctx = Context()
         
-        result_ctx = await step.run("test input", ctx)
+        result_ctx = await step.run_async("test input", ctx)
         
         assert step.executed
         assert result_ctx.current_step == "test_step"
@@ -111,7 +111,7 @@ class TestUserInputStep:
         step = UserInputStep("input_step", "Enter something:", "next_step")
         ctx = Context()
         
-        result_ctx = await step.run(None, ctx)
+        result_ctx = await step.run_async(None, ctx)
         
         assert result_ctx.current_step == "input_step"
         assert result_ctx.awaiting_user_input
@@ -127,7 +127,7 @@ class TestUserInputStep:
         step = UserInputStep("input_step", "Enter something:", "next_step")
         ctx = Context()
         
-        result_ctx = await step.run("user response", ctx)
+        result_ctx = await step.run_async("user response", ctx)
         
         assert result_ctx.current_step == "input_step"
         assert not result_ctx.awaiting_user_input
@@ -143,7 +143,7 @@ class TestUserInputStep:
         step = UserInputStep("input_step", "Enter something:")
         ctx = Context()
         
-        result_ctx = await step.run("user response", ctx)
+        result_ctx = await step.run_async("user response", ctx)
         
         assert result_ctx.current_step == "input_step"
         assert result_ctx.next_label is None  # Flow should end
@@ -182,7 +182,7 @@ class TestConditionStep:
         step = ConditionStep("condition", condition_func, "true_step", "false_step")
         ctx = Context()
         
-        result_ctx = await step.run(None, ctx)
+        result_ctx = await step.run_async(None, ctx)
         
         assert result_ctx.current_step == "condition"
         assert result_ctx.next_label == "true_step"
@@ -199,7 +199,7 @@ class TestConditionStep:
         step = ConditionStep("condition", condition_func, "true_step", "false_step")
         ctx = Context()
         
-        result_ctx = await step.run(None, ctx)
+        result_ctx = await step.run_async(None, ctx)
         
         assert result_ctx.current_step == "condition"
         assert result_ctx.next_label == "false_step"
@@ -216,7 +216,7 @@ class TestConditionStep:
         step = ConditionStep("condition", condition_func, "true_step", "false_step")
         ctx = Context()
         
-        result_ctx = await step.run(None, ctx)
+        result_ctx = await step.run_async(None, ctx)
         
         assert result_ctx.current_step == "condition"
         assert result_ctx.next_label == "true_step"
@@ -233,7 +233,7 @@ class TestConditionStep:
         step = ConditionStep("condition", condition_func, "true_step", "false_step")
         ctx = Context()
         
-        result_ctx = await step.run(None, ctx)
+        result_ctx = await step.run_async(None, ctx)
         
         assert result_ctx.current_step == "condition"
         assert result_ctx.next_label == "false_step"  # Should go to false on error
@@ -273,7 +273,7 @@ class TestFunctionStep:
         step = FunctionStep("func_step", test_func, "next_step")
         ctx = Context()
         
-        result_ctx = await step.run("test input", ctx)
+        result_ctx = await step.run_async("test input", ctx)
         
         assert result_ctx.current_step == "func_step"
         assert result_ctx.next_label == "next_step"
@@ -292,7 +292,7 @@ class TestFunctionStep:
         step = FunctionStep("func_step", test_func, "next_step")
         ctx = Context()
         
-        result_ctx = await step.run("test input", ctx)
+        result_ctx = await step.run_async("test input", ctx)
         
         assert result_ctx.current_step == "func_step"
         assert result_ctx.next_label == "next_step"
@@ -310,7 +310,7 @@ class TestFunctionStep:
         step = FunctionStep("func_step", error_func, "next_step")
         ctx = Context()
         
-        result_ctx = await step.run("test input", ctx)
+        result_ctx = await step.run_async("test input", ctx)
 
         assert result_ctx.current_step == "func_step"
         assert result_ctx.next_label == "next_step"  # Step continues to next even on error
@@ -329,7 +329,7 @@ class TestFunctionStep:
         step = FunctionStep("func_step", test_func)
         ctx = Context()
         
-        result_ctx = await step.run("test input", ctx)
+        result_ctx = await step.run_async("test input", ctx)
         
         assert result_ctx.current_step == "func_step"
         assert result_ctx.next_label is None  # Flow should end
@@ -364,7 +364,7 @@ class TestDebugStep:
         ctx.add_user_message("test message")
         
         with patch('builtins.print') as mock_print:
-            result_ctx = await step.run("test input", ctx)
+            result_ctx = await step.run_async("test input", ctx)
         
         assert result_ctx.current_step == "debug"
         assert result_ctx.next_label == "next_step"
@@ -386,7 +386,7 @@ class TestDebugStep:
         ctx.add_user_message("context message")
         
         with patch('builtins.print') as mock_print:
-            result_ctx = await step.run("test input", ctx)
+            result_ctx = await step.run_async("test input", ctx)
         
         assert result_ctx.current_step == "debug"
         assert result_ctx.next_label == "next_step"
@@ -459,7 +459,7 @@ class TestStepHelperFunctions:
         step = create_lambda_step("lambda_step", test_func, "next_step")
         ctx = Context()
         
-        result_ctx = await step.run("test input", ctx)
+        result_ctx = await step.run_async("test input", ctx)
         
         assert result_ctx.current_step == "lambda_step"
         assert result_ctx.next_label == "next_step"

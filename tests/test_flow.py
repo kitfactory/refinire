@@ -19,7 +19,7 @@ class DummyStep(Step):
         self.should_error = should_error
         self.executed = False
     
-    async def run(self, user_input: str, ctx: Context) -> Context:
+    async def run_async(self, user_input: str, ctx: Context) -> Context:
         """
         Execute dummy step
         ダミーステップを実行

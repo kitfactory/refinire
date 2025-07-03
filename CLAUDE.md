@@ -60,7 +60,8 @@ source .venv/bin/activate && mkdocs build
 
 **src/refinire/core/** - Core functionality
 - `llm.py` - Provider abstraction layer with `get_llm()` factory
-- `anthropic.py` - Claude integration
+- `anthropic.py` - Claude int
+egration
 - `gemini.py` - Google Gemini integration  
 - `ollama.py` - Local Ollama integration
 - `tracing.py` - Execution monitoring and observability
@@ -134,8 +135,8 @@ When adding provider support, implement the `Model` interface and integrate thro
 Workflows should be built using composable steps rather than monolithic functions. Prefer:
 - `FunctionStep` for pure functions
 - `ConditionStep` for branching logic
-- `ParallelStep` for concurrent operations
-- `AgentPipelineStep` for LLM integration
+- `{"parallel": [...]}` syntax for concurrent operations
+- `RefinireAgent` for LLM integration
 
 ### Testing Strategy
 Tests use dependency injection patterns with fixtures. Each provider has isolation through monkeypatching to avoid external API calls during testing. Key test categories:
@@ -180,3 +181,17 @@ Development dependencies include pytest, mypy (strict mode), mkdocs for document
 - `/tests/` - Test suite with provider-specific test isolation
 - `/src/refinire/` - Main source code
 - `/scripts/` - Utility scripts for development
+
+
+# 知見の集積
+- 開発のサブフェーズが終わったら振り返りを行ってください。
+- ユーザーが手直しを指示、特に設計の見直し指示した場合に、bad_generation.mdを記載してください。
+- bad_generation.md には、事例として、どんな指示でどんな生成がされ、ユーザーからどのように指摘がされたかを記載してください。
+- ユーザーの指示がなくてもフェーズが完了出来たら、good_generation.mdに記載してください。そこには、どうして生成がうまくできたかを自分なりに考えて書いてください。
+
+
+# ガイド・設計文書
+- 文書はソースコードのみの記載としない。ライブラリの利用者が実装しなければならないことを説明し、ソースコードの詳細すぎる箇所を説明をはぶくようにする。
+- また設計文書でのソースコードの事例もコメントはユーザーが実装しなければならないことを伝えるようにする。
+- 非推奨になったAPIの内容は記載しない
+

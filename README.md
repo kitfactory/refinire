@@ -77,17 +77,20 @@ print(f"Content: {result.content}")
 ### Simple Yet Powerful
 
 ```python
-from refinire import Flow, FunctionStep, ConditionStep, ParallelStep
+from refinire import Flow, FunctionStep, ConditionStep
 
 # Define your workflow as a composable flow
 flow = Flow({
     "start": FunctionStep("analyze", analyze_request),
     "route": ConditionStep("route", route_by_complexity, "simple", "complex"),
     "simple": RefinireAgent(name="simple", generation_instructions="Quick response"),
-    "complex": ParallelStep("research", [
-        RefinireAgent(name="expert1", generation_instructions="Deep analysis"),
-        RefinireAgent(name="expert2", generation_instructions="Alternative perspective")
-    ]),
+    "complex": {
+        "parallel": [
+            RefinireAgent(name="expert1", generation_instructions="Deep analysis"),
+            RefinireAgent(name="expert2", generation_instructions="Alternative perspective")
+        ],
+        "next_step": "aggregate"
+    },
     "aggregate": FunctionStep("combine", combine_results)
 })
 

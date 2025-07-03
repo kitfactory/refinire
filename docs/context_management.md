@@ -4,6 +4,89 @@
 
 RefinireAgentのコンテキスト管理機能は、AIエージェントが効率的かつ効果的に会話履歴、文脈情報、長期記憶を管理し、適切なコンテキストをLLMに提供するためのシステムです。
 
+## Contextとルーティングの関係
+
+### Contextオブジェクトとは
+
+FlowにおけるContextは、ステップ間でデータを共有し、状態を管理するための中核的なオブジェクトです。RefinireAgentの実行結果はContextに保存され、後続のステップや条件分岐で利用されます。
+
+```python
+from refinire import Context, Flow, ConditionStep, RefinireAgent
+
+# Contextオブジェクトの基本構造
+ctx = Context()
+ctx.result            # 現在のステップの結果
+ctx.shared_state      # ステップ間で共有される状態
+ctx.evaluation_result # RefinireAgentの評価結果
+ctx.prev_outputs      # 前のエージェントの出力
+```
+
+### ルーティングにおけるContextの活用
+
+RefinireAgentの結果に基づいてルーティングを設定するには、ConditionStepと組み合わせて使用します：
+
+```python
+# 1. RefinireAgentによる分析
+analyzer = RefinireAgent(
+    name="content_analyzer",
+    generation_instructions="入力内容を分析して以下のいずれかで回答: 技術的、ビジネス、一般的",
+    model="gpt-4o-mini"
+)
+
+# 2. Contextの結果に基づくルーティング関数
+def route_by_content_type(ctx):
+    """RefinireAgentの結果に基づいてルーティング"""
+    analysis_result = str(ctx.result).lower()
+    if "技術的" in analysis_result:
+        return "technical_handler"
+    elif "ビジネス" in analysis_result:
+        return "business_handler"
+    else:
+        return "general_handler"
+
+# 3. Flowでの統合
+routing_flow = Flow({
+    "analyze": analyzer,
+    "route": ConditionStep("route", route_by_content_type, 
+                          {"technical_handler": "technical", 
+                           "business_handler": "business", 
+                           "general_handler": "general"}),
+    "technical": RefinireAgent(name="tech_expert", generation_instructions="技術的な回答を提供"),
+    "business": RefinireAgent(name="business_expert", generation_instructions="ビジネス視点で回答"),
+    "general": RefinireAgent(name="general_assistant", generation_instructions="一般的な回答を提供")
+})
+```
+
+### 評価結果を使ったルーティング
+
+RefinireAgentの評価機能を活用したルーティングも可能です：
+
+```python
+# 評価機能付きRefinireAgent
+quality_agent = RefinireAgent(
+    name="quality_analyzer",
+    generation_instructions="内容を分析してください",
+    evaluation_instructions="分析の品質を0-100で評価してください",
+    threshold=75.0,
+    model="gpt-4o-mini"
+)
+
+# 評価スコアに基づくルーティング
+def route_by_quality(ctx):
+    """評価スコアに基づくルーティング"""
+    if hasattr(ctx, 'evaluation_result') and ctx.evaluation_result:
+        score = ctx.evaluation_result.get('score', 0)
+        return score >= 85  # 85点以上なら高品質ルート
+    return False
+
+quality_flow = Flow({
+    "analyze": quality_agent,
+    "quality_check": ConditionStep("quality_check", route_by_quality, "high_quality", "needs_improvement"),
+    "high_quality": RefinireAgent(name="publisher", generation_instructions="承認済みとして処理"),
+    "needs_improvement": RefinireAgent(name="reviewer", generation_instructions="改善提案を提供")
+})
+```
+
 ## 設計原則
 
 ### 極限まで絞った設計思想

@@ -319,7 +319,7 @@ class RefinireAgent(Step):
             else:
                 # Execute RefinireAgent and get LLMResult
                 # RefinireAgentを実行してLLMResultを取得
-                llm_result = await self._run_standalone(input_text)
+                llm_result = await self._run_standalone(input_text, ctx)
                 
                 # Perform evaluation if evaluation_instructions are provided
                 # evaluation_instructionsが提供されている場合は評価を実行
@@ -381,7 +381,7 @@ class RefinireAgent(Step):
         
         return ctx
     
-    async def _run_standalone(self, user_input: str) -> LLMResult:
+    async def _run_standalone(self, user_input: str, ctx: Optional[Context] = None) -> LLMResult:
         """
         Run agent in standalone mode
         スタンドアロンモードでエージェントを実行
@@ -394,10 +394,20 @@ class RefinireAgent(Step):
             )
         
         # 会話履歴とユーザー入力を含むプロンプトを構築（指示文は除く）
-        full_prompt = self._build_prompt(user_input, include_instructions=False)
+        full_prompt = self._build_prompt(user_input, include_instructions=False, ctx=ctx)
+        
+        # Store original instructions to restore later
+        # 後で復元するために元の指示を保存
+        original_instructions = self._sdk_agent.instructions
         
         for attempt in range(1, self.max_retries + 1):
             try:
+                # Apply variable substitution to SDK agent instructions if context is available
+                # コンテキストが利用可能な場合はSDKエージェントの指示にも変数置換を適用
+                if ctx:
+                    processed_instructions = self._substitute_variables(self.generation_instructions, ctx)
+                    self._sdk_agent.instructions = processed_instructions
+                
                 # full_promptを使用してRunner.runを呼び出し
                 result = await Runner.run(self._sdk_agent, full_prompt)
                 content = result.final_output
@@ -410,6 +420,9 @@ class RefinireAgent(Step):
                 if not self._validate_output(parsed_content):
                     if attempt < self.max_retries:
                         continue
+                    # Restore original instructions before returning
+                    # 戻る前に元の指示を復元
+                    self._sdk_agent.instructions = original_instructions
                     return LLMResult(
                         content=None,
                         success=False,
@@ -433,15 +446,24 @@ class RefinireAgent(Step):
                     attempts=attempt
                 )
                 self._store_in_history(user_input, llm_result)
+                # Restore original instructions before returning
+                # 戻る前に元の指示を復元
+                self._sdk_agent.instructions = original_instructions
                 return llm_result
             except Exception as e:
                 if attempt == self.max_retries:
+                    # Restore original instructions before returning
+                    # 戻る前に元の指示を復元
+                    self._sdk_agent.instructions = original_instructions
                     return LLMResult(
                         content=None,
                         success=False,
                         metadata={"error": str(e), "attempts": attempt, "sdk": True}
                     )
                 continue
+        # Restore original instructions before final return
+        # 最終リターン前に元の指示を復元
+        self._sdk_agent.instructions = original_instructions
         return LLMResult(
             content=None,
             success=False,
@@ -465,7 +487,68 @@ class RefinireAgent(Step):
                 return False
         return True
     
-    def _build_prompt(self, user_input: str, include_instructions: bool = True) -> str:
+    def _substitute_variables(self, text: str, ctx: Optional[Context] = None) -> str:
+        """
+        Substitute variables in text using {{variable}} syntax
+        {{変数}}構文を使用してテキストの変数を置換
+        
+        Args:
+            text: Text with potential variables / 変数を含む可能性のあるテキスト
+            ctx: Context for variable substitution / 変数置換用のコンテキスト
+            
+        Returns:
+            str: Text with variables substituted / 変数が置換されたテキスト
+        """
+        if not text or not ctx:
+            return text
+        
+        # Find all {{variable}} patterns
+        # {{変数}}パターンをすべて検索
+        import re
+        variable_pattern = r'\{\{([^}]+)\}\}'
+        variables = re.findall(variable_pattern, text)
+        
+        if not variables:
+            return text
+        
+        result_text = text
+        
+        for variable in variables:
+            variable_key = variable.strip()
+            placeholder = f"{{{{{variable}}}}}"
+            
+            # Handle special reserved variables
+            # 特別な予約変数を処理
+            if variable_key == "RESULT":
+                # Use the most recent result
+                # 最新の結果を使用
+                replacement = str(ctx.result) if ctx.result is not None else ""
+            elif variable_key == "EVAL_RESULT":
+                # Use evaluation result if available
+                # 評価結果が利用可能な場合は使用
+                if hasattr(ctx, 'evaluation_result') and ctx.evaluation_result:
+                    eval_info = []
+                    if 'score' in ctx.evaluation_result:
+                        eval_info.append(f"Score: {ctx.evaluation_result['score']}")
+                    if 'passed' in ctx.evaluation_result:
+                        eval_info.append(f"Passed: {ctx.evaluation_result['passed']}")
+                    if 'feedback' in ctx.evaluation_result:
+                        eval_info.append(f"Feedback: {ctx.evaluation_result['feedback']}")
+                    replacement = ", ".join(eval_info) if eval_info else ""
+                else:
+                    replacement = ""
+            else:
+                # Use shared_state for other variables
+                # その他の変数にはshared_stateを使用
+                replacement = str(ctx.shared_state.get(variable_key, "")) if ctx.shared_state else ""
+            
+            # Replace the placeholder with the value
+            # プレースホルダーを値で置換
+            result_text = result_text.replace(placeholder, replacement)
+        
+        return result_text
+
+    def _build_prompt(self, user_input: str, include_instructions: bool = True, ctx: Optional[Context] = None) -> str:
         """
         Build complete prompt with instructions, context providers, and history
         指示、コンテキストプロバイダー、履歴を含む完全なプロンプトを構築
@@ -474,13 +557,17 @@ class RefinireAgent(Step):
             user_input: User input / ユーザー入力
             include_instructions: Whether to include instructions (for OpenAI Agents SDK, set to False)
             include_instructions: 指示文を含めるかどうか（OpenAI Agents SDKの場合はFalse）
+            ctx: Context for variable substitution / 変数置換用のコンテキスト
         """
         prompt_parts = []
         
         # Add instructions only if requested (not for OpenAI Agents SDK)
         # 要求された場合のみ指示文を追加（OpenAI Agents SDKの場合は除く）
         if include_instructions:
-            prompt_parts.append(self.generation_instructions)
+            # Apply variable substitution to generation instructions
+            # generation_instructionsにも変数置換を適用
+            processed_instructions = self._substitute_variables(self.generation_instructions, ctx)
+            prompt_parts.append(processed_instructions)
         
         # Add context from context providers (with chaining)
         # コンテキストプロバイダーからのコンテキストを追加（連鎖機能付き）
@@ -513,7 +600,10 @@ class RefinireAgent(Step):
             history_text = "\n".join(self.session_history[-self.history_size:])
             prompt_parts.append(f"Previous context:\n{history_text}")
         
-        prompt_parts.append(f"User input: {user_input}")
+        # Substitute variables in user input before adding
+        # ユーザー入力を追加する前に変数を置換
+        processed_user_input = self._substitute_variables(user_input, ctx)
+        prompt_parts.append(f"User input: {processed_user_input}")
         
         return "\n\n".join(prompt_parts)
     
