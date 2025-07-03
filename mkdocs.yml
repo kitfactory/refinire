@@ -49,6 +49,7 @@ nav:
   - チュートリアル:
       - クイックスタート: tutorials/quickstart.md
       - 応用例: tutorials/advanced.md
+      - トレーシングと可観測性: tutorials/tracing.md
       - Doctest例: tutorials/doctest_examples.md
   - 開発者向け:
       - AI補完設定: developer/ai_completion.md

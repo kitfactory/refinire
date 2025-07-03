@@ -36,6 +36,11 @@ from .core import (
     TraceMetadata,
     get_global_registry,
     set_global_registry,
+    enable_opentelemetry_tracing,
+    disable_opentelemetry_tracing,
+    is_opentelemetry_enabled,
+    is_openinference_available,
+    get_tracer,
     ClaudeModel,
     GeminiModel,
     OllamaModel,
@@ -174,6 +179,11 @@ __all__ = [
     "TraceMetadata",
     "get_global_registry",
     "set_global_registry",
+    "enable_opentelemetry_tracing",
+    "disable_opentelemetry_tracing",
+    "is_opentelemetry_enabled", 
+    "is_openinference_available",
+    "get_tracer",
     
     # Environment templates
     "core_template"

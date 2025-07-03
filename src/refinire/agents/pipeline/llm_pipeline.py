@@ -309,18 +309,65 @@ class RefinireAgent(Step):
         Returns:
             Context: Updated context with result in ctx.result / ctx.resultに結果が格納された更新Context
         """
+        # Import agent_span for automatic tracing
+        # 自動トレーシング用のagent_spanをインポート
+        try:
+            from agents.tracing import agent_span
+        except ImportError:
+            agent_span = None
+        
+        # Create agent span for tracing
+        # トレーシング用のエージェントスパンを作成
+        span_name = f"RefinireAgent({self.name})"
+        tools_list = [tool.__name__ if hasattr(tool, '__name__') else str(tool) for tool in (self.tools or [])]
+        output_type = self.output_model.__name__ if self.output_model else None
+        
+        if agent_span is not None:
+            span = agent_span(
+                name=span_name,
+                tools=tools_list if tools_list else None,
+                output_type=output_type
+            )
+        else:
+            span = None
+        
         # Update step information in context / コンテキストのステップ情報を更新
         ctx.update_step_info(self.name)
         
+        # Execute with agent span for automatic tracing
+        # 自動トレーシング用のエージェントスパンで実行
+        if span is not None:
+            with span:
+                return await self._execute_with_context(user_input, ctx, span)
+        else:
+            return await self._execute_with_context(user_input, ctx, None)
+    
+    async def _execute_with_context(self, user_input: Optional[str], ctx: Context, span=None) -> Context:
+        """
+        Execute agent with context and optional span for metadata
+        コンテキストと オプションのスパンでエージェントを実行
+        """
         try:
             # Determine input text for agent / エージェント用入力テキストを決定
             input_text = user_input or ctx.last_user_input or ""
+            
+            # Add span metadata if available
+            # スパンが利用可能な場合はメタデータを追加
+            if span is not None:
+                span.data.input = input_text
+                span.data.instructions = self.generation_instructions
+                if self.evaluation_instructions:
+                    span.data.evaluation_instructions = self.evaluation_instructions
             
             if not input_text:
                 # If no input available, set result to None and continue
                 # 入力がない場合、結果をNoneに設定して続行
                 ctx.result = None
-                ctx.add_system_message(f"RefinireAgent {self.name}: No input available, skipping execution")
+                message = f"RefinireAgent {self.name}: No input available, skipping execution"
+                ctx.add_system_message(message)
+                if span is not None:
+                    span.data.output = None
+                    span.data.error = "No input available"
             else:
                 # Execute RefinireAgent and get LLMResult
                 # RefinireAgentを実行してLLMResultを取得
@@ -328,6 +375,7 @@ class RefinireAgent(Step):
                 
                 # Perform evaluation if evaluation_instructions are provided
                 # evaluation_instructionsが提供されている場合は評価を実行
+                evaluation_result = None
                 if self.evaluation_instructions and llm_result.success and llm_result.content:
                     try:
                         evaluation_result = self._evaluate_content(input_text, llm_result.content)
@@ -361,6 +409,17 @@ class RefinireAgent(Step):
                 ctx.shared_state[self.store_result_key] = ctx.result
                 ctx.prev_outputs[self.name] = ctx.result
                 
+                # Add span metadata for result
+                # 結果のスパンメタデータを追加
+                if span is not None:
+                    span.data.output = ctx.result
+                    span.data.success = llm_result.success
+                    span.data.model = self.model
+                    span.data.temperature = self.temperature
+                    if evaluation_result:
+                        span.data.evaluation_score = evaluation_result.score
+                        span.data.evaluation_passed = evaluation_result.passed
+                
                 # Add result as assistant message
                 # 結果をアシスタントメッセージとして追加
                 if ctx.result is not None:
@@ -376,6 +435,12 @@ class RefinireAgent(Step):
             ctx.add_system_message(error_msg)
             ctx.shared_state[self.store_result_key] = None
             ctx.prev_outputs[self.name] = None
+            
+            # Add error to span if available
+            # スパンが利用可能な場合はエラーを追加
+            if span is not None:
+                span.data.error = str(e)
+                span.data.success = False
             
             # Log error for debugging / デバッグ用エラーログ
             logger.error(error_msg)

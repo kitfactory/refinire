@@ -22,6 +22,30 @@ from .ollama import OllamaModel
 from .tracing import enable_console_tracing, disable_tracing
 from .trace_registry import TraceRegistry, TraceMetadata, get_global_registry, set_global_registry
 
+# OpenTelemetry tracing (optional, requires openinference-instrumentation)
+try:
+    from .opentelemetry_tracing import (
+        enable_opentelemetry_tracing, 
+        disable_opentelemetry_tracing, 
+        is_opentelemetry_enabled,
+        is_openinference_available,
+        get_tracer
+    )
+    _OPENTELEMETRY_AVAILABLE = True
+except ImportError:
+    _OPENTELEMETRY_AVAILABLE = False
+    # Provide no-op functions when OpenTelemetry is not available
+    def enable_opentelemetry_tracing(*args, **kwargs):
+        return False
+    def disable_opentelemetry_tracing():
+        pass
+    def is_opentelemetry_enabled():
+        return False
+    def is_openinference_available():
+        return False
+    def get_tracer(*args, **kwargs):
+        return None
+
 # Message and localization
 from .message import get_message, DEFAULT_LANGUAGE
 
@@ -47,6 +71,13 @@ __all__ = [
     "TraceMetadata", 
     "get_global_registry", 
     "set_global_registry",
+    
+    # OpenTelemetry tracing
+    "enable_opentelemetry_tracing",
+    "disable_opentelemetry_tracing", 
+    "is_opentelemetry_enabled",
+    "is_openinference_available",
+    "get_tracer",
     
     # Message and localization
     "get_message",

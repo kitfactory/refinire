@@ -39,6 +39,76 @@ class Step(ABC):
         """
         self.name = name
     
+    def _create_step_span(self, step_type: str = None):
+        """
+        Create a custom span for this step execution
+        このステップ実行用のカスタムスパンを作成
+        
+        Args:
+            step_type: Optional step type for span metadata
+            
+        Returns:
+            Span object or None if tracing not available
+        """
+        try:
+            from agents.tracing import custom_span
+            
+            span_name = f"{step_type or self.__class__.__name__}({self.name})"
+            span = custom_span(
+                name=span_name,
+                data={
+                    "step.name": self.name,
+                    "step.type": self.__class__.__name__,
+                    "step.category": step_type or "workflow"
+                }
+            )
+            return span
+        except ImportError:
+            return None
+    
+    def _update_span_with_result(self, span, user_input: Optional[str], ctx: Context, success: bool = True, error: Optional[str] = None):
+        """
+        Update span with execution results
+        実行結果でスパンを更新
+        
+        Args:
+            span: Span object to update
+            user_input: User input provided to step
+            ctx: Context after execution
+            success: Whether execution was successful
+            error: Error message if any
+        """
+        if span is None:
+            return
+            
+        try:
+            # Update span data with execution details
+            if user_input is not None:
+                span.data.input = user_input
+            
+            span.data.success = success
+            span.data.current_step = ctx.current_step
+            span.data.next_label = ctx.next_label
+            span.data.step_count = ctx.step_count
+            
+            if error:
+                span.data.error = error
+            
+            # Add context information
+            if hasattr(ctx, 'result') and ctx.result is not None:
+                span.data.output = str(ctx.result)
+            
+            # Add system messages
+            if ctx.messages:
+                recent_messages = ctx.messages[-3:]  # Last 3 messages
+                span.data.recent_messages = [
+                    {"role": msg.get("role", "unknown"), "content": msg.get("content", "")[:200]}
+                    for msg in recent_messages
+                ]
+                
+        except Exception as e:
+            logger.debug(f"Failed to update span data: {e}")
+    
     @abstractmethod
     async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
@@ -161,10 +231,30 @@ class ConditionStep(Step):
         Returns:
             Context: Updated context with routing / ルーティング付き更新済みコンテキスト
         """
+        # Create span for tracing
+        # トレーシング用のスパンを作成
+        span = self._create_step_span("condition")
+        
+        if span is not None:
+            with span:
+                return await self._execute_condition_with_span(user_input, ctx, span)
+        else:
+            return await self._execute_condition_with_span(user_input, ctx, None)
+    
+    async def _execute_condition_with_span(self, user_input: Optional[str], ctx: Context, span) -> Context:
+        """Execute condition step with span tracking"""
         ctx.update_step_info(self.name)
+        
+        # Add condition metadata to span
+        if span is not None:
+            span.data.if_true = self.if_true
+            span.data.if_false = self.if_false
+            span.data.condition_function = getattr(self.condition, '__name__', 'anonymous')
         
         # Evaluate condition (may be async)
         # 条件を評価（非同期の可能性あり）
+        result = False
+        error_msg = None
         try:
             result = self.condition(ctx)
             if asyncio.iscoroutine(result):
@@ -172,13 +262,20 @@ class ConditionStep(Step):
         except Exception as e:
             # On error, go to false branch
             # エラー時はfalseブランチに進む
-            ctx.add_system_message(f"Condition evaluation error: {e}")
+            error_msg = f"Condition evaluation error: {e}"
+            ctx.add_system_message(error_msg)
             result = False
         
         # Route based on condition result
         # 条件結果に基づいてルーティング
         next_step = self.if_true if result else self.if_false
         ctx.goto(next_step)
+        
+        # Update span with results
+        if span is not None:
+            span.data.condition_result = result
+            span.data.next_step = next_step
+            self._update_span_with_result(span, user_input, ctx, success=error_msg is None, error=error_msg)
         
         return ctx
 
@@ -223,8 +320,26 @@ class FunctionStep(Step):
         Returns:
             Context: Updated context / 更新済みコンテキスト
         """
+        # Create span for tracing
+        # トレーシング用のスパンを作成
+        span = self._create_step_span("function")
+        
+        if span is not None:
+            with span:
+                return await self._execute_function_with_span(user_input, ctx, span)
+        else:
+            return await self._execute_function_with_span(user_input, ctx, None)
+    
+    async def _execute_function_with_span(self, user_input: Optional[str], ctx: Context, span) -> Context:
+        """Execute function step with span tracking"""
         ctx.update_step_info(self.name)
         
+        # Add function metadata to span
+        if span is not None:
+            span.data.function_name = getattr(self.function, '__name__', 'anonymous')
+            span.data.next_step = self.next_step
+        
+        error_msg = None
         try:
             # Execute the function (may be async)
             # 関数を実行（非同期の可能性あり）
@@ -237,7 +352,8 @@ class FunctionStep(Step):
                 if result is not None:
                     ctx = result
         except Exception as e:
-            ctx.add_system_message(f"Function execution error in {self.name}: {e}")
+            error_msg = f"Function execution error in {self.name}: {e}"
+            ctx.add_system_message(error_msg)
         
         # Set next step if specified, otherwise finish the flow
         # 指定されている場合は次ステップを設定、そうでなければフローを終了
@@ -245,6 +361,10 @@ class FunctionStep(Step):
             ctx.goto(self.next_step)
         else:
             ctx.finish()
+        
+        # Update span with results
+        if span is not None:
+            self._update_span_with_result(span, user_input, ctx, success=error_msg is None, error=error_msg)
         
         return ctx
 
@@ -530,7 +650,25 @@ class ParallelStep(Step):
         Returns:
             Context: Updated context with merged results / マージされた結果を持つ更新済みコンテキスト
         """
+        # Create span for tracing
+        # トレーシング用のスパンを作成
+        span = self._create_step_span("parallel")
+        
+        if span is not None:
+            with span:
+                return await self._execute_parallel_with_span(user_input, ctx, span)
+        else:
+            return await self._execute_parallel_with_span(user_input, ctx, None)
+    
+    async def _execute_parallel_with_span(self, user_input: Optional[str], ctx: Context, span) -> Context:
+        """Execute parallel steps with span tracking"""
         ctx.update_step_info(self.name)
+        
+        # Add parallel execution metadata to span
+        if span is not None:
+            span.data.parallel_steps = [step.name for step in self.parallel_steps]
+            span.data.max_workers = self.max_workers
+            span.data.step_count = len(self.parallel_steps)
         
         # Create separate contexts for each parallel step
         # 各並列ステップ用に別々のコンテキストを作成
@@ -553,14 +691,20 @@ class ParallelStep(Step):
         
         # Use asyncio.gather for parallel execution
         # 並列実行にasyncio.gatherを使用
+        import time
+        start_time = time.time()
+        
         results = await asyncio.gather(
             *[run_parallel_step(sc) for sc in parallel_contexts],
             return_exceptions=True
         )
         
+        execution_time = time.time() - start_time
+        
         # Merge results back into main context
         # 結果をメインコンテキストにマージ
         errors = []
+        successful_steps = []
         for result in results:
             if isinstance(result, Exception):
                 errors.append(result)
@@ -571,16 +715,24 @@ class ParallelStep(Step):
                 errors.append(f"Step {step_name}: {error}")
                 continue
             
+            successful_steps.append(step_name)
             # Merge parallel step results
             # 並列ステップ結果をマージ
             self._merge_parallel_result(ctx, step_name, result_ctx)
         
+        # Update span with execution results
+        if span is not None:
+            span.data.execution_time_seconds = execution_time
+            span.data.successful_steps = successful_steps
+            span.data.failed_steps = len(errors)
+            span.data.total_steps = len(self.parallel_steps)
+        
         # Handle errors if any
         # エラーがあれば処理
+        error_msg = None
         if errors:
             error_msg = f"Parallel execution errors: {'; '.join(map(str, errors))}"
             ctx.add_system_message(error_msg)
-            raise RuntimeError(error_msg)
         
         # Set next step or finish
         # 次ステップを設定または終了
@@ -588,6 +740,14 @@ class ParallelStep(Step):
             ctx.goto(self.next_step)
         else:
             ctx.finish()
+        
+        # Update span with final results
+        if span is not None:
+            self._update_span_with_result(span, user_input, ctx, success=error_msg is None, error=error_msg)
+        
+        # Raise error after span update
+        if error_msg:
+            raise RuntimeError(error_msg)
         
         return ctx
     

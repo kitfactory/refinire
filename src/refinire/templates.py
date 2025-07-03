@@ -28,3 +28,24 @@ def core_template():
             "required": False
         }
     }
+
+
+def tracing_template():
+    """OpenTelemetry tracing configuration template"""
+    return {
+        "REFINIRE_TRACE_OTLP_ENDPOINT": {
+            "description": "OTLP endpoint URL for OpenTelemetry trace export\nExample: http://localhost:4317 (Grafana Tempo)\nExample: http://jaeger:4317 (Jaeger)",
+            "default": "",
+            "required": False
+        },
+        "REFINIRE_TRACE_SERVICE_NAME": {
+            "description": "Service name for OpenTelemetry traces\nUsed to identify your application in trace data",
+            "default": "refinire-agent",
+            "required": False
+        },
+        "REFINIRE_TRACE_RESOURCE_ATTRIBUTES": {
+            "description": "Additional resource attributes for traces\nFormat: key1=value1,key2=value2\nExample: environment=production,team=ai,version=1.0.0",
+            "default": "",
+            "required": False
+        }
+    }

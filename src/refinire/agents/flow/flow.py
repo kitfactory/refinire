@@ -406,6 +406,44 @@ class Flow:
         Raises:
             FlowExecutionError: If execution fails / 実行失敗時
         """
+        # Create flow span for tracing
+        # トレーシング用のフローワークフロースパンを作成
+        flow_span = self._create_flow_span()
+        
+        if flow_span is not None:
+            with flow_span:
+                return await self._run_with_span(input_data, initial_input, flow_span)
+        else:
+            return await self._run_with_span(input_data, initial_input, None)
+    
+    def _create_flow_span(self):
+        """Create a custom span for the entire flow execution"""
+        try:
+            from agents.tracing import custom_span
+            
+            span_name = f"Flow({self.name or 'unnamed'})"
+            span = custom_span(
+                name=span_name,
+                data={
+                    "flow.name": self.name or "unnamed",
+                    "flow.id": self.flow_id,
+                    "flow.start_step": self.start,
+                    "flow.max_steps": self.max_steps,
+                    "flow.step_count": len(self.steps),
+                    "flow.step_names": list(self.steps.keys())
+                }
+            )
+            return span
+        except ImportError:
+            return None
+    
+    async def _run_with_span(self, input_data: Optional[str], initial_input: Optional[str], span) -> Context:
+        """Run flow with span tracking"""
+        # Add input to span
+        effective_input = input_data or initial_input
+        if span is not None and effective_input:
+            span.data.flow_input = effective_input
+        
         async with self._execution_lock:
             try:
                 self._running = True
@@ -462,11 +500,27 @@ class Flow:
                 # フロー完了時に残りのスパンを終了
                 self.context.finalize_flow_span()
                 
+                # Update flow span with execution results
+                if span is not None:
+                    span.data.flow_completed = True
+                    span.data.final_step_count = step_count
+                    span.data.flow_finished = self.finished
+                    span.data.awaiting_user_input = self.context.awaiting_user_input
+                    if hasattr(self.context, 'result') and self.context.result is not None:
+                        span.data.flow_result = str(self.context.result)[:500]  # Truncate long results
+                
                 # Update trace registry
                 # トレースレジストリを更新
                 self._update_trace_on_completion()
                 
                 return self.context
+                
+            except Exception as e:
+                # Update span with error information
+                if span is not None:
+                    span.data.flow_error = str(e)
+                    span.data.flow_completed = False
+                raise
                 
             finally:
                 self._running = False

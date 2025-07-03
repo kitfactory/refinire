@@ -43,6 +43,13 @@ ollama = [
     "ollama>=0.1.0",
 ]
 
+# OpenInference instrumentation dependencies
+openinference-instrumentation = [
+    "openinference-instrumentation",
+    "openinference-instrumentation-openai",
+    "opentelemetry-exporter-otlp",
+]
+
 # Development dependencies
 dev = [
     "mkdocs-material>=9.6.14",
@@ -61,6 +68,9 @@ all = [
     "anthropic>=0.34.0",
     "google-generativeai>=0.3.0",
     "ollama>=0.1.0",
+    "openinference-instrumentation",
+    "openinference-instrumentation-openai",
+    "opentelemetry-exporter-otlp",
 ]
 [project.urls]
 Homepage = "https://github.com/kitfactory/refinire"
@@ -70,6 +80,7 @@ Bug-Tracker = "https://github.com/kitfactory/refinire/issues"
 
 [project.entry-points."oneenv.templates"]
 core = "refinire.templates:core_template"
+tracing = "refinire.templates:tracing_template"
 agents = "refinire.templates:agents_template" 
 development = "refinire.templates:development_template"
 

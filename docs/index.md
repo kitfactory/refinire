@@ -39,8 +39,8 @@ uv pip install -e .[dev]
 - OpenAI Agents SDK 0.0.9+
 - Windows, Linux, MacOS 
 
-## Tracing
-This library supports OpenAI Agents SDK tracing features. For details, see [Tracing](tracing.md).
+## Tracing and Observability
+Refinire provides comprehensive tracing capabilities with built-in console output and optional OpenTelemetry integration for advanced observability. For details, see [Tracing Tutorial](tutorials/tracing.md).
 
 ## Documentation
 

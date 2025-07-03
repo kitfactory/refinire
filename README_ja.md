@@ -8,6 +8,7 @@
 - **Unified API across providers** — OpenAI / Anthropic / Google / Ollama  
 - **Built-in evaluation & regeneration loops** — Quality assurance out of the box
 - **One-line parallel processing** — Complex async operations with just `{"parallel": [...]}`
+- **Comprehensive observability** — Automatic tracing with OpenTelemetry integration
 
 # 30-Second Quick Start
 

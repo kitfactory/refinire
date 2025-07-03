@@ -16,6 +16,7 @@
 - **Unified API across providers** — OpenAI / Anthropic / Google / Ollama  
 - **Built-in evaluation & regeneration loops** — Quality assurance out of the box
 - **One-line parallel processing** — Complex async operations with just `{"parallel": [...]}`
+- **Comprehensive observability** — Automatic tracing with OpenTelemetry integration
 
 ## 30-Second Quick Start
 
@@ -703,6 +704,186 @@ result_ctx.shared_state["custom_data"] = {"key": "value"}
 
 ---
 
+## Comprehensive Observability - Automatic Tracing
+
+**The Challenge**: Debugging AI workflows and understanding agent behavior in production requires visibility into execution flows, performance metrics, and failure patterns. Manual logging is insufficient for complex multi-agent systems.
+
+**The Solution**: Refinire provides comprehensive tracing capabilities with zero configuration. Every agent execution, workflow step, and evaluation is automatically captured and can be exported to industry-standard observability platforms like Grafana Tempo and Jaeger.
+
+**Key Benefits**:
+- **Zero Configuration**: Built-in console tracing works out of the box
+- **Production Ready**: OpenTelemetry integration with OTLP export
+- **Automatic Span Creation**: All agents and workflow steps traced automatically
+- **Rich Metadata**: Captures inputs, outputs, evaluation scores, and performance metrics
+- **Industry Standard**: Compatible with existing observability infrastructure
+
+### Built-in Console Tracing
+
+Every agent execution shows detailed, color-coded trace information by default:
+
+```python
+from refinire import RefinireAgent
+
+agent = RefinireAgent(
+    name="traced_agent",
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini"
+)
+
+result = agent.run("What is quantum computing?")
+# Console automatically shows:
+# 🔵 [Instructions] You are a helpful assistant.
+# 🟢 [User Input] What is quantum computing?
+# 🟡 [LLM Output] Quantum computing is a revolutionary computing paradigm...
+# ✅ [Result] Operation completed successfully
+```
+
+### Production OpenTelemetry Integration
+
+For production environments, enable OpenTelemetry tracing with a single function call:
+
+```python
+from refinire import (
+    RefinireAgent,
+    enable_opentelemetry_tracing,
+    disable_opentelemetry_tracing
+)
+
+# Enable comprehensive tracing
+enable_opentelemetry_tracing(
+    service_name="my-agent-app",
+    otlp_endpoint="http://localhost:4317",  # Grafana Tempo endpoint
+    console_output=True  # Also show console traces
+)
+
+# All agent executions are now automatically traced
+agent = RefinireAgent(
+    name="production_agent",
+    generation_instructions="Generate high-quality responses",
+    evaluation_instructions="Rate quality from 0-100",
+    threshold=85.0,
+    model="gpt-4o-mini"
+)
+
+# This execution creates detailed spans with:
+# - Agent name: "RefinireAgent(production_agent)"
+# - Input/output text and instructions
+# - Model name and parameters
+# - Evaluation scores and pass/fail status
+# - Success/error status and timing
+result = agent.run("Explain machine learning concepts")
+
+# Clean up when done
+disable_opentelemetry_tracing()
+```
+
+### Environment Variable Configuration
+
+Use environment variables for streamlined configuration:
+
+```bash
+# Set tracing configuration
+export REFINIRE_TRACE_OTLP_ENDPOINT="http://localhost:4317"
+export REFINIRE_TRACE_SERVICE_NAME="my-agent-service"
+export REFINIRE_TRACE_RESOURCE_ATTRIBUTES="environment=production,team=ai"
+
+# Use oneenv for easy configuration management
+oneenv init --template refinire.tracing
+```
+
+### Automatic Span Coverage
+
+When tracing is enabled, Refinire automatically creates spans for:
+
+#### **RefinireAgent Spans**
+- Input text, generation instructions, and output
+- Model name and evaluation scores
+- Success/failure status and error details
+
+#### **Workflow Step Spans**
+- **ConditionStep**: Boolean results and routing decisions
+- **FunctionStep**: Function execution and next steps
+- **ParallelStep**: Parallel execution timing and success rates
+
+#### **Flow Workflow Spans**
+- Complete workflow execution with step counts
+- Flow input/output and completion status
+- Step names and execution sequence
+
+### Grafana Tempo Integration
+
+Set up complete observability with Grafana Tempo:
+
+```yaml
+# tempo.yaml
+server:
+  http_listen_port: 3200
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+storage:
+  trace:
+    backend: local
+    local:
+      path: /tmp/tempo/traces
+```
+
+```bash
+# Start Tempo
+./tempo -config.file=tempo.yaml
+
+# Run your traced application
+python my_agent_app.py
+
+# View traces in Grafana at http://localhost:3000
+# Search: {service.name="my-agent-service"}
+```
+
+### Advanced Workflow Tracing
+
+For complex workflows, add custom spans around groups of operations:
+
+```python
+from refinire import get_tracer, enable_opentelemetry_tracing
+
+enable_opentelemetry_tracing(
+    service_name="workflow-app",
+    otlp_endpoint="http://localhost:4317"
+)
+
+tracer = get_tracer("workflow-tracer")
+
+with tracer.start_as_current_span("multi-agent-workflow") as span:
+    span.set_attribute("workflow.type", "analysis-pipeline")
+    span.set_attribute("user.id", "user123")
+    
+    # These agents automatically create spans within the workflow span
+    analyzer = RefinireAgent(name="analyzer", model="gpt-4o-mini")
+    expert = RefinireAgent(name="expert", model="gpt-4o-mini")
+    
+    # Each call automatically creates detailed spans
+    analysis = analyzer.run("Analyze this data")
+    response = expert.run("Provide expert analysis")
+    
+    span.set_attribute("workflow.status", "completed")
+```
+
+**📖 Complete Guide:** [Tracing and Observability Tutorial](docs/tutorials/tracing.md) - Comprehensive setup and usage
+
+**🔗 Integration Examples:**
+- [OpenTelemetry Example](examples/opentelemetry_tracing_example.py) - Basic OpenTelemetry setup
+- [Grafana Tempo Example](examples/grafana_tempo_tracing_example.py) - Complete Tempo integration
+- [Environment Configuration](examples/oneenv_tracing_example.py) - oneenv configuration management
+
+---
+
 ## Why Refinire?
 
 ### For Developers
@@ -751,6 +932,11 @@ Explore comprehensive examples in the `examples/` directory:
 - `context_management_basic.py` - Basic context provider usage
 - `context_management_advanced.py` - Advanced context with source code analysis
 - `context_management_practical.py` - Real-world context management scenarios
+
+### Tracing and Observability
+- `opentelemetry_tracing_example.py` - Basic OpenTelemetry setup and usage
+- `grafana_tempo_tracing_example.py` - Complete Grafana Tempo integration
+- `oneenv_tracing_example.py` - Environment configuration with oneenv
 
 ---
 
@@ -816,6 +1002,79 @@ result = agent.run("Analyze project files and include database information in yo
 - **Documentation**: Updated guides showing MCP server configuration and usage patterns
 
 **📖 Detailed Guide:** [MCP Server Example](examples/mcp_server_example.py) - Complete MCP integration demonstration
+
+---
+
+### v0.2.11 - Comprehensive Observability and Automatic Tracing
+
+### 🔍 Complete OpenTelemetry Integration
+- **Automatic Agent Tracing**: All RefinireAgent executions automatically create detailed spans with zero configuration
+- **Workflow Step Tracing**: ConditionStep, FunctionStep, and ParallelStep operations automatically tracked
+- **Flow-Level Spans**: Complete workflow execution visibility with comprehensive metadata
+- **Rich Span Metadata**: Captures inputs, outputs, evaluation scores, model parameters, and performance metrics
+
+```python
+from refinire import enable_opentelemetry_tracing, RefinireAgent
+
+# Enable comprehensive tracing
+enable_opentelemetry_tracing(
+    service_name="my-agent-app",
+    otlp_endpoint="http://localhost:4317"
+)
+
+# All executions automatically create detailed spans
+agent = RefinireAgent(
+    name="traced_agent",
+    generation_instructions="Generate responses",
+    evaluation_instructions="Rate quality 0-100",
+    threshold=85.0,
+    model="gpt-4o-mini"
+)
+
+# Automatic span with rich metadata
+result = agent.run("Explain quantum computing")
+```
+
+### 🎯 Zero-Configuration Observability
+- **Built-in Console Tracing**: Color-coded trace output works out of the box
+- **Environment Variable Configuration**: `REFINIRE_TRACE_*` variables for streamlined setup
+- **oneenv Template Support**: `oneenv init --template refinire.tracing` for easy configuration
+- **Production Ready**: Industry-standard OTLP export to Grafana Tempo, Jaeger, and other platforms
+
+### 🚀 Automatic Span Coverage
+- **RefinireAgent Spans**: Input/output text, instructions, model name, evaluation scores, success/error status
+- **ConditionStep Spans**: Boolean results, if_true/if_false branches, routing decisions
+- **FunctionStep Spans**: Function name, execution success, next step information
+- **ParallelStep Spans**: Parallel execution timing, success rates, worker utilization
+- **Flow Spans**: Complete workflow metadata, step counts, execution sequence, completion status
+
+### 📊 Advanced Observability Features
+- **OpenAI Agents SDK Integration**: Leverages built-in tracing abstractions (`agent_span`, `custom_span`)
+- **OpenTelemetry Bridge**: Seamless connection between Agents SDK spans and OpenTelemetry
+- **Grafana Tempo Support**: Complete setup guide and integration examples
+- **Custom Span Support**: Add business logic spans while maintaining automatic coverage
+
+### 📖 Comprehensive Documentation
+- **English Tutorial**: [Tracing and Observability](docs/tutorials/tracing.md) - Complete setup and usage guide
+- **Japanese Tutorial**: [トレーシングと可観測性](docs/tutorials/tracing_ja.md) - 包括的なセットアップと使用ガイド
+- **Integration Examples**: Complete examples for OpenTelemetry, Grafana Tempo, and environment configuration
+- **Best Practices**: Guidelines for production deployment and performance optimization
+
+### 🔧 Technical Implementation
+- **Minimal Overhead**: Efficient span creation with automatic metadata collection
+- **Error Handling**: Robust error capture and reporting in trace data
+- **Performance Monitoring**: Automatic timing and performance metrics collection
+- **Memory Efficiency**: Optimized trace data structure and export batching
+
+### 💡 Developer Benefits
+- **Production Debugging**: Complete visibility into multi-agent workflows and complex flows
+- **Performance Optimization**: Identify bottlenecks and optimization opportunities
+- **Quality Monitoring**: Track evaluation scores and improvement patterns
+- **Zero Maintenance**: Automatic tracing with no manual instrumentation required
+
+**📖 Complete Guides:**
+- [Tracing Tutorial](docs/tutorials/tracing.md) - Comprehensive setup and integration guide
+- [Grafana Tempo Example](examples/grafana_tempo_tracing_example.py) - Production observability setup
 
 ---
 
