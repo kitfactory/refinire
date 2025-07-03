@@ -355,6 +355,183 @@ async def test_emotion_flow():
 
 この課題では、**RefinireAgentの連携**と**条件分岐**を組み合わせて、感情に応じたパーソナライズされたアドバイスシステムを構築します。
 
+### 1.6 show()を使ったFlow可視化
+
+複雑なFlowを理解し、デバッグするためには、Flow構造を可視化することが重要です。Refinireの`show()`メソッドを使用すると、テキスト形式とグラフィカル形式の両方でFlowを表示できます。
+
+#### 基本的なFlow可視化
+
+```python
+from refinire import Flow, FunctionStep, ConditionStep
+
+def analyze_input(ctx):
+    return f"分析済み: {ctx.result}"
+
+def is_complex(ctx):
+    return len(str(ctx.result)) > 10
+
+# デモンストレーション用のFlowを作成
+demo_flow = Flow(start="analyze", steps={
+    "analyze": FunctionStep("analyze", analyze_input, next_step="check"),
+    "check": ConditionStep("check", is_complex, "complex_process", "simple_process"),
+    "complex_process": FunctionStep("complex_process", lambda ctx: "複雑な処理完了"),
+    "simple_process": FunctionStep("simple_process", lambda ctx: "簡単な処理完了")
+})
+
+# テキスト形式でFlow構造を表示
+print("=== Flow構造（テキスト形式） ===")
+print(demo_flow.show(format="text"))
+
+# Mermaid形式でFlow構造を表示
+print("\n=== Flow構造（Mermaid形式） ===")
+print(demo_flow.show(format="mermaid"))
+```
+
+**期待される出力:**
+
+```
+=== Flow構造（テキスト形式） ===
+Flow Diagram:
+==================================================
+→ analyze (FunctionStep)
+  → check (ConditionStep)
+    True → complex_process
+    False → simple_process
+    → complex_process (FunctionStep)
+    → simple_process (FunctionStep)
+
+=== Flow構造（Mermaid形式） ===
+graph TD
+    analyze["analyze<br/>(FunctionStep)"]:::start
+    analyze --> check
+    check["check<br/>(ConditionStep)"]:::condition
+    check -->|"True"| complex_process
+    check -->|"False"| simple_process
+    complex_process["complex_process<br/>(FunctionStep)"]
+    simple_process["simple_process<br/>(FunctionStep)"]
+```
+
+#### 可視化形式の違い
+
+**テキスト形式** (`format="text"`):
+- コンソールでのデバッグと迅速な確認に最適
+- インデントによる階層構造の表示
+- ステップタイプとルーティング情報を表示
+- 開発とトラブルシューティングに理想的
+
+**Mermaid形式** (`format="mermaid"`):
+- Mermaid.jsフローチャートコードを生成
+- GitHub、GitLab、Notion、その他のプラットフォームでレンダリング可能
+- プロフェッショナルな文書作成とプレゼンテーション
+- マークダウンファイルにコピー&ペースト可能
+
+#### 異なるFlowタイプの可視化
+
+```python
+# 1. シーケンシャルFlowの可視化
+sequential_flow = Flow(steps=[
+    FunctionStep("step1", lambda ctx: "ステップ1完了"),
+    FunctionStep("step2", lambda ctx: "ステップ2完了"),
+    FunctionStep("step3", lambda ctx: "ステップ3完了")
+])
+
+print("シーケンシャルFlow:")
+print(sequential_flow.show(format="text"))
+
+# 2. 単一ステップFlowの可視化
+from refinire import RefinireAgent
+
+single_flow = Flow(steps=RefinireAgent(
+    name="assistant",
+    generation_instructions="あなたは役立つアシスタントです",
+    model="gpt-4o-mini"
+))
+
+print("\n単一ステップFlow:")
+print(single_flow.show(format="text"))
+
+# 3. 並列処理Flowの可視化
+parallel_flow = Flow(start="input", steps={
+    "input": FunctionStep("input", lambda ctx: ctx.result, next_step="parallel"),
+    "parallel": {
+        "parallel": [
+            RefinireAgent(name="agent1", generation_instructions="視点Aから分析", model="gpt-4o-mini"),
+            RefinireAgent(name="agent2", generation_instructions="視点Bから分析", model="gpt-4o-mini")
+        ],
+        "next_step": "combine",
+        "max_workers": 2
+    },
+    "combine": FunctionStep("combine", lambda ctx: "結果統合完了")
+})
+
+print("\n並列処理Flow:")
+print(parallel_flow.show(format="mermaid"))
+```
+
+#### 実行履歴付き可視化
+
+Flowを実行した後、実際の実行パスを可視化できます：
+
+```python
+# 最初にFlowを実行
+result = await demo_flow.run("Flowのテスト入力")
+
+# 実行履歴付きでFlowを表示
+print("=== 実行履歴付きFlow ===")
+print(demo_flow.show(format="text", include_history=True))
+
+# 実行パスハイライト付きMermaid形式
+print("\n=== 実行パス付きMermaid ===")
+print(demo_flow.show(format="mermaid", include_history=True))
+```
+
+実行履歴では以下がハイライトされます：
+- 実際に実行されたステップ
+- 実行順序
+- 各ステップのタイムスタンプ
+- Mermaid図での視覚的パスハイライト
+
+#### Flow可視化のベストプラクティス
+
+1. **開発フェーズ**:
+   - `format="text"`を使用して迅速なコンソール確認
+   - 実装前にFlow構造をチェック
+   - 条件分岐とルーティングを検証
+
+2. **文書化フェーズ**:
+   - `format="mermaid"`を文書化に使用
+   - README ファイルと技術仕様書に含める
+   - チームメンバーとのレビューで共有
+
+3. **デバッグフェーズ**:
+   - 実行後に`include_history=True`を使用
+   - どのパスが取られるかを特定
+   - 予期しないルーティング動作をデバッグ
+
+4. **本番監視**:
+   - 運用文書用にFlow図を生成
+   - 実行パターンとボトルネックを追跡
+   - 複雑なビジネスプロセスを可視化
+
+#### 外部ツールとの統合
+
+**Mermaid Live Editor**: Mermaid出力を [https://mermaid.live/](https://mermaid.live/) にコピーして、インタラクティブな編集とエクスポートが可能です。
+
+**GitHub/GitLab**: Mermaid図はマークダウンファイルで自動的にレンダリングされます：
+
+````markdown
+```mermaid
+graph TD
+    analyze["analyze<br/>(FunctionStep)"]:::start
+    analyze --> check
+    check["check<br/>(ConditionStep)"]:::condition
+    check -->|"True"| complex_process
+    check -->|"False"| simple_process
+```
+````
+
+**文書作成ツール**: ほとんどの現代的な文書プラットフォームでMermaidレンダリングをサポートしています（Notion、Obsidian、GitBook など）。
+
 ---
 
 ## 中級編：複雑なワークフローとエージェント統合

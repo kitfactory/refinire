@@ -289,6 +289,183 @@ practice_flow = Flow({
 })
 ```
 
+### 1.6 Flow Visualization with show()
+
+Understanding and debugging complex flows becomes much easier when you can visualize them. Refinire provides a powerful `show()` method that generates both text-based and graphical representations of your flows.
+
+#### Basic Flow Visualization
+
+```python
+from refinire import Flow, FunctionStep, ConditionStep
+
+def analyze_input(ctx):
+    return f"Analyzed: {ctx.result}"
+
+def is_complex(ctx):
+    return len(str(ctx.result)) > 10
+
+# Create a flow for demonstration
+demo_flow = Flow(start="analyze", steps={
+    "analyze": FunctionStep("analyze", analyze_input, next_step="check"),
+    "check": ConditionStep("check", is_complex, "complex_process", "simple_process"),
+    "complex_process": FunctionStep("complex_process", lambda ctx: "Complex processing complete"),
+    "simple_process": FunctionStep("simple_process", lambda ctx: "Simple processing complete")
+})
+
+# Display flow structure in text format
+print("=== Flow Structure (Text) ===")
+print(demo_flow.show(format="text"))
+
+# Display flow structure in Mermaid format
+print("\n=== Flow Structure (Mermaid) ===")
+print(demo_flow.show(format="mermaid"))
+```
+
+**Expected Output:**
+
+```
+=== Flow Structure (Text) ===
+Flow Diagram:
+==================================================
+→ analyze (FunctionStep)
+  → check (ConditionStep)
+    True → complex_process
+    False → simple_process
+    → complex_process (FunctionStep)
+    → simple_process (FunctionStep)
+
+=== Flow Structure (Mermaid) ===
+graph TD
+    analyze["analyze<br/>(FunctionStep)"]:::start
+    analyze --> check
+    check["check<br/>(ConditionStep)"]:::condition
+    check -->|"True"| complex_process
+    check -->|"False"| simple_process
+    complex_process["complex_process<br/>(FunctionStep)"]
+    simple_process["simple_process<br/>(FunctionStep)"]
+```
+
+#### Visualization Formats
+
+**Text Format** (`format="text"`):
+- Perfect for console debugging and quick inspection
+- Shows hierarchical structure with indentation
+- Displays step types and routing information
+- Ideal for development and troubleshooting
+
+**Mermaid Format** (`format="mermaid"`):
+- Generates Mermaid.js flowchart code
+- Can be rendered in GitHub, GitLab, Notion, and other platforms
+- Professional documentation and presentations
+- Copy-paste ready for markdown files
+
+#### Visualizing Different Flow Types
+
+```python
+# 1. Sequential Flow Visualization
+sequential_flow = Flow(steps=[
+    FunctionStep("step1", lambda ctx: "Step 1 complete"),
+    FunctionStep("step2", lambda ctx: "Step 2 complete"),
+    FunctionStep("step3", lambda ctx: "Step 3 complete")
+])
+
+print("Sequential Flow:")
+print(sequential_flow.show(format="text"))
+
+# 2. Single Step Flow Visualization
+from refinire import RefinireAgent
+
+single_flow = Flow(steps=RefinireAgent(
+    name="assistant",
+    generation_instructions="You are a helpful assistant",
+    model="gpt-4o-mini"
+))
+
+print("\nSingle Step Flow:")
+print(single_flow.show(format="text"))
+
+# 3. Parallel Processing Visualization
+parallel_flow = Flow(start="input", steps={
+    "input": FunctionStep("input", lambda ctx: ctx.result, next_step="parallel"),
+    "parallel": {
+        "parallel": [
+            RefinireAgent(name="agent1", generation_instructions="Analyze from perspective A", model="gpt-4o-mini"),
+            RefinireAgent(name="agent2", generation_instructions="Analyze from perspective B", model="gpt-4o-mini")
+        ],
+        "next_step": "combine",
+        "max_workers": 2
+    },
+    "combine": FunctionStep("combine", lambda ctx: "Combined results")
+})
+
+print("\nParallel Processing Flow:")
+print(parallel_flow.show(format="mermaid"))
+```
+
+#### Execution History Visualization
+
+After running a flow, you can visualize the actual execution path:
+
+```python
+# Run the flow first
+result = await demo_flow.run("This is a test input for the flow")
+
+# Show flow with execution history
+print("=== Flow with Execution History ===")
+print(demo_flow.show(format="text", include_history=True))
+
+# Mermaid format with execution highlighting
+print("\n=== Mermaid with Execution Path ===")
+print(demo_flow.show(format="mermaid", include_history=True))
+```
+
+The execution history will highlight:
+- Which steps were actually executed
+- The order of execution
+- Timestamps for each step
+- Visual path highlighting in Mermaid diagrams
+
+#### Best Practices for Flow Visualization
+
+1. **Development Phase**:
+   - Use `format="text"` for quick console inspection
+   - Check flow structure before implementation
+   - Verify conditional branches and routing
+
+2. **Documentation Phase**:
+   - Use `format="mermaid"` for documentation
+   - Include in README files and technical specs
+   - Share with team members for review
+
+3. **Debugging Phase**:
+   - Use `include_history=True` after execution
+   - Identify which paths are taken
+   - Debug unexpected routing behavior
+
+4. **Production Monitoring**:
+   - Generate flow diagrams for operational documentation
+   - Track execution patterns and bottlenecks
+   - Visualize complex business processes
+
+#### Integration with External Tools
+
+**Mermaid Live Editor**: Copy the Mermaid output to [https://mermaid.live/](https://mermaid.live/) for interactive editing and export.
+
+**GitHub/GitLab**: Mermaid diagrams render automatically in markdown files:
+
+````markdown
+```mermaid
+graph TD
+    analyze["analyze<br/>(FunctionStep)"]:::start
+    analyze --> check
+    check["check<br/>(ConditionStep)"]:::condition
+    check -->|"True"| complex_process
+    check -->|"False"| simple_process
+```
+````
+
+**Documentation Tools**: Most modern documentation platforms support Mermaid rendering (Notion, Obsidian, GitBook, etc.).
+
 ---
 
 ## Intermediate: Complex Workflows and Agent Integration
