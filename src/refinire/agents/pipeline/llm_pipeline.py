@@ -309,26 +309,31 @@ class RefinireAgent(Step):
         Returns:
             Context: Updated context with result in ctx.result / ctx.resultに結果が格納された更新Context
         """
-        # Import agent_span for automatic tracing
-        # 自動トレーシング用のagent_spanをインポート
+        # Attempt to create agent span for automatic tracing if available
+        # 利用可能な場合は自動トレーシング用のエージェントスパン作成を試行
+        span = None
+        span_name = f"RefinireAgent({self.name})"
+        
         try:
             from agents.tracing import agent_span
-        except ImportError:
-            agent_span = None
-        
-        # Create agent span for tracing
-        # トレーシング用のエージェントスパンを作成
-        span_name = f"RefinireAgent({self.name})"
-        tools_list = [tool.__name__ if hasattr(tool, '__name__') else str(tool) for tool in (self.tools or [])]
-        output_type = self.output_model.__name__ if self.output_model else None
-        
-        if agent_span is not None:
+            tools_list = [tool.__name__ if hasattr(tool, '__name__') else str(tool) for tool in (self.tools or [])]
+            output_type = self.output_model.__name__ if self.output_model else None
+            
             span = agent_span(
                 name=span_name,
                 tools=tools_list if tools_list else None,
                 output_type=output_type
             )
-        else:
+            logger.debug(f"Created agent span: {span_name}")
+            
+        except ImportError:
+            # agents.tracing is not available - this is expected and normal
+            # agents.tracingが利用できません - これは予期された正常な状況です
+            logger.debug("agents.tracing not available, proceeding without agent span")
+        except Exception as e:
+            # Handle any other tracing-related errors gracefully
+            # その他のトレーシング関連エラーを適切に処理
+            logger.warning(f"Failed to create agent span due to error: {e}")
             span = None
         
         # Update step information in context / コンテキストのステップ情報を更新

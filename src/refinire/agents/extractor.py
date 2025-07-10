@@ -577,7 +577,7 @@ class ExtractorAgent(Step):
         
         return rules
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute the extraction logic.
         抽出ロジックを実行します。
@@ -598,7 +598,7 @@ class ExtractorAgent(Step):
             # 抽出対象のデータを決定
             data_to_extract = user_input
             if data_to_extract is None:
-                data_to_extract = ctx.get_user_input()
+                data_to_extract = ctx.last_user_input
             
             if not data_to_extract:
                 logger.warning(f"No input data provided for extraction in {self.name}")
@@ -663,6 +663,13 @@ class ExtractorAgent(Step):
                 raise
             
             return ctx
+    
+    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+        """
+        Backward compatibility method that calls run_async.
+        run_asyncを呼び出す後方互換性メソッド。
+        """
+        return await self.run_async(user_input, ctx)
     
     def _extract_data(self, data: str, context: Context) -> ExtractionResult:
         """

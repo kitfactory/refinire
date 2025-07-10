@@ -31,7 +31,11 @@ class TestContext:
         assert ctx.shared_state == {}
         assert ctx.awaiting_prompt is None
         assert ctx.awaiting_user_input == False
-        assert ctx.trace_id is None
+        # trace_id is now automatically generated if not provided
+        # trace_idは提供されない場合は自動生成される
+        assert ctx.trace_id is not None
+        assert isinstance(ctx.trace_id, str)
+        assert ctx.trace_id.startswith("context_")
         assert isinstance(ctx.start_time, datetime)
         assert ctx.step_count == 0
     

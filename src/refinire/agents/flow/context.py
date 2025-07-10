@@ -84,9 +84,17 @@ class Context(BaseModel):
     
     def __init__(self, **data):
         """
-        Initialize Context with async events
-        非同期イベントでContextを初期化
+        Initialize Context with async events and proper defaults
+        非同期イベントと適切なデフォルト値でContextを初期化
         """
+        # Ensure trace_id has a default value if not provided
+        # trace_idが提供されていない場合はデフォルト値を設定
+        if 'trace_id' not in data or data['trace_id'] is None:
+            import uuid
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+            data['trace_id'] = f"context_{timestamp}_{str(uuid.uuid4())[:8]}"
+        
         super().__init__(**data)
         self._user_input_event = asyncio.Event()
         self._awaiting_prompt_event = asyncio.Event()
@@ -100,13 +108,43 @@ class Context(BaseModel):
             content: Message content / メッセージ内容
             metadata: Additional metadata / 追加メタデータ
         """
-        message = Message(
-            role="user",
-            content=content,
-            metadata=metadata or {}
-        )
-        self.messages.append(message)
-        self.last_user_input = content
+        # Validate content type and convert if necessary
+        # コンテンツ型を検証し、必要に応じて変換
+        if content is None:
+            content = ""
+        elif not isinstance(content, str):
+            # Handle cases where content might be a Context object or other type
+            # contentがContextオブジェクトやその他の型の場合を処理
+            try:
+                content = str(content)
+            except Exception as e:
+                # If conversion fails, use a safe default
+                # 変換に失敗した場合は安全なデフォルトを使用
+                content = f"[Invalid content type: {type(content).__name__}]"
+        
+        try:
+            message = Message(
+                role="user",
+                content=content,
+                metadata=metadata or {}
+            )
+            self.messages.append(message)
+            self.last_user_input = content
+        except Exception as e:
+            # Handle pydantic validation errors gracefully
+            # pydanticバリデーションエラーを適切に処理
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to create user message with content type {type(content)}: {e}")
+            # Create a fallback message
+            # フォールバックメッセージを作成
+            fallback_message = Message(
+                role="user",
+                content=f"[Message creation failed: {str(e)}]",
+                metadata=metadata or {}
+            )
+            self.messages.append(fallback_message)
+            self.last_user_input = fallback_message.content
     
     def add_assistant_message(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> None:
         """

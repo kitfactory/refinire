@@ -319,36 +319,51 @@ class Flow:
         Generate a unique trace ID based on flow name and timestamp
         フロー名とタイムスタンプに基づいてユニークなトレースIDを生成
         
-        If we're inside a trace context (with trace()), use that trace ID instead.
-        trace コンテキスト内（with trace()）にいる場合は、そのtrace IDを代わりに使用します。
+        This method creates a trace ID independently without relying on external tracing systems.
+        If agents.tracing is available and has an active trace context, it will attempt to use that,
+        but will gracefully fall back to generating its own trace ID.
+        このメソッドは外部トレーシングシステムに依存せずに独立してtrace IDを生成します。
+        agents.tracingが利用可能でアクティブなトレースコンテキストがある場合はそれを使用しようとしますが、
+        適切に自身のtrace ID生成にフォールバックします。
         
         Returns:
             str: Generated trace ID / 生成されたトレースID
         """
-        # Check if we're inside an active trace context
-        # アクティブなトレースコンテキスト内にいるかチェック
+        # Optionally check if we're inside an active trace context
+        # オプションとしてアクティブなトレースコンテキスト内にいるかチェック
         try:
             from agents.tracing import get_current_trace
             current_trace = get_current_trace()
-            if current_trace and current_trace.trace_id:
+            if current_trace and hasattr(current_trace, 'trace_id') and current_trace.trace_id:
                 # Use the trace ID from the active trace context
                 # アクティブなトレースコンテキストからtrace IDを使用
+                logger.debug(f"Using trace ID from active trace context: {current_trace.trace_id}")
                 return current_trace.trace_id
-        except Exception:
+        except ImportError:
+            # agents.tracing is not available - this is expected and normal
+            # agents.tracingが利用できません - これは予期された正常な状況です
+            logger.debug("agents.tracing not available, generating independent trace ID")
+        except Exception as e:
             # If there's any issue with trace detection, fall back to default behavior
             # トレース検出で問題がある場合は、デフォルトの動作にフォールバック
-            pass
+            logger.debug(f"Unable to get current trace context ({e}), generating independent trace ID")
         
-        # Use full microsecond precision for uniqueness
-        # ユニーク性のために完全なマイクロ秒精度を使用
+        # Generate independent trace ID with enhanced uniqueness
+        # 強化されたユニーク性で独立したtrace IDを生成
+        import uuid
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        random_suffix = str(uuid.uuid4())[:8]  # Use first 8 chars of UUID for additional uniqueness
+        
         if self.name:
             # Use flow name in trace ID for easier identification
             # 識別しやすくするためにフロー名をトレースIDに含める
             safe_name = "".join(c if c.isalnum() or c in "-_" else "_" for c in self.name.lower())
-            return f"{safe_name}_{timestamp}"
+            trace_id = f"{safe_name}_{timestamp}_{random_suffix}"
         else:
-            return f"flow_{timestamp}"
+            trace_id = f"flow_{timestamp}_{random_suffix}"
+        
+        logger.debug(f"Generated independent trace ID: {trace_id}")
+        return trace_id
     
     @property
     def finished(self) -> bool:
@@ -434,8 +449,22 @@ class Flow:
             return await self._run_with_span(input_data, initial_input, None)
     
     def _create_flow_span(self):
-        """Create a custom span for the entire flow execution"""
+        """
+        Create a custom span for the entire flow execution
+        フロー実行全体用のカスタムスパンを作成
+        
+        This method attempts to create a tracing span if agents.tracing is available,
+        but gracefully handles the case when it's not available.
+        agents.tracingが利用可能な場合はトレーシングスパンの作成を試行しますが、
+        利用できない場合は適切に処理します。
+        
+        Returns:
+            span object if tracing is available, None otherwise
+            トレーシングが利用可能な場合はspanオブジェクト、そうでなければNone
+        """
         try:
+            # Attempt to import and use agents.tracing if available
+            # agents.tracingが利用可能な場合はインポートして使用を試行
             from agents.tracing import custom_span
             
             span_name = f"Flow({self.name or 'unnamed'})"
@@ -450,97 +479,131 @@ class Flow:
                     "flow.step_names": list(self.steps.keys())
                 }
             )
+            logger.debug(f"Created flow span: {span_name}")
             return span
         except ImportError:
+            # agents.tracing is not available - this is expected and normal
+            # agents.tracingが利用できません - これは予期された正常な状況です
+            logger.debug("agents.tracing not available, proceeding without flow span")
+            return None
+        except Exception as e:
+            # Handle any other tracing-related errors gracefully
+            # その他のトレーシング関連エラーを適切に処理
+            logger.warning(f"Failed to create flow span due to error: {e}")
             return None
     
     async def _run_with_span(self, input_data: Optional[str], initial_input: Optional[str], span) -> Context:
-        """Run flow with span tracking"""
+        """
+        Run flow with span tracking and improved lock management
+        スパントラッキングと改善されたロック管理でフローを実行
+        """
         # Add input to span
         effective_input = input_data or initial_input
         if span is not None and effective_input:
             span.span_data.data["flow_input"] = effective_input
         
-        async with self._execution_lock:
-            try:
-                self._running = True
+        # Prevent re-entry from same flow instance
+        # 同一フローインスタンスからの再入を防止
+        if self._running:
+            raise FlowExecutionError(f"Flow {self.name} is already running. Concurrent execution not allowed.")
+        
+        # Acquire lock with timeout to prevent deadlock
+        # デッドロック防止のためタイムアウト付きでロックを取得
+        try:
+            # Use asyncio.wait_for to add timeout to lock acquisition
+            # asyncio.wait_forを使用してロック取得にタイムアウトを追加
+            await asyncio.wait_for(self._execution_lock.acquire(), timeout=30.0)
+        except asyncio.TimeoutError:
+            raise FlowExecutionError(f"Flow {self.name} failed to acquire execution lock within 30 seconds. Possible deadlock detected.")
+        
+        try:
+            self._running = True
+            logger.debug(f"Flow {self.name} acquired execution lock, starting execution")
+            
+            # Reset context for new execution
+            # 新しい実行用にコンテキストをリセット
+            if self.context.step_count > 0:
+                self.context = Context(trace_id=self.trace_id)
+                self.context.next_label = self.start
+            
+            # Determine input to use (input_data takes precedence)
+            # 使用する入力を決定（input_dataが優先）
+            effective_input = input_data or initial_input
+            
+            # Add input if provided
+            # 入力が提供されている場合は追加
+            if effective_input:
+                self.context.add_user_message(effective_input)
+            
+            current_input = effective_input
+            step_count = 0
+            
+            while not self.finished and step_count < self.max_steps:
+                step_name = self.context.next_label
+                if not step_name or step_name not in self.steps:
+                    self.context.finish()  # Finish flow when no next step or unknown step
+                    break
                 
-                # Reset context for new execution
-                # 新しい実行用にコンテキストをリセット
-                if self.context.step_count > 0:
-                    self.context = Context(trace_id=self.trace_id)
-                    self.context.next_label = self.start
+                step = self.steps[step_name]
                 
-                # Determine input to use (input_data takes precedence)
-                # 使用する入力を決定（input_dataが優先）
-                effective_input = input_data or initial_input
-                
-                # Add input if provided
-                # 入力が提供されている場合は追加
-                if effective_input:
-                    self.context.add_user_message(effective_input)
-                
-                current_input = effective_input
-                step_count = 0
-                
-                while not self.finished and step_count < self.max_steps:
-                    step_name = self.context.next_label
-                    if not step_name or step_name not in self.steps:
-                        self.context.finish()  # Finish flow when no next step or unknown step
+                # Execute step
+                # ステップを実行
+                try:
+                    await self._execute_step(step, current_input)
+                    current_input = None  # Only use initial input for first step
+                    step_count += 1
+                    
+                    # If step is waiting for user input, break
+                    # ステップがユーザー入力を待機している場合、中断
+                    if self.context.awaiting_user_input:
                         break
-                    
-                    step = self.steps[step_name]
-                    
-                    # Execute step
-                    # ステップを実行
-                    try:
-                        await self._execute_step(step, current_input)
-                        current_input = None  # Only use initial input for first step
-                        step_count += 1
                         
-                        # If step is waiting for user input, break
-                        # ステップがユーザー入力を待機している場合、中断
-                        if self.context.awaiting_user_input:
-                            break
-                            
-                    except Exception as e:
-                        logger.error(f"Error executing step {step_name}: {e}")
-                        self._handle_step_error(step_name, e)
-                        break
-                
-                # Check for infinite loop
-                # 無限ループのチェック
-                if step_count >= self.max_steps:
-                    raise FlowExecutionError(f"Flow exceeded maximum steps ({self.max_steps})")
-                
-                # Finalize any remaining span when flow completes
-                # フロー完了時に残りのスパンを終了
-                self.context.finalize_flow_span()
-                
-                # Update flow span with execution results
-                if span is not None:
-                    span.span_data.data["flow_completed"] = True
-                    span.span_data.data["final_step_count"] = step_count
-                    span.span_data.data["flow_finished"] = self.finished
-                    span.span_data.data["awaiting_user_input"] = self.context.awaiting_user_input
-                    if hasattr(self.context, 'result') and self.context.result is not None:
-                        span.span_data.data["flow_result"] = str(self.context.result)[:500]  # Truncate long results
-                
-                # Update trace registry
-                # トレースレジストリを更新
-                self._update_trace_on_completion()
-                
-                return self.context
-                
-            except Exception as e:
-                # Update span with error information
-                if span is not None:
-                    span.span_data.data["flow_error"] = str(e)
-                    span.span_data.data["flow_completed"] = False
-                raise
-                
-            finally:
-                self._running = False
+                except Exception as e:
+                    logger.error(f"Error executing step {step_name}: {e}")
+                    self._handle_step_error(step_name, e)
+                    break
+            
+            # Check for infinite loop
+            # 無限ループのチェック
+            if step_count >= self.max_steps:
+                raise FlowExecutionError(f"Flow exceeded maximum steps ({self.max_steps})")
+            
+            # Finalize any remaining span when flow completes
+            # フロー完了時に残りのスパンを終了
+            self.context.finalize_flow_span()
+            
+            # Update flow span with execution results
+            if span is not None:
+                span.span_data.data["flow_completed"] = True
+                span.span_data.data["final_step_count"] = step_count
+                span.span_data.data["flow_finished"] = self.finished
+                span.span_data.data["awaiting_user_input"] = self.context.awaiting_user_input
+                if hasattr(self.context, 'result') and self.context.result is not None:
+                    span.span_data.data["flow_result"] = str(self.context.result)[:500]  # Truncate long results
+            
+            # Update trace registry
+            # トレースレジストリを更新
+            self._update_trace_on_completion()
+            
+            return self.context
+            
+        except Exception as e:
+            # Update span with error information
+            if span is not None:
+                span.span_data.data["flow_error"] = str(e)
+                span.span_data.data["flow_completed"] = False
+            raise
+            
+        finally:
+            # Ensure proper cleanup regardless of how execution ends
+            # 実行の終了方法に関係なく適切なクリーンアップを保証
+            self._running = False
+            logger.debug(f"Flow {self.name} releasing execution lock")
+            
+            # Release the lock explicitly
+            # ロックを明示的に解放
+            if self._execution_lock.locked():
+                self._execution_lock.release()
     
     async def run_loop(self) -> None:
         """
@@ -552,63 +615,83 @@ class Flow:
         Use feed() to provide user input when the flow is waiting.
         フローが待機している時はfeed()を使用してユーザー入力を提供してください。
         """
-        async with self._execution_lock:
-            try:
-                self._running = True
+        # Prevent re-entry from same flow instance
+        # 同一フローインスタンスからの再入を防止
+        if self._running:
+            raise FlowExecutionError(f"Flow {self.name} is already running in loop mode. Concurrent execution not allowed.")
+        
+        # Acquire lock with timeout to prevent deadlock
+        # デッドロック防止のためタイムアウト付きでロックを取得
+        try:
+            await asyncio.wait_for(self._execution_lock.acquire(), timeout=30.0)
+        except asyncio.TimeoutError:
+            raise FlowExecutionError(f"Flow {self.name} failed to acquire execution lock for run_loop within 30 seconds. Possible deadlock detected.")
+        
+        try:
+            self._running = True
+            logger.debug(f"Flow {self.name} acquired execution lock for run_loop, starting execution")
+            
+            # Reset context for new execution
+            # 新しい実行用にコンテキストをリセット
+            if self.context.step_count > 0:
+                self.context = Context(trace_id=self.trace_id)
+                self.context.next_label = self.start
+            
+            step_count = 0
+            current_input = None
+            
+            while not self.finished and step_count < self.max_steps:
+                step_name = self.context.next_label
+                if not step_name or step_name not in self.steps:
+                    self.context.finish()  # Finish flow when no next step or unknown step
+                    break
                 
-                # Reset context for new execution
-                # 新しい実行用にコンテキストをリセット
-                if self.context.step_count > 0:
-                    self.context = Context(trace_id=self.trace_id)
-                    self.context.next_label = self.start
+                step = self.steps[step_name]
                 
-                step_count = 0
-                current_input = None
-                
-                while not self.finished and step_count < self.max_steps:
-                    step_name = self.context.next_label
-                    if not step_name or step_name not in self.steps:
-                        self.context.finish()  # Finish flow when no next step or unknown step
-                        break
+                # Execute step
+                # ステップを実行
+                try:
+                    await self._execute_step(step, current_input)
+                    current_input = None
+                    step_count += 1
                     
-                    step = self.steps[step_name]
-                    
-                    # Execute step
-                    # ステップを実行
-                    try:
-                        await self._execute_step(step, current_input)
-                        current_input = None
-                        step_count += 1
+                    # If step is waiting for user input, wait for feed()
+                    # ステップがユーザー入力を待機している場合、feed()を待つ
+                    if self.context.awaiting_user_input:
+                        await self.context.wait_for_user_input()
+                        # After receiving input, continue with the same step
+                        # 入力受信後、同じステップで継続
+                        current_input = self.context.last_user_input
+                        continue
                         
-                        # If step is waiting for user input, wait for feed()
-                        # ステップがユーザー入力を待機している場合、feed()を待つ
-                        if self.context.awaiting_user_input:
-                            await self.context.wait_for_user_input()
-                            # After receiving input, continue with the same step
-                            # 入力受信後、同じステップで継続
-                            current_input = self.context.last_user_input
-                            continue
-                            
-                    except Exception as e:
-                        logger.error(f"Error executing step {step_name}: {e}")
-                        self._handle_step_error(step_name, e)
-                        break
-                
-                # Check for infinite loop
-                # 無限ループのチェック
-                if step_count >= self.max_steps:
-                    raise FlowExecutionError(f"Flow exceeded maximum steps ({self.max_steps})")
-                
-                # Finalize any remaining span when flow completes
-                # フロー完了時に残りのスパンを終了
-                self.context.finalize_flow_span()
-                
-                # Update trace registry
-                # トレースレジストリを更新
-                self._update_trace_on_completion()
-                
-            finally:
-                self._running = False
+                except Exception as e:
+                    logger.error(f"Error executing step {step_name}: {e}")
+                    self._handle_step_error(step_name, e)
+                    break
+            
+            # Check for infinite loop
+            # 無限ループのチェック
+            if step_count >= self.max_steps:
+                raise FlowExecutionError(f"Flow exceeded maximum steps ({self.max_steps})")
+            
+            # Finalize any remaining span when flow completes
+            # フロー完了時に残りのスパンを終了
+            self.context.finalize_flow_span()
+            
+            # Update trace registry
+            # トレースレジストリを更新
+            self._update_trace_on_completion()
+            
+        finally:
+            # Ensure proper cleanup regardless of how execution ends
+            # 実行の終了方法に関係なく適切なクリーンアップを保証
+            self._running = False
+            logger.debug(f"Flow {self.name} releasing execution lock from run_loop")
+            
+            # Release the lock explicitly
+            # ロックを明示的に解放
+            if self._execution_lock.locked():
+                self._execution_lock.release()
     
     def next_prompt(self) -> Optional[str]:
         """

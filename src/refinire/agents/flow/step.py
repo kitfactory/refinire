@@ -84,24 +84,24 @@ class Step(ABC):
         try:
             # Update span data with execution details
             if user_input is not None:
-                span.span_data.data.input = user_input
+                span.span_data.data['input'] = user_input
             
-            span.span_data.data.success = success
-            span.span_data.data.current_step = ctx.current_step
-            span.span_data.data.next_label = ctx.next_label
-            span.span_data.data.step_count = ctx.step_count
+            span.span_data.data['success'] = success
+            span.span_data.data['current_step'] = ctx.current_step
+            span.span_data.data['next_label'] = ctx.next_label
+            span.span_data.data['step_count'] = ctx.step_count
             
             if error:
-                span.span_data.data.error = error
+                span.span_data.data['error'] = error
             
             # Add context information
             if hasattr(ctx, 'result') and ctx.result is not None:
-                span.span_data.data.output = str(ctx.result)
+                span.span_data.data['output'] = str(ctx.result)
             
             # Add system messages
             if ctx.messages:
                 recent_messages = ctx.messages[-3:]  # Last 3 messages
-                span.span_data.data.recent_messages = [
+                span.span_data.data['recent_messages'] = [
                     {"role": msg.get("role", "unknown"), "content": msg.get("content", "")[:200]}
                     for msg in recent_messages
                 ]
@@ -247,9 +247,9 @@ class ConditionStep(Step):
         
         # Add condition metadata to span
         if span is not None:
-            span.span_data.data.if_true = self.if_true
-            span.span_data.data.if_false = self.if_false
-            span.span_data.data.condition_function = getattr(self.condition, '__name__', 'anonymous')
+            span.span_data.data['if_true'] = self.if_true
+            span.span_data.data['if_false'] = self.if_false
+            span.span_data.data['condition_function'] = getattr(self.condition, '__name__', 'anonymous')
         
         # Evaluate condition (may be async)
         # 条件を評価（非同期の可能性あり）
@@ -273,8 +273,8 @@ class ConditionStep(Step):
         
         # Update span with results
         if span is not None:
-            span.span_data.data.condition_result = result
-            span.span_data.data.next_step = next_step
+            span.span_data.data['condition_result'] = result
+            span.span_data.data['next_step'] = next_step
             self._update_span_with_result(span, user_input, ctx, success=error_msg is None, error=error_msg)
         
         return ctx
@@ -336,8 +336,8 @@ class FunctionStep(Step):
         
         # Add function metadata to span
         if span is not None:
-            span.span_data.data.function_name = getattr(self.function, '__name__', 'anonymous')
-            span.span_data.data.next_step = self.next_step
+            span.span_data.data['function_name'] = getattr(self.function, '__name__', 'anonymous')
+            span.span_data.data['next_step'] = self.next_step
         
         error_msg = None
         try:
@@ -666,9 +666,9 @@ class ParallelStep(Step):
         
         # Add parallel execution metadata to span
         if span is not None:
-            span.span_data.data.parallel_steps = [step.name for step in self.parallel_steps]
-            span.span_data.data.max_workers = self.max_workers
-            span.span_data.data.step_count = len(self.parallel_steps)
+            span.span_data.data['parallel_steps'] = [step.name for step in self.parallel_steps]
+            span.span_data.data['max_workers'] = self.max_workers
+            span.span_data.data['step_count'] = len(self.parallel_steps)
         
         # Create separate contexts for each parallel step
         # 各並列ステップ用に別々のコンテキストを作成
@@ -722,10 +722,10 @@ class ParallelStep(Step):
         
         # Update span with execution results
         if span is not None:
-            span.span_data.data.execution_time_seconds = execution_time
-            span.span_data.data.successful_steps = successful_steps
-            span.span_data.data.failed_steps = len(errors)
-            span.span_data.data.total_steps = len(self.parallel_steps)
+            span.span_data.data['execution_time_seconds'] = execution_time
+            span.span_data.data['successful_steps'] = successful_steps
+            span.span_data.data['failed_steps'] = len(errors)
+            span.span_data.data['total_steps'] = len(self.parallel_steps)
         
         # Handle errors if any
         # エラーがあれば処理
