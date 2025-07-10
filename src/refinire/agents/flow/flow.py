@@ -82,10 +82,29 @@ class Flow:
             # シーケンシャルモード: List[Step]
             if not steps:
                 raise ValueError("Steps list cannot be empty")
+            
+            # Validate that all items are Step instances, not other types like RefinireAgent
+            # すべてのアイテムがStepインスタンスであり、RefinireAgentなどの他の型でないことを検証
             self.steps = {}
             prev_step_name = None
             
             for i, step in enumerate(steps):
+                # Check if it's a common mistake: RefinireAgent instead of proper Step
+                # 一般的な間違いをチェック: 適切なStepではなくRefinireAgent
+                if hasattr(step, 'generation_instructions') and hasattr(step, 'evaluation_instructions'):
+                    raise ValueError(
+                        f"Step at index {i} appears to be a RefinireAgent, not a proper Step. "
+                        f"RefinireAgent should not be used directly in Flow step lists. "
+                        f"To use agents in Flow, wrap them in FunctionStep or create proper Step instances. "
+                        f"Example: FunctionStep('agent_step', lambda u, c: your_agent.run_async(u, c))"
+                    )
+                
+                if not isinstance(step, Step):
+                    raise ValueError(
+                        f"Step at index {i} must be a Step instance, got {type(step)}. "
+                        f"Use FunctionStep, ConditionStep, or other Step subclasses."
+                    )
+                
                 if not hasattr(step, 'name'):
                     raise ValueError(f"Step at index {i} must have a 'name' attribute")
                 
@@ -438,14 +457,25 @@ class Flow:
         Raises:
             FlowExecutionError: If execution fails / 実行失敗時
         """
-        # Create flow span for tracing
-        # トレーシング用のフローワークフロースパンを作成
-        flow_span = self._create_flow_span()
-        
-        if flow_span is not None:
-            with flow_span:
-                return await self._run_with_span(input_data, initial_input, flow_span)
-        else:
+        # Try to create trace context if agents.tracing is available
+        # agents.tracingが利用可能な場合はトレースコンテキストを作成を試行
+        try:
+            from agents.tracing import trace
+            
+            # Create trace context for this flow execution
+            # このフロー実行用のトレースコンテキストを作成
+            trace_name = f"Flow({self.name or 'unnamed'})"
+            with trace(trace_name):
+                return await self._run_with_span(input_data, initial_input, None)
+        except ImportError:
+            # agents.tracing is not available - run without trace context
+            # agents.tracingが利用できません - トレースコンテキストなしで実行
+            logger.debug("agents.tracing not available, running without trace context")
+            return await self._run_with_span(input_data, initial_input, None)
+        except Exception as e:
+            # If there's any issue with trace creation, fall back to no trace
+            # トレース作成で問題がある場合は、トレースなしにフォールバック
+            logger.debug(f"Unable to create trace context ({e}), running without trace context")
             return await self._run_with_span(input_data, initial_input, None)
     
     def _create_flow_span(self):

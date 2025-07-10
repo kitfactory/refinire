@@ -309,42 +309,25 @@ class RefinireAgent(Step):
         Returns:
             Context: Updated context with result in ctx.result / ctx.resultに結果が格納された更新Context
         """
-        # Attempt to create agent span for automatic tracing if available
-        # 利用可能な場合は自動トレーシング用のエージェントスパン作成を試行
-        span = None
-        span_name = f"RefinireAgent({self.name})"
-        
+        # Try to create trace context if agents.tracing is available
+        # agents.tracingが利用可能な場合はトレースコンテキストを作成を試行
         try:
-            from agents.tracing import agent_span
-            tools_list = [tool.__name__ if hasattr(tool, '__name__') else str(tool) for tool in (self.tools or [])]
-            output_type = self.output_model.__name__ if self.output_model else None
+            from agents.tracing import trace
             
-            span = agent_span(
-                name=span_name,
-                tools=tools_list if tools_list else None,
-                output_type=output_type
-            )
-            logger.debug(f"Created agent span: {span_name}")
-            
+            # Create trace context for this agent execution
+            # このエージェント実行用のトレースコンテキストを作成
+            trace_name = f"RefinireAgent({self.name})"
+            with trace(trace_name):
+                return await self._execute_with_context(user_input, ctx, None)
         except ImportError:
-            # agents.tracing is not available - this is expected and normal
-            # agents.tracingが利用できません - これは予期された正常な状況です
-            logger.debug("agents.tracing not available, proceeding without agent span")
+            # agents.tracing is not available - run without trace context
+            # agents.tracingが利用できません - トレースコンテキストなしで実行
+            logger.debug("agents.tracing not available, running without trace context")
+            return await self._execute_with_context(user_input, ctx, None)
         except Exception as e:
-            # Handle any other tracing-related errors gracefully
-            # その他のトレーシング関連エラーを適切に処理
-            logger.warning(f"Failed to create agent span due to error: {e}")
-            span = None
-        
-        # Update step information in context / コンテキストのステップ情報を更新
-        ctx.update_step_info(self.name)
-        
-        # Execute with agent span for automatic tracing
-        # 自動トレーシング用のエージェントスパンで実行
-        if span is not None:
-            with span:
-                return await self._execute_with_context(user_input, ctx, span)
-        else:
+            # If there's any issue with trace creation, fall back to no trace
+            # トレース作成で問題がある場合は、トレースなしにフォールバック
+            logger.debug(f"Unable to create trace context ({e}), running without trace context")
             return await self._execute_with_context(user_input, ctx, None)
     
     async def _execute_with_context(self, user_input: Optional[str], ctx: Context, span=None) -> Context:
