@@ -319,9 +319,26 @@ class Flow:
         Generate a unique trace ID based on flow name and timestamp
         フロー名とタイムスタンプに基づいてユニークなトレースIDを生成
         
+        If we're inside a trace context (with trace()), use that trace ID instead.
+        trace コンテキスト内（with trace()）にいる場合は、そのtrace IDを代わりに使用します。
+        
         Returns:
             str: Generated trace ID / 生成されたトレースID
         """
+        # Check if we're inside an active trace context
+        # アクティブなトレースコンテキスト内にいるかチェック
+        try:
+            from agents.tracing import get_current_trace
+            current_trace = get_current_trace()
+            if current_trace and current_trace.trace_id:
+                # Use the trace ID from the active trace context
+                # アクティブなトレースコンテキストからtrace IDを使用
+                return current_trace.trace_id
+        except Exception:
+            # If there's any issue with trace detection, fall back to default behavior
+            # トレース検出で問題がある場合は、デフォルトの動作にフォールバック
+            pass
+        
         # Use full microsecond precision for uniqueness
         # ユニーク性のために完全なマイクロ秒精度を使用
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')
@@ -442,7 +459,7 @@ class Flow:
         # Add input to span
         effective_input = input_data or initial_input
         if span is not None and effective_input:
-            span.data.flow_input = effective_input
+            span.span_data.data["flow_input"] = effective_input
         
         async with self._execution_lock:
             try:
@@ -502,12 +519,12 @@ class Flow:
                 
                 # Update flow span with execution results
                 if span is not None:
-                    span.data.flow_completed = True
-                    span.data.final_step_count = step_count
-                    span.data.flow_finished = self.finished
-                    span.data.awaiting_user_input = self.context.awaiting_user_input
+                    span.span_data.data["flow_completed"] = True
+                    span.span_data.data["final_step_count"] = step_count
+                    span.span_data.data["flow_finished"] = self.finished
+                    span.span_data.data["awaiting_user_input"] = self.context.awaiting_user_input
                     if hasattr(self.context, 'result') and self.context.result is not None:
-                        span.data.flow_result = str(self.context.result)[:500]  # Truncate long results
+                        span.span_data.data["flow_result"] = str(self.context.result)[:500]  # Truncate long results
                 
                 # Update trace registry
                 # トレースレジストリを更新
@@ -518,8 +535,8 @@ class Flow:
             except Exception as e:
                 # Update span with error information
                 if span is not None:
-                    span.data.flow_error = str(e)
-                    span.data.flow_completed = False
+                    span.span_data.data["flow_error"] = str(e)
+                    span.span_data.data["flow_completed"] = False
                 raise
                 
             finally:

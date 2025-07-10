@@ -87,18 +87,31 @@ class ConsoleTracingProcessor(TracingProcessor):
         else:
             # Irrelevant span type
             return
-        # Color-coded output with localized labels
+        
+        # Get trace ID and span ID for enhanced observability
+        # オブザーバビリティ向上のためtrace IDとspan IDを取得
+        trace_id = getattr(span, 'trace_id', 'unknown')
+        span_id = getattr(span, 'span_id', 'unknown')
+        
+        # Truncate IDs for better readability (show last 8 characters)
+        # 可読性向上のためIDを短縮（末尾8文字を表示）
+        trace_short = trace_id[-8:] if trace_id != 'unknown' else 'unknown'
+        span_short = span_id[-8:] if span_id != 'unknown' else 'unknown'
+        id_info = f"[trace:{trace_short} span:{span_short}]"
+        
+        # Color-coded output with localized labels and ID information
+        # ローカライズされたラベルとID情報付きの色分け出力
         if self.output_stream is None:
             return
         if instr:
             instr_label = get_message("trace_instruction", DEFAULT_LANGUAGE)
-            self.output_stream.write(f"\033[93m{instr_label} {instr}\033[0m\n")
+            self.output_stream.write(f"\033[93m{instr_label} {id_info} {instr}\033[0m\n")
         if prompt:
             prompt_label = get_message("trace_prompt", DEFAULT_LANGUAGE)
-            self.output_stream.write(f"\033[94m{prompt_label} {prompt}\033[0m\n")
+            self.output_stream.write(f"\033[94m{prompt_label} {id_info} {prompt}\033[0m\n")
         if output:
             output_label = get_message("trace_output", DEFAULT_LANGUAGE)
-            self.output_stream.write(f"\033[92m{output_label} {output}\033[0m\n")
+            self.output_stream.write(f"\033[92m{output_label} {id_info} {output}\033[0m\n")
         self.output_stream.flush()
         # # Log span end marker with error info
         # info = span.export() or {}

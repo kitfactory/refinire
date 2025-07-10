@@ -354,10 +354,10 @@ class RefinireAgent(Step):
             # Add span metadata if available
             # スパンが利用可能な場合はメタデータを追加
             if span is not None:
-                span.data.input = input_text
-                span.data.instructions = self.generation_instructions
+                span.span_data.input = input_text
+                span.span_data.instructions = self.generation_instructions
                 if self.evaluation_instructions:
-                    span.data.evaluation_instructions = self.evaluation_instructions
+                    span.span_data.evaluation_instructions = self.evaluation_instructions
             
             if not input_text:
                 # If no input available, set result to None and continue
@@ -366,8 +366,8 @@ class RefinireAgent(Step):
                 message = f"RefinireAgent {self.name}: No input available, skipping execution"
                 ctx.add_system_message(message)
                 if span is not None:
-                    span.data.output = None
-                    span.data.error = "No input available"
+                    span.span_data.output = None
+                    span.span_data.error = "No input available"
             else:
                 # Execute RefinireAgent and get LLMResult
                 # RefinireAgentを実行してLLMResultを取得
@@ -412,13 +412,13 @@ class RefinireAgent(Step):
                 # Add span metadata for result
                 # 結果のスパンメタデータを追加
                 if span is not None:
-                    span.data.output = ctx.result
-                    span.data.success = llm_result.success
-                    span.data.model = self.model
-                    span.data.temperature = self.temperature
+                    span.span_data.output = ctx.result
+                    span.span_data.success = llm_result.success
+                    span.span_data.model = self.model
+                    span.span_data.temperature = self.temperature
                     if evaluation_result:
-                        span.data.evaluation_score = evaluation_result.score
-                        span.data.evaluation_passed = evaluation_result.passed
+                        span.span_data.evaluation_score = evaluation_result.score
+                        span.span_data.evaluation_passed = evaluation_result.passed
                 
                 # Add result as assistant message
                 # 結果をアシスタントメッセージとして追加
@@ -439,8 +439,8 @@ class RefinireAgent(Step):
             # Add error to span if available
             # スパンが利用可能な場合はエラーを追加
             if span is not None:
-                span.data.error = str(e)
-                span.data.success = False
+                span.span_data.error = str(e)
+                span.span_data.success = False
             
             # Log error for debugging / デバッグ用エラーログ
             logger.error(error_msg)
