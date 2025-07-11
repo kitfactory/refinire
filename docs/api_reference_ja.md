@@ -159,11 +159,40 @@ result = asyncio.run(flow.run(input_data="入力データ"))
 
 #### 主要メソッド
 
-| メソッド名 | 引数                  | 戻り値        | 説明                           |
-|------------|----------------------|---------------|--------------------------------|
-| run        | input_data: Any      | Context       | ワークフローを非同期実行       |
-| run_sync   | input_data: Any      | Context       | ワークフローを同期実行         |
-| show       | -                    | None          | ワークフロー構造を可視化       |
+| メソッド名     | 引数                                        | 戻り値              | 説明                            |
+|----------------|---------------------------------------------|---------------------|---------------------------------|
+| run            | input_data: Any                             | Context            | ワークフローを非同期実行        |
+| run_sync       | input_data: Any                             | Context            | ワークフローを同期実行          |
+| run_streamed   | input_data: Any, callback: Callable = None | AsyncIterator[str] | ワークフロー出力をリアルタイムストリーミング |
+| show           | -                                           | None               | ワークフロー構造を可視化        |
+
+#### Flowストリーミング
+
+Flowはストリーミングコンテンツを生成するステップ（RefinireAgentなど）からのストリーミング出力をサポートします：
+
+```python
+from refinire import Flow, FunctionStep, RefinireAgent
+
+# ストリーミング対応エージェントを含むフローを作成
+flow = Flow({
+    "analyze": FunctionStep("analyze", analyze_function),
+    "generate": RefinireAgent(
+        name="generator",
+        generation_instructions="詳細なコンテンツを生成してください",
+        model="gpt-4o-mini"
+    )
+})
+
+# フロー全体の出力をストリーミング
+async for chunk in flow.run_streamed("技術文書を作成してください"):
+    print(chunk, end="", flush=True)
+```
+
+**Flowストリーミングの動作:**
+- ストリーミング対応ステップ（RefinireAgentなど）のみがチャンクを生成
+- 非ストリーミングステップはチャンクなしで通常通り実行
+- コンテキストと状態はストリーミング全体で保持
+- 混合ストリーミング/非ストリーミングワークフローをサポート
 
 ### Context
 
@@ -211,6 +240,173 @@ agent = GenAgent(
 |------------|----------------------------|---------------|--------------------------------|
 | run        | user_input: str, ctx: Context | Context    | エージェントを非同期実行       |
 | run_sync   | user_input: str, ctx: Context | Context    | エージェントを同期実行         |
+
+### RefinireAgent
+
+組み込み評価、ツール統合、ストリーミング機能を備えた高度なAIエージェントです。本番利用に最適な主要エージェントクラスです。
+
+```python
+from refinire import RefinireAgent
+
+agent = RefinireAgent(
+    name="assistant",
+    generation_instructions="明確で正確な情報を提供する親切なアシスタントです。",
+    evaluation_instructions="""以下の基準で応答品質を0-100点で評価してください：
+    - 正確性と事実の正しさ（0-25点）
+    - 明確性と理解しやすさ（0-25点）
+    - 有用性と関連性（0-25点）
+    - 完全性と徹底性（0-25点）
+    
+    評価結果は以下の形式で提供してください：
+    スコア: [0-100]
+    コメント:
+    - [応答の具体的な強み]
+    - [改善が必要な領域]
+    - [向上のための提案]""",
+    model="gpt-4o-mini",
+    threshold=85.0,
+    max_retries=3
+)
+```
+
+#### 主要メソッド
+
+| メソッド名     | 引数                                         | 戻り値              | 説明                            |
+|----------------|----------------------------------------------|---------------------|---------------------------------|
+| run            | user_input: str, ctx: Context = None        | LLMResult          | エージェントを同期実行          |
+| run_async      | user_input: str, ctx: Context = None        | LLMResult          | エージェントを非同期実行        |
+| run_streamed   | user_input: str, ctx: Context = None, callback: Callable = None | AsyncIterator[str] | 応答チャンクをリアルタイムストリーミング |
+
+#### ストリーミング引数
+
+| 引数      | 型                    | 必須/オプション | デフォルト | 説明                              |
+|-----------|-----------------------|-----------------|------------|-----------------------------------|
+| user_input| str                   | 必須            | -          | 処理する入力テキスト              |
+| ctx       | Context               | オプション      | None       | 会話状態用コンテキスト            |
+| callback  | Callable[[str], None] | オプション      | None       | 各チャンクを処理する関数          |
+
+#### ストリーミング使用例
+
+**基本ストリーミング:**
+```python
+async for chunk in agent.run_streamed("量子コンピューティングを説明してください"):
+    print(chunk, end="", flush=True)
+```
+
+**コールバック付きストリーミング:**
+```python
+def process_chunk(chunk: str):
+    # カスタム処理: ファイル保存、WebSocket送信など
+    print(f"受信: {chunk}")
+
+async for chunk in agent.run_streamed("コンテンツを生成", callback=process_chunk):
+    print(chunk, end="", flush=True)
+```
+
+**コンテキスト対応ストリーミング:**
+```python
+from refinire import Context
+
+ctx = Context()
+async for chunk in agent.run_streamed("こんにちは", ctx=ctx):
+    print(chunk, end="", flush=True)
+
+# コンテキストを維持して会話を継続
+async for chunk in agent.run_streamed("前の話を続けましょう", ctx=ctx):
+    print(chunk, end="", flush=True)
+```
+
+#### 構造化出力ストリーミング
+
+構造化出力（Pydanticモデル）をストリーミングで使用すると、応答は解析されたオブジェクトではなく**JSONチャンク**として配信されます：
+
+```python
+from pydantic import BaseModel
+
+class Article(BaseModel):
+    title: str
+    content: str
+
+agent = RefinireAgent(
+    name="writer",
+    generation_instructions="記事を書いてください",
+    output_model=Article
+)
+
+# JSONチャンクをストリーミング: {"title": "...", "content": "..."}
+async for json_chunk in agent.run_streamed("AIについて書いて"):
+    print(json_chunk, end="", flush=True)
+
+# 解析されたオブジェクトが必要な場合は通常のメソッドを使用:
+result = await agent.run_async("AIについて書いて")
+article = result.content  # Articleオブジェクトを返す
+```
+
+#### 評価システム
+
+RefinireAgentには、コンテンツ品質を自動評価し、品質閾値に達しない場合に再生成をトリガーする組み込み評価システムが含まれています。
+
+**評価出力形式:**
+
+評価システムは、この正確な形式での応答を期待します：
+```
+スコア: 87
+コメント:
+- 技術的正確性が優れており包括的なカバレッジ
+- 論理的な流れを持つ明確な構造
+- 実践的な例の効果的な使用
+- 視覚的な図解があるとより良い
+- トラブルシューティングセクションの追加を検討
+```
+
+**評価パラメータ:**
+
+| パラメータ | 型 | デフォルト | 説明 |
+|-----------|-----|-----------|------|
+| evaluation_instructions | str | None | 品質評価のための指示 |
+| threshold | float | 70.0 | 必要な最小スコア（0-100） |
+| max_retries | int | 3 | 最大再生成試行回数 |
+
+**評価結果へのアクセス:**
+
+```python
+# 基本評価アクセス
+result = agent.run("技術コンテンツを作成")
+score = result.evaluation_score  # 0-100の整数
+
+# Contextによる詳細評価
+from refinire import Context
+ctx = Context()
+result = agent.run("技術コンテンツを作成", ctx)
+
+eval_data = ctx.evaluation_result
+score = eval_data["score"]           # 87
+passed = eval_data["passed"]         # True/False
+feedback = eval_data["feedback"]     # 完全な評価テキスト
+comments = eval_data["comments"]     # 解析されたコメントリスト
+```
+
+**評価指示のベストプラクティス:**
+
+1. **明確なポイント配分を含む100点満点スケール**を使用
+2. **各スコア次元の具体的基準**を提供
+3. **コメントリストによる構造化フィードバック**を要求
+4. **改善のための実行可能な提案**を含める
+
+包括的評価指示の例:
+```python
+evaluation_instructions="""コンテンツ品質を評価してください（0-100点）：
+- 技術的正確性（0-30点）: 事実の正確性と精密性
+- 明確性（0-30点）: 明確なコミュニケーションと理解
+- 構造（0-25点）: 論理的組織と流れ
+- 完全性（0-15点）: 包括的なカバレッジ
+
+スコア: [0-100]
+コメント:
+- [具体例を含む強み]
+- [提案を含む改善領域]
+- [向上推奨事項]"""
+```
 
 ### ClarifyAgent
 

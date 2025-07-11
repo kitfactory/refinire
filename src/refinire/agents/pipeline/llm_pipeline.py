@@ -330,6 +330,68 @@ class RefinireAgent(Step):
             logger.debug(f"Unable to create trace context ({e}), running without trace context")
             return await self._execute_with_context(user_input, ctx, None)
     
+    async def run_streamed(self, user_input: str, ctx: Optional[Context] = None, callback: Optional[Callable[[str], None]] = None):
+        """
+        Run the agent with streaming output (simple implementation)
+        エージェントをストリーミング出力で実行（シンプル実装）
+        
+        Args:
+            user_input: User input for the agent / エージェント用ユーザー入力
+            ctx: Optional context (creates new if None) / オプションコンテキスト（Noneの場合は新作成）
+            callback: Optional callback function for streaming chunks / ストリーミングチャンク用オプションコールバック関数
+            
+        Yields:
+            str: Streaming content chunks / ストリーミングコンテンツチャンク
+        """
+        # Create context if not provided / 提供されていない場合はContextを作成
+        if ctx is None:
+            ctx = Context()
+            ctx.add_user_message(user_input)
+        
+        try:
+            # Build prompt using existing method / 既存メソッドを使用してプロンプトを構築
+            full_prompt = self._build_prompt(user_input, include_instructions=False)
+            
+            # Apply generation instructions to agent / エージェントに生成指示を適用
+            original_instructions = self._sdk_agent.instructions
+            self._sdk_agent.instructions = self.generation_instructions
+            
+            # Use Runner.run_streamed for streaming execution
+            # ストリーミング実行のためにRunner.run_streamedを使用
+            stream_result = Runner.run_streamed(self._sdk_agent, full_prompt)
+            
+            full_content = ""
+            async for stream_event in stream_result.stream_events():
+                # Handle text delta events for streaming content
+                # ストリーミングコンテンツのためにテキストデルタイベントを処理
+                if hasattr(stream_event, 'type') and stream_event.type == 'raw_response_event':
+                    if hasattr(stream_event, 'data'):
+                        # Check for ResponseTextDeltaEvent
+                        if stream_event.data.__class__.__name__ == 'ResponseTextDeltaEvent':
+                            if hasattr(stream_event.data, 'delta') and stream_event.data.delta:
+                                chunk = stream_event.data.delta
+                                full_content += chunk
+                                
+                                # Call callback if provided / コールバックが提供されている場合は呼び出し
+                                if callback:
+                                    callback(chunk)
+                                
+                                # Yield the chunk / チャンクをyield
+                                yield chunk
+            
+            # Store result in context if provided / 提供されている場合はコンテキストに結果を保存
+            if ctx is not None:
+                ctx.result = full_content
+            
+            # Restore original instructions / 元の指示を復元
+            self._sdk_agent.instructions = original_instructions
+            
+        except Exception as e:
+            # Restore original instructions on error / エラー時に元の指示を復元
+            self._sdk_agent.instructions = original_instructions
+            logger.error(f"Streaming execution failed: {e}")
+            yield f"Error: {str(e)}"
+    
     async def _execute_with_context(self, user_input: Optional[str], ctx: Context, span=None) -> Context:
         """
         Execute agent with context and optional span for metadata

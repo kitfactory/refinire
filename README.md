@@ -50,8 +50,19 @@ from refinire import RefinireAgent
 # Agent with automatic evaluation
 agent = RefinireAgent(
     name="quality_writer",
-    generation_instructions="Generate high-quality content",
-    evaluation_instructions="Rate quality from 0-100",
+    generation_instructions="Generate high-quality, informative content with clear structure and engaging writing style",
+    evaluation_instructions="""Evaluate the content quality on a scale of 0-100 based on:
+    - Clarity and readability (0-25 points)
+    - Accuracy and factual correctness (0-25 points)  
+    - Structure and organization (0-25 points)
+    - Engagement and writing style (0-25 points)
+    
+    Provide your evaluation as:
+    Score: [0-100]
+    Comments:
+    - [Specific feedback on strengths]
+    - [Areas for improvement]
+    - [Suggestions for enhancement]""",
     threshold=85.0,  # Automatically regenerate if score < 85
     max_retries=3,
     model="gpt-4o-mini"
@@ -61,6 +72,117 @@ result = agent.run("Write an article about AI")
 print(f"Quality Score: {result.evaluation_score}")
 print(f"Content: {result.content}")
 ```
+
+## Streaming Output - Real-time Response Display
+
+**Stream responses in real-time** for improved user experience and immediate feedback. Both RefinireAgent and Flow support streaming output, perfect for chat interfaces, live dashboards, and interactive applications.
+
+### Basic RefinireAgent Streaming
+
+```python
+from refinire import RefinireAgent
+
+agent = RefinireAgent(
+    name="streaming_assistant",
+    generation_instructions="Provide detailed, helpful responses",
+    model="gpt-4o-mini"
+)
+
+# Stream response chunks as they arrive
+async for chunk in agent.run_streamed("Explain quantum computing"):
+    print(chunk, end="", flush=True)  # Real-time display
+```
+
+### Streaming with Callback Processing
+
+```python
+# Custom processing for each chunk
+chunks_received = []
+def process_chunk(chunk: str):
+    chunks_received.append(chunk)
+    # Send to websocket, update UI, save to file, etc.
+
+async for chunk in agent.run_streamed(
+    "Write a Python tutorial", 
+    callback=process_chunk
+):
+    print(chunk, end="", flush=True)
+
+print(f"\nReceived {len(chunks_received)} chunks")
+```
+
+### Context-Aware Streaming
+
+```python
+from refinire import Context
+
+# Maintain conversation context across streaming responses
+ctx = Context()
+
+# First message
+async for chunk in agent.run_streamed("Hello, I'm learning Python", ctx=ctx):
+    print(chunk, end="", flush=True)
+
+# Context-aware follow-up
+ctx.add_user_message("What about async programming?")
+async for chunk in agent.run_streamed("What about async programming?", ctx=ctx):
+    print(chunk, end="", flush=True)
+```
+
+### Flow Streaming
+
+**Flows also support streaming** for complex multi-step workflows:
+
+```python
+from refinire import Flow, FunctionStep
+
+flow = Flow({
+    "analyze": FunctionStep("analyze", analyze_input),
+    "generate": RefinireAgent(
+        name="writer", 
+        generation_instructions="Write detailed content"
+    )
+})
+
+# Stream entire flow output
+async for chunk in flow.run_streamed("Create a technical article"):
+    print(chunk, end="", flush=True)
+```
+
+### Structured Output Streaming
+
+**Important**: When using structured output (Pydantic models) with streaming, the response is streamed as **JSON chunks**, not parsed objects:
+
+```python
+from pydantic import BaseModel
+
+class Article(BaseModel):
+    title: str
+    content: str
+    tags: list[str]
+
+agent = RefinireAgent(
+    name="structured_writer",
+    generation_instructions="Generate an article",
+    output_model=Article  # Structured output
+)
+
+# Streams JSON chunks: {"title": "...", "content": "...", "tags": [...]}
+async for json_chunk in agent.run_streamed("Write about AI"):
+    print(json_chunk, end="", flush=True)
+    
+# For parsed objects, use regular run() method:
+result = await agent.run_async("Write about AI")
+article = result.content  # Returns Article object
+```
+
+**Key Streaming Features**:
+- **Real-time Output**: Immediate response as content is generated
+- **Callback Support**: Custom processing for each chunk  
+- **Context Continuity**: Streaming works with conversation context
+- **Flow Integration**: Stream complex multi-step workflows
+- **JSON Streaming**: Structured output streams as JSON chunks
+- **Error Handling**: Graceful handling of streaming interruptions
 
 
 ## Flow Architecture: Orchestrate Complex Workflows

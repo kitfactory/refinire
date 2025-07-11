@@ -159,11 +159,40 @@ result = asyncio.run(flow.run(input_data="input data"))
 
 #### Main Methods
 
-| Method Name | Parameters           | Return Value  | Description                    |
-|-------------|---------------------|---------------|--------------------------------|
-| run         | input_data: Any     | Context       | Execute workflow asynchronously|
-| run_sync    | input_data: Any     | Context       | Execute workflow synchronously |
-| show        | -                   | None          | Visualize workflow structure   |
+| Method Name   | Parameters                                    | Return Value        | Description                      |
+|---------------|-----------------------------------------------|---------------------|----------------------------------|
+| run           | input_data: Any                               | Context            | Execute workflow asynchronously  |
+| run_sync      | input_data: Any                               | Context            | Execute workflow synchronously   |
+| run_streamed  | input_data: Any, callback: Callable = None   | AsyncIterator[str] | Stream workflow output in real-time |
+| show          | -                                             | None               | Visualize workflow structure     |
+
+#### Flow Streaming
+
+Flows support streaming output from steps that generate streaming content (like RefinireAgent):
+
+```python
+from refinire import Flow, FunctionStep, RefinireAgent
+
+# Create flow with streaming-enabled agent
+flow = Flow({
+    "analyze": FunctionStep("analyze", analyze_function),
+    "generate": RefinireAgent(
+        name="generator",
+        generation_instructions="Generate detailed content",
+        model="gpt-4o-mini"
+    )
+})
+
+# Stream entire flow output
+async for chunk in flow.run_streamed("Create technical documentation"):
+    print(chunk, end="", flush=True)
+```
+
+**Flow Streaming Behavior:**
+- Only streaming-enabled steps (like RefinireAgent) produce chunks
+- Non-streaming steps execute normally without chunks
+- Context and state are preserved throughout streaming
+- Mixed streaming/non-streaming workflows are supported
 
 ### Context
 
@@ -211,6 +240,173 @@ agent = GenAgent(
 |-------------|---------------------------------|---------------|--------------------------------|
 | run         | user_input: str, ctx: Context   | Context       | Execute agent asynchronously   |
 | run_sync    | user_input: str, ctx: Context   | Context       | Execute agent synchronously    |
+
+### RefinireAgent
+
+Advanced AI agent with built-in evaluation, tool integration, and streaming capabilities. The main agent class for production use.
+
+```python
+from refinire import RefinireAgent
+
+agent = RefinireAgent(
+    name="assistant",
+    generation_instructions="You are a helpful assistant providing clear, accurate information.",
+    evaluation_instructions="""Evaluate response quality on a scale of 0-100 based on:
+    - Accuracy and factual correctness (0-25 points)
+    - Clarity and comprehensibility (0-25 points)
+    - Helpfulness and relevance (0-25 points)
+    - Completeness and thoroughness (0-25 points)
+    
+    Provide your evaluation as:
+    Score: [0-100]
+    Comments:
+    - [Specific strengths of the response]
+    - [Areas needing improvement]
+    - [Suggestions for enhancement]""",
+    model="gpt-4o-mini",
+    threshold=85.0,
+    max_retries=3
+)
+```
+
+#### Main Methods
+
+| Method Name   | Parameters                                    | Return Value        | Description                      |
+|---------------|-----------------------------------------------|---------------------|----------------------------------|
+| run           | user_input: str, ctx: Context = None         | LLMResult          | Execute agent synchronously      |
+| run_async     | user_input: str, ctx: Context = None         | LLMResult          | Execute agent asynchronously     |
+| run_streamed  | user_input: str, ctx: Context = None, callback: Callable = None | AsyncIterator[str] | Stream response chunks in real-time |
+
+#### Streaming Parameters
+
+| Parameter | Type                  | Required/Optional | Default | Description                                |
+|-----------|-----------------------|-------------------|---------|-------------------------------------------|
+| user_input| str                   | Required          | -       | Input text to process                     |
+| ctx       | Context               | Optional          | None    | Context for conversation state            |
+| callback  | Callable[[str], None] | Optional          | None    | Function to process each chunk            |
+
+#### Streaming Usage Examples
+
+**Basic Streaming:**
+```python
+async for chunk in agent.run_streamed("Explain quantum computing"):
+    print(chunk, end="", flush=True)
+```
+
+**Streaming with Callback:**
+```python
+def process_chunk(chunk: str):
+    # Custom processing: save to file, send to websocket, etc.
+    print(f"Received: {chunk}")
+
+async for chunk in agent.run_streamed("Generate content", callback=process_chunk):
+    print(chunk, end="", flush=True)
+```
+
+**Context-Aware Streaming:**
+```python
+from refinire import Context
+
+ctx = Context()
+async for chunk in agent.run_streamed("Hello", ctx=ctx):
+    print(chunk, end="", flush=True)
+
+# Continue conversation with context
+async for chunk in agent.run_streamed("Continue our discussion", ctx=ctx):
+    print(chunk, end="", flush=True)
+```
+
+#### Structured Output Streaming
+
+When using structured output (Pydantic models) with streaming, responses are delivered as **JSON chunks**, not parsed objects:
+
+```python
+from pydantic import BaseModel
+
+class Article(BaseModel):
+    title: str
+    content: str
+
+agent = RefinireAgent(
+    name="writer",
+    generation_instructions="Write articles",
+    output_model=Article
+)
+
+# Streams JSON chunks: {"title": "...", "content": "..."}
+async for json_chunk in agent.run_streamed("Write about AI"):
+    print(json_chunk, end="", flush=True)
+
+# For parsed objects, use regular methods:
+result = await agent.run_async("Write about AI")
+article = result.content  # Returns Article object
+```
+
+#### Evaluation System
+
+RefinireAgent includes a built-in evaluation system that automatically assesses content quality and triggers regeneration when quality thresholds aren't met.
+
+**Evaluation Output Format:**
+
+The evaluation system expects responses in this exact format:
+```
+Score: 87
+Comments:
+- Excellent technical accuracy and comprehensive coverage
+- Clear structure with logical flow
+- Strong use of practical examples
+- Could benefit from more visual diagrams
+- Consider adding troubleshooting section
+```
+
+**Evaluation Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| evaluation_instructions | str | None | Instructions for quality evaluation |
+| threshold | float | 70.0 | Minimum score required (0-100) |
+| max_retries | int | 3 | Maximum regeneration attempts |
+
+**Accessing Evaluation Results:**
+
+```python
+# Basic evaluation access
+result = agent.run("Create technical content")
+score = result.evaluation_score  # Integer 0-100
+
+# Detailed evaluation with Context
+from refinire import Context
+ctx = Context()
+result = agent.run("Create technical content", ctx)
+
+eval_data = ctx.evaluation_result
+score = eval_data["score"]           # 87
+passed = eval_data["passed"]         # True/False
+feedback = eval_data["feedback"]     # Complete evaluation text
+comments = eval_data["comments"]     # Parsed comment list
+```
+
+**Best Practices for Evaluation Instructions:**
+
+1. **Use 100-point scoring scale** with clear point distributions
+2. **Provide specific criteria** for each scoring dimension
+3. **Request structured feedback** with comment lists
+4. **Include actionable suggestions** for improvement
+
+Example comprehensive evaluation instruction:
+```python
+evaluation_instructions="""Evaluate content quality (0-100):
+- Technical accuracy (0-30 points): Factual correctness and precision
+- Clarity (0-30 points): Clear communication and understanding  
+- Structure (0-25 points): Logical organization and flow
+- Completeness (0-15 points): Comprehensive coverage
+
+Score: [0-100]
+Comments:
+- [Strengths with specific examples]
+- [Improvement areas with suggestions]
+- [Enhancement recommendations]"""
+```
 
 ### ClarifyAgent
 

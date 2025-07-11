@@ -42,8 +42,19 @@ from refinire import RefinireAgent
 # 自動評価付きエージェント
 agent = RefinireAgent(
     name="quality_writer",
-    generation_instructions="高品質なコンテンツを生成してください",
-    evaluation_instructions="品質を0-100で評価してください",
+    generation_instructions="明確な構成と魅力的な文体で、高品質で情報豊富なコンテンツを生成してください",
+    evaluation_instructions="""以下の基準でコンテンツ品質を0-100点で評価してください：
+    - 明確性と読みやすさ（0-25点）
+    - 正確性と事実の正しさ（0-25点）
+    - 構成と組織化（0-25点）
+    - 魅力的な文体とエンゲージメント（0-25点）
+    
+    評価結果は以下の形式で提供してください：
+    スコア: [0-100]
+    コメント:
+    - [強みに関する具体的なフィードバック]
+    - [改善点]
+    - [向上のための提案]""",
     threshold=85.0,  # 85点未満は自動的に再生成
     max_retries=3,
     model="gpt-4o-mini"
@@ -53,6 +64,117 @@ result = agent.run("AIについての記事を書いて")
 print(f"品質スコア: {result.evaluation_score}点")
 print(f"生成内容: {result.content}")
 ```
+
+## ストリーミング出力 - リアルタイム応答表示
+
+**リアルタイムでレスポンスをストリーミング**することで、ユーザー体験の向上と即座のフィードバックを実現します。RefinireAgentとFlowの両方がストリーミング出力をサポートし、チャットインターフェース、ライブダッシュボード、インタラクティブアプリケーションに最適です。
+
+### 基本的なRefinireAgentストリーミング
+
+```python
+from refinire import RefinireAgent
+
+agent = RefinireAgent(
+    name="streaming_assistant",
+    generation_instructions="詳細で役立つ回答を提供してください",
+    model="gpt-4o-mini"
+)
+
+# レスポンスチャンクを到着と同時にストリーミング
+async for chunk in agent.run_streamed("量子コンピューティングを説明してください"):
+    print(chunk, end="", flush=True)  # リアルタイム表示
+```
+
+### コールバック処理付きストリーミング
+
+```python
+# 各チャンクをカスタム処理
+chunks_received = []
+def process_chunk(chunk: str):
+    chunks_received.append(chunk)
+    # WebSocketに送信、UIを更新、ファイルに保存等
+
+async for chunk in agent.run_streamed(
+    "Pythonチュートリアルを書いて", 
+    callback=process_chunk
+):
+    print(chunk, end="", flush=True)
+
+print(f"\n{len(chunks_received)}個のチャンクを受信")
+```
+
+### コンテキスト対応ストリーミング
+
+```python
+from refinire import Context
+
+# ストリーミング応答全体で会話コンテキストを維持
+ctx = Context()
+
+# 最初のメッセージ
+async for chunk in agent.run_streamed("こんにちは、Pythonを学習中です", ctx=ctx):
+    print(chunk, end="", flush=True)
+
+# コンテキスト対応のフォローアップ
+ctx.add_user_message("非同期プログラミングについてはどうですか？")
+async for chunk in agent.run_streamed("非同期プログラミングについてはどうですか？", ctx=ctx):
+    print(chunk, end="", flush=True)
+```
+
+### Flowストリーミング
+
+**Flowも複雑な多段階ワークフローのストリーミングをサポート**：
+
+```python
+from refinire import Flow, FunctionStep
+
+flow = Flow({
+    "analyze": FunctionStep("analyze", analyze_input),
+    "generate": RefinireAgent(
+        name="writer", 
+        generation_instructions="詳細なコンテンツを書いてください"
+    )
+})
+
+# フロー全体の出力をストリーミング
+async for chunk in flow.run_streamed("技術記事を作成してください"):
+    print(chunk, end="", flush=True)
+```
+
+### 構造化出力ストリーミング
+
+**重要**: 構造化出力（Pydanticモデル）をストリーミングで使用すると、レスポンスは解析されたオブジェクトではなく**JSONチャンク**としてストリーミングされます：
+
+```python
+from pydantic import BaseModel
+
+class Article(BaseModel):
+    title: str
+    content: str
+    tags: list[str]
+
+agent = RefinireAgent(
+    name="structured_writer",
+    generation_instructions="記事を生成してください",
+    output_model=Article  # 構造化出力
+)
+
+# JSONチャンクをストリーミング: {"title": "...", "content": "...", "tags": [...]}
+async for json_chunk in agent.run_streamed("AIについて書いてください"):
+    print(json_chunk, end="", flush=True)
+    
+# 解析されたオブジェクトが必要な場合は、通常のrun()メソッドを使用：
+result = await agent.run_async("AIについて書いてください")
+article = result.content  # Articleオブジェクトを返す
+```
+
+**主要ストリーミング機能**:
+- **リアルタイム出力**: コンテンツ生成と同時の即座の応答
+- **コールバックサポート**: 各チャンクのカスタム処理
+- **コンテキスト継続性**: 会話コンテキストと連携するストリーミング
+- **Flow統合**: 複雑な多段階ワークフローのストリーミング
+- **JSONストリーミング**: 構造化出力はJSONチャンクとしてストリーミング
+- **エラーハンドリング**: ストリーミング中断の適切な処理
 
 ## Flow Architecture - 複雑なワークフローの構築
 

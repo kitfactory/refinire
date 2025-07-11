@@ -478,6 +478,148 @@ class Flow:
             logger.debug(f"Unable to create trace context ({e}), running without trace context")
             return await self._run_with_span(input_data, initial_input, None)
     
+    async def run_streamed(self, input_data: Optional[str] = None, callback: Optional[Callable[[str], None]] = None):
+        """
+        Run flow with streaming output for steps that support it
+        ストリーミング出力をサポートするステップでフローを実行
+        
+        Args:
+            input_data: Input data to the flow / フローへの入力データ
+            callback: Optional callback function for streaming chunks / ストリーミングチャンク用オプションコールバック関数
+            
+        Yields:
+            str: Streaming content chunks from supported steps / サポートされたステップからのストリーミングコンテンツチャンク
+        """
+        try:
+            from agents.tracing import trace
+            
+            # Create trace context for this flow execution
+            # このフロー実行用のトレースコンテキストを作成
+            trace_name = f"Flow({self.name or 'unnamed'})"
+            with trace(trace_name):
+                async for chunk in self._run_streamed_with_span(input_data, callback):
+                    yield chunk
+        except ImportError:
+            # agents.tracing is not available - run without trace context
+            # agents.tracingが利用できません - トレースコンテキストなしで実行
+            logger.debug("agents.tracing not available, running without trace context")
+            async for chunk in self._run_streamed_with_span(input_data, callback):
+                yield chunk
+        except Exception as e:
+            # If there's any issue with trace creation, fall back to no trace
+            # トレース作成で問題がある場合は、トレースなしにフォールバック
+            logger.debug(f"Unable to create trace context ({e}), running without trace context")
+            async for chunk in self._run_streamed_with_span(input_data, callback):
+                yield chunk
+    
+    async def _run_streamed_with_span(self, input_data: Optional[str] = None, callback: Optional[Callable[[str], None]] = None):
+        """
+        Internal streaming execution method for Flow
+        Flow用内部ストリーミング実行メソッド
+        """
+        try:
+            # Initialize context and input
+            # コンテキストと入力を初期化
+            effective_input = input_data or ""
+            if effective_input:
+                self.context.add_user_message(effective_input)
+            
+            current_step_name = self.start
+            execution_count = 0
+            
+            while current_step_name and execution_count < self.max_steps:
+                execution_count += 1
+                
+                if current_step_name not in self.steps:
+                    error_msg = f"Step '{current_step_name}' not found in flow"
+                    logger.error(error_msg)
+                    yield f"Error: {error_msg}"
+                    break
+                
+                current_step = self.steps[current_step_name]
+                
+                # Check if step supports streaming (is RefinireAgent with run_streamed)
+                # ステップがストリーミングをサポートしているかチェック（run_streamedを持つRefinireAgent）
+                if hasattr(current_step, 'run_streamed'):
+                    logger.debug(f"Executing streaming step: {current_step_name}")
+                    
+                    step_has_output = False
+                    async for chunk in current_step.run_streamed(effective_input, ctx=self.context, callback=callback):
+                        step_has_output = True
+                        yield chunk
+                    
+                    # If no output, yield step completion message
+                    # 出力がない場合、ステップ完了メッセージをyield
+                    if not step_has_output:
+                        completion_msg = f"[Step {current_step_name} completed]"
+                        if callback:
+                            callback(completion_msg)
+                        yield completion_msg
+                
+                else:
+                    # For non-streaming steps, execute normally and yield result
+                    # 非ストリーミングステップの場合、通常実行して結果をyield
+                    logger.debug(f"Executing non-streaming step: {current_step_name}")
+                    
+                    try:
+                        if hasattr(current_step, 'run_async'):
+                            result = await current_step.run_async(effective_input, self.context)
+                        elif hasattr(current_step, 'run'):
+                            result = current_step.run(effective_input, self.context)
+                        else:
+                            error_msg = f"Step '{current_step_name}' has no run method"
+                            logger.error(error_msg)
+                            yield f"Error: {error_msg}"
+                            break
+                        
+                        # Yield step result
+                        # ステップ結果をyield
+                        if hasattr(result, 'result') and result.result:
+                            step_output = str(result.result)
+                            if callback:
+                                callback(step_output)
+                            yield step_output
+                        else:
+                            completion_msg = f"[Step {current_step_name} completed]"
+                            if callback:
+                                callback(completion_msg)
+                            yield completion_msg
+                        
+                        # Update context
+                        # コンテキストを更新
+                        self.context = result
+                        
+                    except Exception as e:
+                        error_msg = f"Step '{current_step_name}' failed: {str(e)}"
+                        logger.error(error_msg)
+                        yield f"Error: {error_msg}"
+                        break
+                
+                # Determine next step
+                # 次のステップを決定
+                if hasattr(current_step, 'next_step') and current_step.next_step:
+                    current_step_name = current_step.next_step
+                else:
+                    # No next step defined, flow ends
+                    # 次のステップが定義されていない、フロー終了
+                    break
+                
+                # Clear input for subsequent steps
+                # 後続ステップのために入力をクリア
+                effective_input = ""
+            
+            # Flow completed
+            # フロー完了
+            if execution_count >= self.max_steps:
+                warning_msg = f"Flow reached maximum steps ({self.max_steps})"
+                logger.warning(warning_msg)
+                yield f"Warning: {warning_msg}"
+            
+        except Exception as e:
+            error_msg = f"Flow streaming execution failed: {str(e)}"
+            logger.error(error_msg)
+            yield f"Error: {error_msg}"
+    
     def _create_flow_span(self):
         """
         Create a custom span for the entire flow execution
