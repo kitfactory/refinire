@@ -73,6 +73,127 @@ print(f"Quality Score: {result.evaluation_score}")
 print(f"Content: {result.content}")
 ```
 
+## Orchestration Mode - Multi-Agent Coordination
+
+**The Challenge**: Building complex multi-agent systems requires standardized communication protocols between agents. Different output formats make agent coordination difficult and error-prone.
+
+**The Solution**: RefinireAgent's orchestration mode provides structured JSON output with standardized status, result, reasoning, and next-step hints. This enables seamless integration in multi-agent workflows where agents need to communicate their status and recommend next actions.
+
+**Key Benefits**:
+- **Standardized Communication**: Unified JSON protocol for agent-to-agent interaction
+- **Smart Coordination**: Agents provide hints about recommended next steps
+- **Error Handling**: Clear status reporting (completed/failed) for robust workflows
+- **Type Safety**: Structured output with optional Pydantic model integration
+
+### Basic Orchestration Mode
+
+```python
+from refinire import RefinireAgent
+
+# Agent configured for orchestration
+orchestrator_agent = RefinireAgent(
+    name="analysis_worker",
+    generation_instructions="Analyze the provided data and provide insights",
+    orchestration_mode=True,  # Enable structured output
+    model="gpt-4o-mini"
+)
+
+# Returns structured JSON instead of Context
+result = orchestrator_agent.run("Analyze user engagement trends")
+
+# Standard orchestration response format
+print(f"Status: {result['status']}")           # "completed" or "failed"
+print(f"Result: {result['result']}")           # Analysis output
+print(f"Reasoning: {result['reasoning']}")     # Why this result was generated
+print(f"Next Task: {result['next_hint']['task']}")        # Recommended next step
+print(f"Confidence: {result['next_hint']['confidence']}")  # Confidence level (0-1)
+```
+
+### Orchestration with Structured Output
+
+```python
+from pydantic import BaseModel
+from refinire import RefinireAgent
+
+class AnalysisReport(BaseModel):
+    findings: list[str]
+    recommendations: list[str]
+    confidence_score: float
+
+# Orchestration mode with typed result
+agent = RefinireAgent(
+    name="structured_analyst",
+    generation_instructions="Generate detailed analysis report",
+    orchestration_mode=True,
+    output_model=AnalysisReport,  # Result will be typed
+    model="gpt-4o-mini"
+)
+
+result = agent.run("Analyze customer feedback data")
+
+# result['result'] is now a typed AnalysisReport object
+report = result['result']
+print(f"Findings: {report.findings}")
+print(f"Recommendations: {report.recommendations}")
+print(f"Confidence: {report.confidence_score}")
+```
+
+### Multi-Agent Workflow Coordination
+
+```python
+from refinire import RefinireAgent, Flow, FunctionStep
+
+# Orchestration-enabled agents
+data_collector = RefinireAgent(
+    name="data_collector",
+    generation_instructions="Collect and prepare data for analysis",
+    orchestration_mode=True,
+    model="gpt-4o-mini"
+)
+
+analyzer = RefinireAgent(
+    name="analyzer", 
+    generation_instructions="Perform deep analysis on collected data",
+    orchestration_mode=True,
+    model="gpt-4o-mini"
+)
+
+reporter = RefinireAgent(
+    name="reporter",
+    generation_instructions="Generate final report with recommendations",
+    orchestration_mode=True,
+    model="gpt-4o-mini"
+)
+
+def orchestration_router(ctx):
+    """Route based on agent recommendations"""
+    if hasattr(ctx, 'result') and isinstance(ctx.result, dict):
+        next_task = ctx.result.get('next_hint', {}).get('task', 'unknown')
+        if next_task == 'analysis':
+            return 'analyzer'
+        elif next_task == 'reporting':
+            return 'reporter'
+    return 'end'
+
+# Workflow with orchestration-based routing
+flow = Flow({
+    "collect": data_collector,
+    "route": ConditionStep("route", orchestration_router, "analyzer", "end"),
+    "analyzer": analyzer,
+    "report": reporter
+})
+
+result = await flow.run("Process customer survey data")
+```
+
+**Key Orchestration Features**:
+- **Status Tracking**: Clear completion/failure status for workflow control
+- **Result Typing**: Optional Pydantic model integration for type safety
+- **Next-Step Hints**: Agents recommend optimal next actions with confidence levels
+- **Reasoning Transparency**: Agents explain their decision-making process
+- **Error Handling**: Structured error reporting for robust multi-agent systems
+- **Backward Compatibility**: Normal mode continues to work unchanged (orchestration_mode=False)
+
 ## Streaming Output - Real-time Response Display
 
 **Stream responses in real-time** for improved user experience and immediate feedback. Both RefinireAgent and Flow support streaming output, perfect for chat interfaces, live dashboards, and interactive applications.

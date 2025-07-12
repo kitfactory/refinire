@@ -100,7 +100,9 @@ class RefinireAgent(Step):
         context_providers_config: Optional[Union[str, List[Dict[str, Any]]]] = None,
         # Flow integration parameters / Flow統合パラメータ
         next_step: Optional[str] = None,
-        store_result_key: Optional[str] = None
+        store_result_key: Optional[str] = None,
+        # Orchestration mode parameter / オーケストレーションモードパラメータ
+        orchestration_mode: bool = False
     ) -> None:
         """
         Initialize Refinire Agent as a Step
@@ -129,7 +131,7 @@ class RefinireAgent(Step):
             context_providers_config: Configuration for context providers (YAML-like string or dict list) / コンテキストプロバイダーの設定（YAMLライクな文字列または辞書リスト）
             next_step: Next step for Flow integration / Flow統合用次ステップ
             store_result_key: Key to store result in Flow context / Flow context内での結果保存キー
-            is_flow_step: Enable Flow step mode / Flowステップモード有効化
+            orchestration_mode: Enable orchestration mode with structured JSON output / 構造化JSON出力付きオーケストレーションモード有効化
         """
         # Initialize Step base class
         # Step基底クラスを初期化
@@ -176,6 +178,9 @@ class RefinireAgent(Step):
         # Flow integration configuration / Flow統合設定
         self.next_step = next_step
         self.store_result_key = store_result_key or f"{name}_result"
+        
+        # Orchestration mode configuration / オーケストレーションモード設定
+        self.orchestration_mode = orchestration_mode
         
         # Tools and MCP support
         self.tools = tools or []
@@ -234,6 +239,11 @@ class RefinireAgent(Step):
                 {"type": "conversation_history", "max_items": 10}
             ]
         
+        # Prepare orchestration system instruction template
+        # オーケストレーション用システム指示テンプレートを準備
+        if self.orchestration_mode:
+            self._orchestration_template = self._prepare_orchestration_template()
+        
         if context_providers_config:
             # Handle YAML-like string or dict list
             # YAMLライクな文字列または辞書リストを処理
@@ -263,6 +273,43 @@ class RefinireAgent(Step):
                 ContextProviderFactory.validate_config(config)
             self.context_providers = ContextProviderFactory.create_providers(context_providers_config)
     
+    def _prepare_orchestration_template(self) -> str:
+        """
+        Prepare orchestration mode system instruction template
+        オーケストレーション・モード用システム指示テンプレートを準備
+        
+        Returns:
+            str: Orchestration template / オーケストレーション・テンプレート
+        """
+        if self.locale == "ja":
+            return """あなたは以下のJSON構造で必ず回答してください:
+{
+  "status": "completed または failed",
+  "result": "任務の成果",
+  "reasoning": "推論過程",
+  "next_hint": {
+    "task": "次に推奨される処理種別",
+    "confidence": "0-1の信頼度",
+    "rationale": "推奨理由（任意）"
+  }
+}
+
+重要: この形式から逸脱しないでください。"""
+        else:
+            return """You must respond in the following JSON structure:
+{
+  "status": "completed or failed",
+  "result": "task outcome",
+  "reasoning": "reasoning process",
+  "next_hint": {
+    "task": "recommended next task type",
+    "confidence": "confidence level 0-1",
+    "rationale": "rationale for recommendation (optional)"
+  }
+}
+
+IMPORTANT: Do not deviate from this format."""
+    
     def run(self, user_input: str, ctx: Optional[Context] = None) -> Context:
         """
         Run the agent synchronously and return Context with result
@@ -284,17 +331,61 @@ class RefinireAgent(Step):
             # Check if we're already in an event loop
             try:
                 loop = asyncio.get_running_loop()
-                # If we're in a loop, use nest_asyncio or fallback
-                import nest_asyncio
-                nest_asyncio.apply()
-                future = asyncio.ensure_future(self.run_async(user_input, ctx))
-                return loop.run_until_complete(future)
+                # If we're in a loop, try to use nest_asyncio or fallback
+                try:
+                    import nest_asyncio
+                    nest_asyncio.apply()
+                    future = asyncio.ensure_future(self.run_async(user_input, ctx))
+                    result_ctx = loop.run_until_complete(future)
+                except ImportError:
+                    # nest_asyncio not available, cannot run in existing event loop
+                    # nest_asyncioが利用できない場合、既存のイベントループでは実行不可
+                    raise RuntimeError("Cannot run in existing event loop without nest_asyncio")
             except RuntimeError:
                 # No running loop, we can create one
-                return asyncio.run(self.run_async(user_input, ctx))
+                result_ctx = asyncio.run(self.run_async(user_input, ctx))
+            
+            # Return orchestration result if in orchestration mode
+            # オーケストレーションモードの場合はオーケストレーション結果を返却
+            if self.orchestration_mode:
+                # Check if result_ctx is already a dict (returned from run_async)
+                # result_ctxが既に辞書（run_asyncから返却）の場合をチェック
+                if isinstance(result_ctx, dict):
+                    return result_ctx
+                elif hasattr(result_ctx, 'result') and isinstance(result_ctx.result, dict):
+                    return result_ctx.result
+                else:
+                    # If orchestration mode but no dict result, return error format
+                    # オーケストレーションモードだが辞書結果がない場合、エラー形式を返却
+                    return {
+                        "status": "failed",
+                        "result": result_ctx.result if hasattr(result_ctx, 'result') else None,
+                        "reasoning": "Orchestration mode enabled but structured output not generated",
+                        "next_hint": {
+                            "task": "retry",
+                            "confidence": 0.3,
+                            "rationale": "Retry with clearer instructions or check agent configuration"
+                        }
+                    }
+            return result_ctx
+            
         except Exception as e:
             ctx.result = None
             ctx.add_system_message(f"Execution error: {e}")
+            
+            # Return appropriate error format for orchestration mode
+            # オーケストレーションモードの場合は適切なエラー形式を返却
+            if self.orchestration_mode:
+                return {
+                    "status": "failed",
+                    "result": None,
+                    "reasoning": f"Execution error: {str(e)}",
+                    "next_hint": {
+                        "task": "retry",
+                        "confidence": 0.3,
+                        "rationale": "System error occurred, may need retry or different approach"
+                    }
+                }
             return ctx
     
     async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
@@ -318,17 +409,35 @@ class RefinireAgent(Step):
             # このエージェント実行用のトレースコンテキストを作成
             trace_name = f"RefinireAgent({self.name})"
             with trace(trace_name):
-                return await self._execute_with_context(user_input, ctx, None)
+                result_ctx = await self._execute_with_context(user_input, ctx, None)
+                
+                # Return orchestration result if in orchestration mode
+                # オーケストレーションモードの場合はオーケストレーション結果を返却
+                if self.orchestration_mode and isinstance(result_ctx.result, dict):
+                    return result_ctx.result
+                return result_ctx
         except ImportError:
             # agents.tracing is not available - run without trace context
             # agents.tracingが利用できません - トレースコンテキストなしで実行
             logger.debug("agents.tracing not available, running without trace context")
-            return await self._execute_with_context(user_input, ctx, None)
+            result_ctx = await self._execute_with_context(user_input, ctx, None)
+            
+            # Return orchestration result if in orchestration mode
+            # オーケストレーションモードの場合はオーケストレーション結果を返却
+            if self.orchestration_mode and isinstance(result_ctx.result, dict):
+                return result_ctx.result
+            return result_ctx
         except Exception as e:
             # If there's any issue with trace creation, fall back to no trace
             # トレース作成で問題がある場合は、トレースなしにフォールバック
             logger.debug(f"Unable to create trace context ({e}), running without trace context")
-            return await self._execute_with_context(user_input, ctx, None)
+            result_ctx = await self._execute_with_context(user_input, ctx, None)
+            
+            # Return orchestration result if in orchestration mode
+            # オーケストレーションモードの場合はオーケストレーション結果を返却
+            if self.orchestration_mode and isinstance(result_ctx.result, dict):
+                return result_ctx.result
+            return result_ctx
     
     async def run_streamed(self, user_input: str, ctx: Optional[Context] = None, callback: Optional[Callable[[str], None]] = None):
         """
@@ -526,14 +635,34 @@ class RefinireAgent(Step):
                 # コンテキストが利用可能な場合はSDKエージェントの指示にも変数置換を適用
                 if ctx:
                     processed_instructions = self._substitute_variables(self.generation_instructions, ctx)
+                    # Add orchestration template if in orchestration mode
+                    # オーケストレーション・モードの場合はテンプレートを追加
+                    if self.orchestration_mode:
+                        # Check if orchestration template is already in instructions
+                        # オーケストレーション・テンプレートが既に指示に含まれているかチェック
+                        if not self._has_orchestration_instruction(processed_instructions):
+                            processed_instructions = f"{self._orchestration_template}\n\n{processed_instructions}"
                     self._sdk_agent.instructions = processed_instructions
+                else:
+                    # Apply orchestration template without context
+                    # コンテキストなしでオーケストレーション・テンプレートを適用
+                    if self.orchestration_mode:
+                        instructions = self.generation_instructions
+                        if not self._has_orchestration_instruction(instructions):
+                            instructions = f"{self._orchestration_template}\n\n{instructions}"
+                        self._sdk_agent.instructions = instructions
                 
                 # full_promptを使用してRunner.runを呼び出し
                 result = await Runner.run(self._sdk_agent, full_prompt)
                 content = result.final_output
                 if not content and hasattr(result, 'output') and result.output:
                     content = result.output
-                if self.output_model and content:
+                
+                # In orchestration mode, skip structured parsing here - do it later on result field
+                # オーケストレーションモードでは、ここでの構造化解析をスキップ - resultフィールドで後で実行
+                if self.orchestration_mode:
+                    parsed_content = content  # Keep raw content for orchestration parsing
+                elif self.output_model and content:
                     parsed_content = self._parse_structured_output(content)
                 else:
                     parsed_content = content
@@ -558,8 +687,69 @@ class RefinireAgent(Step):
                     metadata.update(self._generation_prompt_metadata)
                 if self._evaluation_prompt_metadata:
                     metadata["evaluation_prompt"] = self._evaluation_prompt_metadata
+                # Parse orchestration JSON if in orchestration mode
+                # オーケストレーション・モードの場合はJSONを解析
+                if self.orchestration_mode:
+                    try:
+                        orchestration_result = self._parse_orchestration_result(parsed_content)
+                        # Apply output_model parsing to result field if specified
+                        # output_modelが指定されている場合はresultフィールドに適用
+                        if self.output_model and orchestration_result.get("result") is not None:
+                            try:
+                                orchestration_result["result"] = self._parse_structured_output(orchestration_result["result"])
+                            except Exception as parse_error:
+                                # Keep original result if parsing fails
+                                # 解析に失敗した場合は元のresultを保持
+                                logger.warning(f"Failed to parse orchestration result with output_model: {parse_error}")
+                        final_content = orchestration_result
+                        metadata["orchestration_mode"] = True
+                        metadata["parsed_json"] = True
+                    except Exception as e:
+                        # If orchestration parsing fails, check if content is structured output
+                        # オーケストレーション解析が失敗した場合、コンテンツが構造化出力かチェック
+                        if self.output_model:
+                            try:
+                                # Try to parse as structured output and wrap in orchestration format
+                                # 構造化出力として解析し、オーケストレーション形式でラップを試行
+                                structured_result = self._parse_structured_output(parsed_content)
+                                orchestration_result = {
+                                    "status": "completed",
+                                    "result": structured_result,
+                                    "reasoning": f"Generated structured output using {self.output_model.__name__}",
+                                    "next_hint": {
+                                        "task": "review_output",
+                                        "confidence": 0.8,
+                                        "rationale": "Structured output generated successfully"
+                                    }
+                                }
+                                final_content = orchestration_result
+                                metadata["orchestration_mode"] = True
+                                metadata["structured_fallback"] = True
+                                logger.info("Wrapped structured output in orchestration format")
+                            except Exception as structured_error:
+                                # Both orchestration and structured parsing failed
+                                # オーケストレーション解析と構造化解析の両方が失敗
+                                logger.error(f"Both orchestration and structured parsing failed: {str(e)}, {str(structured_error)}")
+                                self._sdk_agent.instructions = original_instructions
+                                return LLMResult(
+                                    content=None,
+                                    success=False,
+                                    metadata={"error": f"Orchestration JSON parsing failed: {str(e)}", "attempts": attempt, "orchestration_mode": True}
+                                )
+                        else:
+                            # Restore original instructions before returning error
+                            # エラー返却前に元の指示を復元
+                            self._sdk_agent.instructions = original_instructions
+                            return LLMResult(
+                                content=None,
+                                success=False,
+                                metadata={"error": f"Orchestration JSON parsing failed: {str(e)}", "attempts": attempt, "orchestration_mode": True}
+                            )
+                else:
+                    final_content = parsed_content
+                
                 llm_result = LLMResult(
-                    content=parsed_content,
+                    content=final_content,
                     success=True,
                     metadata=metadata,
                     evaluation_score=None,
@@ -896,6 +1086,114 @@ Return your response as JSON with 'score' and 'feedback' fields.
                 except Exception as e:
                     logger.warning(f"Failed to clear context provider {provider.__class__.__name__}: {e}")
                     continue
+    
+    def _has_orchestration_instruction(self, instructions: str) -> bool:
+        """
+        Check if instructions already contain orchestration template
+        指示にオーケストレーション・テンプレートが既に含まれているかチェック
+        
+        Args:
+            instructions: Instructions to check / チェックする指示
+            
+        Returns:
+            bool: True if orchestration template is found / オーケストレーション・テンプレートが見つかった場合True
+        """
+        if not instructions:
+            return False
+        
+        # Check for locale-specific orchestration indicators
+        # ロケール固有のオーケストレーション指標をチェック
+        if self.locale == "ja":
+            japanese_indicators = [
+                "JSON構造で必ず回答",
+                "以下のJSON構造で",
+                "この形式から逸脱しない"
+            ]
+            return any(indicator in instructions for indicator in japanese_indicators)
+        else:
+            english_indicators = [
+                "JSON structure",
+                "You must respond in the following JSON",
+                "Do not deviate from this format"
+            ]
+            return any(indicator in instructions for indicator in english_indicators)
+    
+    def _parse_orchestration_result(self, content: Any) -> Dict[str, Any]:
+        """
+        Parse orchestration result from LLM output
+        LLM出力からオーケストレーション結果を解析
+        
+        Args:
+            content: LLM output content / LLM出力コンテンツ
+            
+        Returns:
+            Dict[str, Any]: Parsed orchestration result / 解析されたオーケストレーション結果
+            
+        Raises:
+            Exception: If parsing fails / 解析に失敗した場合
+        """
+        try:
+            # If content is already a dict, validate it
+            # contentが既に辞書の場合は検証
+            if isinstance(content, dict):
+                parsed_data = content
+            elif isinstance(content, str):
+                # Extract JSON from markdown codeblock if present
+                # Markdownコードブロックが存在する場合はJSONを抽出
+                json_match = re.search(r'```(?:json)?\s*\n(.*?)\n```', str(content), re.DOTALL)
+                if json_match:
+                    json_content = json_match.group(1).strip()
+                else:
+                    json_content = str(content).strip()
+                
+                # Parse JSON
+                parsed_data = json.loads(json_content)
+            else:
+                # Try to convert to string and parse
+                # 文字列に変換して解析を試行
+                parsed_data = json.loads(str(content))
+            
+            # Validate required fields
+            # 必須フィールドを検証
+            required_fields = ["status", "result", "reasoning"]
+            for field in required_fields:
+                if field not in parsed_data:
+                    raise ValueError(f"Missing required field: {field}")
+            
+            # Validate status field
+            # statusフィールドを検証
+            if parsed_data["status"] not in ["completed", "failed"]:
+                raise ValueError(f"Invalid status value: {parsed_data['status']}. Must be 'completed' or 'failed'")
+            
+            # Ensure next_hint has proper structure if present
+            # next_hintが存在する場合は適切な構造を確保
+            if "next_hint" in parsed_data and parsed_data["next_hint"] is not None:
+                next_hint = parsed_data["next_hint"]
+                if not isinstance(next_hint, dict):
+                    raise ValueError("next_hint must be a dictionary")
+                # Set default values for optional fields
+                # オプションフィールドのデフォルト値を設定
+                if "confidence" not in next_hint:
+                    next_hint["confidence"] = 0.5
+                if "rationale" not in next_hint:
+                    next_hint["rationale"] = ""
+                # Validate confidence value
+                # confidence値を検証
+                try:
+                    confidence = float(next_hint["confidence"])
+                    if not 0 <= confidence <= 1:
+                        next_hint["confidence"] = 0.5
+                    else:
+                        next_hint["confidence"] = confidence
+                except (ValueError, TypeError):
+                    next_hint["confidence"] = 0.5
+            
+            return parsed_data
+            
+        except json.JSONDecodeError as e:
+            raise Exception(f"Invalid JSON format: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Orchestration parsing error: {str(e)}")
     
     def __str__(self) -> str:
         return f"RefinireAgent(name={self.name}, model={self.model})"
