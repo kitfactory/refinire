@@ -2,7 +2,7 @@
 from agents import Model, OpenAIChatCompletionsModel, set_tracing_disabled
 # English: Import OpenAI client
 # 日本語: OpenAI クライアントをインポート
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, AsyncAzureOpenAI
 from agents import OpenAIResponsesModel
 # English: Import HTTP client for API requests
 # 日本語: API リクエスト用の HTTP クライアントをインポート
@@ -14,6 +14,7 @@ import os
 from .anthropic import ClaudeModel
 from .gemini import GeminiModel
 from .ollama import OllamaModel
+from .model_parser import parse_model_id, detect_provider_from_environment, get_provider_config
 
 # Define the provider type hint
 ProviderType = Literal["openai", "google", "anthropic", "ollama"]
@@ -72,78 +73,118 @@ def get_llm(
     if model is None:
         model = os.environ.get("REFINIRE_DEFAULT_LLM_MODEL", "gpt-4o-mini")
 
-    def get_provider_canditate(model: str) -> ProviderType:
-        if "gpt" in model:
-            return "openai"
-        if "o3" in model or "o4" in model:
-            return "openai"
-        elif "gemini" in model:
-            return "google"
-        elif "claude" in model:
-            return "anthropic"
-        else:
-            return "ollama"
-
+    # Parse model ID to extract provider, model name, and tag
+    # モデルIDを解析してプロバイダー、モデル名、タグを抽出
+    parsed_provider, model_name, model_tag = parse_model_id(model)
+    
+    # Determine provider if not explicitly specified
+    # 明示的に指定されていない場合はプロバイダーを決定
     if provider is None:
-        provider = get_provider_canditate(model)
+        if parsed_provider:
+            provider = parsed_provider
+        else:
+            # Try environment detection first
+            # まず環境検出を試す
+            env_provider = detect_provider_from_environment()
+            if env_provider:
+                provider = env_provider
+            else:
+                # Fallback to model name detection
+                # モデル名検出にフォールバック
+                def get_provider_candidate(model: str) -> ProviderType:
+                    if "gpt" in model:
+                        return "openai"
+                    if "o3" in model or "o4" in model:
+                        return "openai"
+                    elif "gemini" in model:
+                        return "google"
+                    elif "claude" in model:
+                        return "anthropic"
+                    else:
+                        return "ollama"
+                provider = get_provider_candidate(model_name)
+    
+    # Get provider-specific configuration
+    # プロバイダー固有の設定を取得
+    provider_config = get_provider_config(provider, model_name, model_tag)
 
-    if provider == "openai":
-        # Use the standard OpenAI model from the agents library
-        # agentsライブラリの標準 OpenAI モデルを使用
+    # Handle provider-specific model creation
+    # プロバイダー固有のモデル作成を処理
+    if provider == "openai" or provider in ["groq", "lmstudio"]:
+        # Use OpenAI-compatible API
+        # OpenAI互換APIを使用
         openai_kwargs = kwargs.copy()
-
-        # English: Prepare arguments for OpenAI client and model
-        # 日本語: OpenAI クライアントとモデルの引数を準備
         client_args = {}
         model_args = {}
 
-        # English: Set API key for client
-        # 日本語: クライアントに API キーを設定
+        # Set API key and base URL
+        # APIキーとベースURLを設定
         if api_key:
             client_args['api_key'] = api_key
-        # English: Set base URL for client
-        # 日本語: クライアントにベース URL を設定
+        elif provider == "groq":
+            client_args['api_key'] = os.environ.get("GROQ_API_KEY")
+        
         if base_url:
             client_args['base_url'] = base_url
+        elif provider in ["groq", "lmstudio"]:
+            client_args['base_url'] = provider_config.get("base_url")
 
-        # English: Set model name for model constructor
-        # 日本語: モデルコンストラクタにモデル名を設定
-        model_args['model'] = model if model else "gpt-4o-mini" # Default to gpt-4o-mini
+        # Set model name
+        # モデル名を設定
+        model_args['model'] = provider_config["model"]
 
-        # English: Temperature is likely handled by the runner or set post-init,
-        # English: so remove it from constructor args.
-        # 日本語: temperature はランナーによって処理されるか、初期化後に設定される可能性が高いため、
-        # 日本語: コンストラクタ引数から削除します。
-        # model_args['temperature'] = temperature # Removed based on TypeError
-
-        # English: Add any other relevant kwargs passed in, EXCLUDING temperature
-        # 日本語: 渡された他の関連する kwargs を追加 (temperature を除く)
-        # Example: max_tokens, etc. Filter out args meant for the client.
-        # 例: max_tokens など。クライアント向けの引数を除外します。
+        # Add other kwargs
+        # 他のkwargsを追加
         for key, value in kwargs.items():
-            # English: Exclude client args, thinking, temperature, and tracing
-            # 日本語: クライアント引数、thinking、temperature、tracing を除外
             if key not in ['api_key', 'base_url', 'thinking', 'temperature', 'tracing']:
                 model_args[key] = value
 
-        # English: Remove 'thinking' as it's not used by OpenAI model
-        # 日本語: OpenAI モデルでは使用されないため 'thinking' を削除
         model_args.pop('thinking', None)
 
-        # English: Instantiate the OpenAI client
-        # 日本語: OpenAI クライアントをインスタンス化
+        # Create client
+        # クライアントを作成
         openai_client = AsyncOpenAI(**client_args)
 
-        # English: Instantiate and return the model, passing the client and model args
-        # 日本語: クライアントとモデル引数を渡してモデルをインスタンス化して返す
-        return OpenAIResponsesModel(
-            openai_client=openai_client,
-            **model_args
+        # Use appropriate model class based on endpoint type
+        # エンドポイントタイプに基づいて適切なモデルクラスを使用
+        if provider_config["use_chat_completions"]:
+            return OpenAIChatCompletionsModel(
+                openai_client=openai_client,
+                **model_args
+            )
+        else:
+            return OpenAIResponsesModel(
+                openai_client=openai_client,
+                **model_args
+            )
+    elif provider == "azure":
+        # Use Azure OpenAI
+        # Azure OpenAIを使用
+        azure_kwargs = kwargs.copy()
+        client_args = {}
+        
+        # Azure requires specific configuration
+        # Azureは特定の設定が必要
+        client_args['api_key'] = api_key or os.environ.get("AZURE_OPENAI_API_KEY")
+        client_args['api_version'] = provider_config["api_version"]
+        client_args['azure_endpoint'] = base_url or os.environ.get("AZURE_OPENAI_ENDPOINT")
+        
+        # Create Azure client
+        # Azureクライアントを作成
+        azure_client = AsyncAzureOpenAI(**client_args)
+        
+        # Azure always uses chat completions
+        # Azureは常にchat completionsを使用
+        return OpenAIChatCompletionsModel(
+            openai_client=azure_client,
+            model=provider_config["deployment_name"],
+            **azure_kwargs
         )
     elif provider == "google":
         gemini_kwargs = kwargs.copy()
-        if model:
-            gemini_kwargs['model'] = model
+        # Use parsed model name
+        # 解析されたモデル名を使用
+        gemini_kwargs['model'] = model_name
         # thinking is not used by GeminiModel
         gemini_kwargs.pop('thinking', None)
         return GeminiModel(
@@ -154,8 +195,9 @@ def get_llm(
         )
     elif provider == "anthropic":
         claude_kwargs = kwargs.copy()
-        if model:
-            claude_kwargs['model'] = model
+        # Use parsed model name
+        # 解析されたモデル名を使用
+        claude_kwargs['model'] = model_name
         return ClaudeModel(
             temperature=temperature,
             api_key=api_key,
@@ -165,14 +207,14 @@ def get_llm(
         )
     elif provider == "ollama":
         ollama_kwargs = kwargs.copy()
-        if model:
-            ollama_kwargs['model'] = model
-        # thinking is not used by OllamaModel
+        # Use parsed model configuration
+        # 解析されたモデル設定を使用
+        ollama_kwargs['model'] = provider_config["model"]
         ollama_kwargs.pop('thinking', None)
         return OllamaModel(
             temperature=temperature,
-            base_url=base_url,
-            api_key=api_key, # Although Ollama doesn't typically use api_key, pass it if provided
+            base_url=base_url or provider_config.get("base_url"),
+            api_key=api_key,
             **ollama_kwargs
         )
     else:

@@ -24,6 +24,7 @@ from ..flow.context import Context
 from ..context_provider_factory import ContextProviderFactory
 from ...core.trace_registry import TraceRegistry
 from ...core import PromptReference
+from ...core.llm import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -153,8 +154,29 @@ class RefinireAgent(Step):
         else:
             self.evaluation_instructions = evaluation_instructions
         
-        self.model = model
-        self.evaluation_model = evaluation_model or model
+        # Handle model parameter - convert string to Model instance using get_llm()
+        # modelパラメータを処理 - 文字列の場合はget_llm()を使用してModelインスタンスに変換
+        if isinstance(model, str):
+            self.model = get_llm(model=model, temperature=temperature)
+            self.model_name = model
+        else:
+            # Assume it's already a Model instance
+            # 既にModelインスタンスと仮定
+            self.model = model
+            self.model_name = getattr(model, 'model', 'unknown')
+        
+        # Handle evaluation_model parameter similarly
+        # evaluation_modelパラメータも同様に処理
+        if evaluation_model is None:
+            self.evaluation_model = self.model
+            self.evaluation_model_name = self.model_name
+        elif isinstance(evaluation_model, str):
+            self.evaluation_model = get_llm(model=evaluation_model, temperature=temperature)
+            self.evaluation_model_name = evaluation_model
+        else:
+            self.evaluation_model = evaluation_model
+            self.evaluation_model_name = getattr(evaluation_model, 'model', 'unknown')
+        
         self.output_model = output_model
         self.temperature = temperature
         self.max_tokens = max_tokens
@@ -215,7 +237,8 @@ class RefinireAgent(Step):
         agent_kwargs = {
             "name": f"{name}_sdk_agent",
             "instructions": self.generation_instructions,
-            "tools": sdk_tools
+            "tools": sdk_tools,
+            "model": self.model  # Pass the Model instance to the Agent
         }
         
         # Add MCP servers support if specified
@@ -573,7 +596,7 @@ IMPORTANT: Do not deviate from this format."""
                 if span is not None:
                     span.span_data.output = ctx.result
                     span.span_data.success = llm_result.success
-                    span.span_data.model = self.model
+                    span.span_data.model = self.model_name
                     span.span_data.temperature = self.temperature
                     if evaluation_result:
                         span.span_data.evaluation_score = evaluation_result.score
@@ -678,7 +701,7 @@ IMPORTANT: Do not deviate from this format."""
                         metadata={"error": "Output validation failed", "attempts": attempt}
                     )
                 metadata = {
-                    "model": self.model,
+                    "model": self.model_name,
                     "temperature": self.temperature,
                     "attempts": attempt,
                     "sdk": True
@@ -979,7 +1002,7 @@ Return your response as JSON with 'score' and 'feedback' fields.
                 score=score,
                 passed=score >= self.threshold,
                 feedback=feedback,
-                metadata={"model": self.evaluation_model, "evaluation_type": "heuristic"}
+                metadata={"model": self.evaluation_model_name, "evaluation_type": "heuristic"}
             )
             
         except Exception as e:
@@ -1196,7 +1219,7 @@ Return your response as JSON with 'score' and 'feedback' fields.
             raise Exception(f"Orchestration parsing error: {str(e)}")
     
     def __str__(self) -> str:
-        return f"RefinireAgent(name={self.name}, model={self.model})"
+        return f"RefinireAgent(name={self.name}, model={self.model_name})"
     
     def __repr__(self) -> str:
         return self.__str__()
