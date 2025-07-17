@@ -5,7 +5,6 @@ ValidatorAgentはデータ検証とビジネスルール適用を行うエージ
 入力データの妥当性をチェックし、カスタム検証ルールを適用できます。
 """
 
-import logging
 from abc import ABC, abstractmethod
 from typing import Any, List, Optional, Dict, Union, Callable
 from pydantic import BaseModel, Field, field_validator
@@ -15,7 +14,6 @@ import re
 from .flow.context import Context
 from .flow.step import Step
 
-logger = logging.getLogger(__name__)
 
 
 class ValidationRule(ABC):
@@ -206,7 +204,7 @@ class CustomFunctionRule(ValidationRule):
         try:
             return self.validation_func(data, context)
         except Exception as e:
-            logger.warning(f"Custom validation function error: {e}")
+            # Custom validation function error occurred
             return False
     
     def get_error_message(self, data: Any) -> str:
@@ -281,7 +279,8 @@ class ValidatorConfig(BaseModel):
     def rules_not_empty(cls, v):
         """Validate that rules are provided."""
         if not v:
-            logger.warning("No validation rules provided")
+            # No validation rules provided
+            pass
         return v
 
 
@@ -344,11 +343,12 @@ class ValidatorAgent(Step):
                     rules.append(RegexRule(pattern, rule_name))
                     
             else:
-                logger.warning(f"Unknown rule type: {rule_type}")
+                # Unknown rule type - skipping
+                pass
         
         return rules
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute the validation logic.
         検証ロジックを実行します。
@@ -393,10 +393,10 @@ class ValidatorAgent(Step):
                 if self.config.raise_on_error:
                     raise ValueError(error_summary)
                 
-                logger.warning(f"ValidatorAgent '{self.name}': {error_summary}")
+                # ValidatorAgent failed with errors
                 ctx.shared_state[f"{self.name}_status"] = "failed"
             else:
-                logger.info(f"ValidatorAgent '{self.name}': Validation successful")
+                # ValidatorAgent validation successful
                 ctx.shared_state[f"{self.name}_status"] = "success"
             
             # Add warnings to context if any
@@ -407,7 +407,7 @@ class ValidatorAgent(Step):
             return ctx
             
         except Exception as e:
-            logger.error(f"ValidatorAgent '{self.name}' error: {e}")
+            # ValidatorAgent execution error occurred
             
             if self.config.store_result:
                 ctx.shared_state[f"{self.name}_result"] = {
@@ -446,7 +446,7 @@ class ValidatorAgent(Step):
             except Exception as e:
                 error_message = f"Rule '{rule.name}' execution error: {e}"
                 result.add_error(error_message)
-                logger.warning(error_message)
+                # Rule execution error occurred
                 
                 if self.config.fail_fast:
                     break

@@ -25,8 +25,12 @@ from ..context_provider_factory import ContextProviderFactory
 from ...core.trace_registry import TraceRegistry
 from ...core import PromptReference
 from ...core.llm import get_llm
+from ...core.exceptions import (
+    RefinireNetworkError, RefinireConnectionError, RefinireTimeoutError,
+    RefinireAuthenticationError, RefinireRateLimitError, RefinireAPIError,
+    RefinireModelError, map_openai_exception, map_httpx_exception
+)
 
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -230,7 +234,8 @@ class RefinireAgent(Step):
                         function_tool_obj = agents_function_tool(tool)
                         sdk_tools.append(function_tool_obj)
                     except Exception as e:
-                        logger.warning(f"Failed to convert tool {tool} to FunctionTool: {e}")
+                        from ...core.exceptions import RefinireError
+                        raise RefinireError(f"Failed to convert tool {tool} to FunctionTool: {e}", details={"tool": str(tool), "error": str(e)})
         
         # OpenAI Agents SDK Agentを初期化（Study 5と同じ方法）
         # Initialize OpenAI Agents SDK Agent
@@ -442,7 +447,7 @@ IMPORTANT: Do not deviate from this format."""
         except ImportError:
             # agents.tracing is not available - run without trace context
             # agents.tracingが利用できません - トレースコンテキストなしで実行
-            logger.debug("agents.tracing not available, running without trace context")
+            # agents.tracing not available, running without trace context
             result_ctx = await self._execute_with_context(user_input, ctx, None)
             
             # Return orchestration result if in orchestration mode
@@ -453,7 +458,7 @@ IMPORTANT: Do not deviate from this format."""
         except Exception as e:
             # If there's any issue with trace creation, fall back to no trace
             # トレース作成で問題がある場合は、トレースなしにフォールバック
-            logger.debug(f"Unable to create trace context ({e}), running without trace context")
+            # Unable to create trace context, running without trace context
             result_ctx = await self._execute_with_context(user_input, ctx, None)
             
             # Return orchestration result if in orchestration mode
@@ -521,7 +526,8 @@ IMPORTANT: Do not deviate from this format."""
         except Exception as e:
             # Restore original instructions on error / エラー時に元の指示を復元
             self._sdk_agent.instructions = original_instructions
-            logger.error(f"Streaming execution failed: {e}")
+            from ...core.exceptions import RefinireError
+            raise RefinireError(f"Streaming execution failed: {e}", details={"error": str(e)})
             yield f"Error: {str(e)}"
     
     async def _execute_with_context(self, user_input: Optional[str], ctx: Context, span=None) -> Context:
@@ -625,7 +631,7 @@ IMPORTANT: Do not deviate from this format."""
                 span.span_data.success = False
             
             # Log error for debugging / デバッグ用エラーログ
-            logger.error(error_msg)
+            # RefinireAgent execution error - re-raise to caller
         
         # Set next step if specified / 指定されている場合は次ステップを設定
         if self.next_step:
@@ -652,113 +658,116 @@ IMPORTANT: Do not deviate from this format."""
         # 後で復元するために元の指示を保存
         original_instructions = self._sdk_agent.instructions
         
-        for attempt in range(1, self.max_retries + 1):
-            try:
-                # Apply variable substitution to SDK agent instructions if context is available
-                # コンテキストが利用可能な場合はSDKエージェントの指示にも変数置換を適用
-                if ctx:
-                    processed_instructions = self._substitute_variables(self.generation_instructions, ctx)
-                    # Add orchestration template if in orchestration mode
-                    # オーケストレーション・モードの場合はテンプレートを追加
-                    if self.orchestration_mode:
-                        # Check if orchestration template is already in instructions
-                        # オーケストレーション・テンプレートが既に指示に含まれているかチェック
-                        if not self._has_orchestration_instruction(processed_instructions):
-                            processed_instructions = f"{self._orchestration_template}\n\n{processed_instructions}"
-                    self._sdk_agent.instructions = processed_instructions
-                else:
-                    # Apply orchestration template without context
-                    # コンテキストなしでオーケストレーション・テンプレートを適用
-                    if self.orchestration_mode:
-                        instructions = self.generation_instructions
-                        if not self._has_orchestration_instruction(instructions):
-                            instructions = f"{self._orchestration_template}\n\n{instructions}"
-                        self._sdk_agent.instructions = instructions
-                
-                # full_promptを使用してRunner.runを呼び出し
-                result = await Runner.run(self._sdk_agent, full_prompt)
-                content = result.final_output
-                if not content and hasattr(result, 'output') and result.output:
-                    content = result.output
-                
-                # In orchestration mode, skip structured parsing here - do it later on result field
-                # オーケストレーションモードでは、ここでの構造化解析をスキップ - resultフィールドで後で実行
+        # Remove retry loop - fail immediately on network errors
+        # リトライループを削除 - ネットワークエラーでは即座に失敗
+        try:
+            # Apply variable substitution to SDK agent instructions if context is available
+            # コンテキストが利用可能な場合はSDKエージェントの指示にも変数置換を適用
+            if ctx:
+                processed_instructions = self._substitute_variables(self.generation_instructions, ctx)
+                # Add orchestration template if in orchestration mode
+                # オーケストレーション・モードの場合はテンプレートを追加
                 if self.orchestration_mode:
-                    parsed_content = content  # Keep raw content for orchestration parsing
-                elif self.output_model and content:
-                    parsed_content = self._parse_structured_output(content)
-                else:
-                    parsed_content = content
-                if not self._validate_output(parsed_content):
-                    if attempt < self.max_retries:
-                        continue
-                    # Restore original instructions before returning
-                    # 戻る前に元の指示を復元
-                    self._sdk_agent.instructions = original_instructions
-                    return LLMResult(
-                        content=None,
-                        success=False,
-                        metadata={"error": "Output validation failed", "attempts": attempt}
-                    )
-                metadata = {
-                    "model": self.model_name,
-                    "temperature": self.temperature,
-                    "attempts": attempt,
-                    "sdk": True
-                }
-                if self._generation_prompt_metadata:
-                    metadata.update(self._generation_prompt_metadata)
-                if self._evaluation_prompt_metadata:
-                    metadata["evaluation_prompt"] = self._evaluation_prompt_metadata
-                # Parse orchestration JSON if in orchestration mode
-                # オーケストレーション・モードの場合はJSONを解析
+                    # Check if orchestration template is already in instructions
+                    # オーケストレーション・テンプレートが既に指示に含まれているかチェック
+                    if not self._has_orchestration_instruction(processed_instructions):
+                        processed_instructions = f"{self._orchestration_template}\n\n{processed_instructions}"
+                self._sdk_agent.instructions = processed_instructions
+            else:
+                # Apply orchestration template without context
+                # コンテキストなしでオーケストレーション・テンプレートを適用
                 if self.orchestration_mode:
-                    try:
-                        orchestration_result = self._parse_orchestration_result(parsed_content)
+                    instructions = self.generation_instructions
+                    if not self._has_orchestration_instruction(instructions):
+                        instructions = f"{self._orchestration_template}\n\n{instructions}"
+                    self._sdk_agent.instructions = instructions
+            
+            # full_promptを使用してRunner.runを呼び出し
+            result = await Runner.run(self._sdk_agent, full_prompt)
+            content = result.final_output
+            if not content and hasattr(result, 'output') and result.output:
+                content = result.output
+            
+            # In orchestration mode, skip structured parsing here - do it later on result field
+            # オーケストレーションモードでは、ここでの構造化解析をスキップ - resultフィールドで後で実行
+            if self.orchestration_mode:
+                parsed_content = content  # Keep raw content for orchestration parsing
+            elif self.output_model and content:
+                parsed_content = self._parse_structured_output(content)
+            else:
+                parsed_content = content
+            
+            # Validate output - fail immediately if validation fails
+            # 出力を検証 - 検証が失敗した場合は即座に失敗
+            if not self._validate_output(parsed_content):
+                # Restore original instructions before returning
+                # 戻る前に元の指示を復元
+                self._sdk_agent.instructions = original_instructions
+                return LLMResult(
+                    content=None,
+                    success=False,
+                    metadata={"error": "Output validation failed", "attempts": 1}
+                )
+            
+            # Build metadata for successful execution
+            # 成功実行のメタデータを構築
+            metadata = {
+                "model": self.model_name,
+                "temperature": self.temperature,
+                "attempts": 1,
+                "sdk": True
+            }
+            if self._generation_prompt_metadata:
+                metadata.update(self._generation_prompt_metadata)
+            if self._evaluation_prompt_metadata:
+                metadata["evaluation_prompt"] = self._evaluation_prompt_metadata
+            
+            # Parse orchestration JSON if in orchestration mode
+            # オーケストレーション・モードの場合はJSONを解析
+            if self.orchestration_mode:
+                try:
+                    orchestration_result = self._parse_orchestration_result(parsed_content)
                         # Apply output_model parsing to result field if specified
-                        # output_modelが指定されている場合はresultフィールドに適用
-                        if self.output_model and orchestration_result.get("result") is not None:
-                            try:
-                                orchestration_result["result"] = self._parse_structured_output(orchestration_result["result"])
-                            except Exception as parse_error:
-                                # Keep original result if parsing fails
-                                # 解析に失敗した場合は元のresultを保持
-                                logger.warning(f"Failed to parse orchestration result with output_model: {parse_error}")
-                        final_content = orchestration_result
-                        metadata["orchestration_mode"] = True
-                        metadata["parsed_json"] = True
-                    except Exception as e:
-                        # If orchestration parsing fails, check if content is structured output
-                        # オーケストレーション解析が失敗した場合、コンテンツが構造化出力かチェック
-                        if self.output_model:
-                            try:
-                                # Try to parse as structured output and wrap in orchestration format
-                                # 構造化出力として解析し、オーケストレーション形式でラップを試行
-                                structured_result = self._parse_structured_output(parsed_content)
-                                orchestration_result = {
-                                    "status": "completed",
-                                    "result": structured_result,
-                                    "reasoning": f"Generated structured output using {self.output_model.__name__}",
-                                    "next_hint": {
+                    # output_modelが指定されている場合はresultフィールドに適用
+                    if self.output_model and orchestration_result.get("result") is not None:
+                        try:
+                            orchestration_result["result"] = self._parse_structured_output(orchestration_result["result"])
+                        except Exception as parse_error:
+                            # Keep original result if parsing fails
+                            # 解析に失敗した場合は元のresultを保持
+                            # Failed to parse orchestration result with output_model, keeping original
+                            pass
+                    final_content = orchestration_result
+                    metadata["orchestration_mode"] = True
+                    metadata["parsed_json"] = True
+                except Exception as e:
+                    # If orchestration parsing fails, check if content is structured output
+                    # オーケストレーション解析が失敗した場合、コンテンツが構造化出力かチェック
+                    if self.output_model:
+                        try:
+                            # Try to parse as structured output and wrap in orchestration format
+                            # 構造化出力として解析し、オーケストレーション形式でラップを試行
+                            structured_result = self._parse_structured_output(parsed_content)
+                            orchestration_result = {
+                                "status": "completed",
+                                "result": structured_result,
+                                "reasoning": f"Generated structured output using {self.output_model.__name__}",
+                                "next_hint": {
                                         "task": "review_output",
                                         "confidence": 0.8,
                                         "rationale": "Structured output generated successfully"
                                     }
                                 }
-                                final_content = orchestration_result
-                                metadata["orchestration_mode"] = True
-                                metadata["structured_fallback"] = True
-                                logger.info("Wrapped structured output in orchestration format")
-                            except Exception as structured_error:
-                                # Both orchestration and structured parsing failed
-                                # オーケストレーション解析と構造化解析の両方が失敗
-                                logger.error(f"Both orchestration and structured parsing failed: {str(e)}, {str(structured_error)}")
-                                self._sdk_agent.instructions = original_instructions
-                                return LLMResult(
-                                    content=None,
-                                    success=False,
-                                    metadata={"error": f"Orchestration JSON parsing failed: {str(e)}", "attempts": attempt, "orchestration_mode": True}
-                                )
+                            final_content = orchestration_result
+                            metadata["orchestration_mode"] = True
+                            metadata["structured_fallback"] = True
+                            # Wrapped structured output in orchestration format
+                        except Exception as structured_error:
+                            # Both orchestration and structured parsing failed
+                            # オーケストレーション解析と構造化解析の両方が失敗
+                            # Both orchestration and structured parsing failed - raise exception
+                            from ...core.exceptions import RefinireValidationError
+                            raise RefinireValidationError(f"Both orchestration and structured parsing failed: {str(e)}, {str(structured_error)}", details={"orchestration_error": str(e), "structured_error": str(structured_error)})
                         else:
                             # Restore original instructions before returning error
                             # エラー返却前に元の指示を復元
@@ -766,42 +775,87 @@ IMPORTANT: Do not deviate from this format."""
                             return LLMResult(
                                 content=None,
                                 success=False,
-                                metadata={"error": f"Orchestration JSON parsing failed: {str(e)}", "attempts": attempt, "orchestration_mode": True}
+                                metadata={"error": f"Orchestration JSON parsing failed: {str(e)}", "attempts": 1, "orchestration_mode": True}
                             )
-                else:
-                    final_content = parsed_content
+            else:
+                final_content = parsed_content
+            
+            llm_result = LLMResult(
+                content=final_content,
+                success=True,
+                metadata=metadata,
+                evaluation_score=None,
+                attempts=1
+            )
+            self._store_in_history(user_input, llm_result)
+            # Restore original instructions before returning
+            # 戻る前に元の指示を復元
+            self._sdk_agent.instructions = original_instructions
+            return llm_result
+            
+        except Exception as e:
+            # Restore original instructions before handling error
+            # エラー処理前に元の指示を復元
+            self._sdk_agent.instructions = original_instructions
+            
+            # Check if this is a network-related error and raise custom exception immediately
+            # ネットワーク関連エラーかチェックし、即座にカスタム例外を発生
+            import openai
+            import httpx
+            
+            if isinstance(e, (openai.APIConnectionError, openai.APITimeoutError, 
+                             openai.AuthenticationError, openai.RateLimitError,
+                             openai.APIStatusError, openai.APIError)):
+                # Determine provider from model name
+                # モデル名からプロバイダーを判定
+                provider = "openai"
+                if "anthropic" in self.model_name.lower() or "claude" in self.model_name.lower():
+                    provider = "anthropic"
+                elif "gemini" in self.model_name.lower() or "google" in self.model_name.lower():
+                    provider = "google"
+                elif "ollama" in self.model_name.lower() or "llama" in self.model_name.lower():
+                    provider = "ollama"
+                elif "openrouter" in self.model_name.lower():
+                    provider = "openrouter"
+                elif "groq" in self.model_name.lower():
+                    provider = "groq"
+                elif "lmstudio" in self.model_name.lower():
+                    provider = "lmstudio"
                 
-                llm_result = LLMResult(
-                    content=final_content,
-                    success=True,
-                    metadata=metadata,
-                    evaluation_score=None,
-                    attempts=attempt
+                # Map OpenAI exception to Refinire custom exception and raise immediately
+                # OpenAI例外をRefinireカスタム例外にマップして即座に発生
+                raise map_openai_exception(e, provider)
+            
+            elif isinstance(e, (httpx.ConnectError, httpx.TimeoutException,
+                               httpx.HTTPStatusError, httpx.RequestError)):
+                # Determine provider from model name
+                # モデル名からプロバイダーを判定
+                provider = "unknown"
+                if "anthropic" in self.model_name.lower() or "claude" in self.model_name.lower():
+                    provider = "anthropic"
+                elif "gemini" in self.model_name.lower() or "google" in self.model_name.lower():
+                    provider = "google"
+                elif "ollama" in self.model_name.lower() or "llama" in self.model_name.lower():
+                    provider = "ollama"
+                elif "openrouter" in self.model_name.lower():
+                    provider = "openrouter"
+                elif "groq" in self.model_name.lower():
+                    provider = "groq"
+                elif "lmstudio" in self.model_name.lower():
+                    provider = "lmstudio"
+                
+                # Map httpx exception to Refinire custom exception and raise immediately
+                # httpx例外をRefinireカスタム例外にマップして即座に発生
+                raise map_httpx_exception(e, provider)
+            
+            else:
+                # For non-network errors, return LLMResult with error
+                # ネットワークエラー以外の場合は、エラー付きでLLMResultを返す
+                return LLMResult(
+                    content=None,
+                    success=False,
+                    metadata={"error": str(e), "attempts": 1, "sdk": True}
                 )
-                self._store_in_history(user_input, llm_result)
-                # Restore original instructions before returning
-                # 戻る前に元の指示を復元
-                self._sdk_agent.instructions = original_instructions
-                return llm_result
-            except Exception as e:
-                if attempt == self.max_retries:
-                    # Restore original instructions before returning
-                    # 戻る前に元の指示を復元
-                    self._sdk_agent.instructions = original_instructions
-                    return LLMResult(
-                        content=None,
-                        success=False,
-                        metadata={"error": str(e), "attempts": attempt, "sdk": True}
-                    )
-                continue
-        # Restore original instructions before final return
-        # 最終リターン前に元の指示を復元
-        self._sdk_agent.instructions = original_instructions
-        return LLMResult(
-            content=None,
-            success=False,
-            metadata={"error": "Maximum retries exceeded", "sdk": True}
-        )
     
     
     
@@ -921,7 +975,7 @@ IMPORTANT: Do not deviate from this format."""
                 except Exception as e:
                     # Log error but continue with other providers
                     # エラーをログに記録するが、他のプロバイダーは続行
-                    logger.warning(f"Context provider {provider.__class__.__name__} failed: {e}")
+                    # Context provider failed, continue with others
                     continue
             
             if context_parts:
@@ -1044,7 +1098,7 @@ Return your response as JSON with 'score' and 'feedback' fields.
                 except Exception as e:
                     # Log error but continue with other providers
                     # エラーをログに記録するが、他のプロバイダーは続行
-                    logger.warning(f"Failed to update context provider {provider.__class__.__name__}: {e}")
+                    # Failed to update context provider, continue with others
                     continue
     
     def clear_history(self) -> None:
@@ -1061,7 +1115,7 @@ Return your response as JSON with 'score' and 'feedback' fields.
                 except Exception as e:
                     # Log error but continue with other providers
                     # エラーをログに記録するが、他のプロバイダーは続行
-                    logger.warning(f"Failed to clear context provider {provider.__class__.__name__}: {e}")
+                    # Failed to clear context provider, continue with others
                     continue
     
     def get_history(self) -> List[Dict[str, Any]]:
@@ -1107,7 +1161,7 @@ Return your response as JSON with 'score' and 'feedback' fields.
                 try:
                     provider.clear()
                 except Exception as e:
-                    logger.warning(f"Failed to clear context provider {provider.__class__.__name__}: {e}")
+                    # Failed to clear context provider, continue with others
                     continue
     
     def _has_orchestration_instruction(self, instructions: str) -> bool:

@@ -11,11 +11,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import json
 from pathlib import Path
-import logging
 
 from .llm import get_llm
 
-logger = logging.getLogger(__name__)
 
 # Supported languages
 LanguageCode = Literal["ja", "en"]
@@ -619,7 +617,8 @@ Japanese translation:"""
                     conn.commit()
         except Exception as e:
             # Translation failed, but don't crash
-            logger.warning(f"Translation failed: {e}")
+            # Translation failure occurred
+            pass
 
 
 def P(

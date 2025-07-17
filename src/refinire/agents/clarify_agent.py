@@ -7,7 +7,6 @@ RefinireAgentを参考に作成されており、Flowワークフロー内で使
 """
 
 import asyncio
-import logging
 from typing import Any, Callable, List, Dict, Optional, Type, TypeVar, Generic
 from dataclasses import dataclass
 import json
@@ -27,7 +26,6 @@ except ImportError:
 # 日本語: ユーザー要求型用のジェネリック型変数
 T = TypeVar('T')
 
-logger = logging.getLogger(__name__)
 
 
 class ClarifyBase(BaseModel):
@@ -705,9 +703,8 @@ class ClarifyAgent(RefinireAgent):
             ctx.shared_state[self.store_result_key] = error_result
             ctx.prev_outputs[self.name] = error_result
             
-            # English: Log error for debugging
-            # 日本語: デバッグ用エラーログ
-            logger.error(error_msg)
+            # English: Error occurred during clarification
+            # 日本語: 明確化中にエラーが発生
         
         return ctx
 

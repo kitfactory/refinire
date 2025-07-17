@@ -17,7 +17,8 @@ def parse_model_id(model_id: str) -> Tuple[Optional[str], str, Optional[str]]:
     Examples:
         - "gpt-4o-mini" -> (None, "gpt-4o-mini", None)
         - "openai://gpt-4o-mini" -> ("openai", "gpt-4o-mini", None)
-        - "ollama://llama3#8b" -> ("ollama", "llama3", "8b")
+        - "ollama://llama3:8b" -> ("ollama", "llama3:8b", None)
+        - "ollama://llama3#8b" -> ("ollama", "llama3", "8b")  
         - "azure://gpt4o-deploy#2024-10-21" -> ("azure", "gpt4o-deploy", "2024-10-21")
     
     Args:
@@ -57,29 +58,46 @@ def detect_provider_from_environment() -> Optional[str]:
     環境変数からプロバイダーを検出
     
     Priority:
-    1. AZURE_OPENAI_ENDPOINT -> "azure"
-    2. OPENAI_BASE_URL containing groq.com -> "groq"
-    3. OPENAI_BASE_URL containing :11434 -> "ollama"
-    4. Otherwise -> None (defaults to "openai")
+    1. OLLAMA_BASE_URL -> "ollama"
+    2. LM_STUDIO_BASE_URL -> "lmstudio"
+    3. OPENROUTER_API_KEY -> "openrouter"
+    4. GROQ_API_KEY -> "groq"
+    5. ANTHROPIC_API_KEY (+ ANTHROPIC_BASE_URL for compatibility mode) -> "anthropic"
+    6. AZURE_OPENAI_ENDPOINT -> "azure"
+    7. Otherwise -> None (defaults to "openai")
     
     Returns:
         Detected provider name or None / 検出されたプロバイダー名またはNone
     """
+    # Check OLLAMA_BASE_URL first
+    # OLLAMA_BASE_URLを最初にチェック
+    if os.environ.get("OLLAMA_BASE_URL"):
+        return "ollama"
+    
+    # Check LM_STUDIO_BASE_URL
+    # LM_STUDIO_BASE_URLをチェック
+    if os.environ.get("LM_STUDIO_BASE_URL"):
+        return "lmstudio"
+    
+    # Check OPENROUTER_API_KEY
+    # OPENROUTER_API_KEYをチェック
+    if os.environ.get("OPENROUTER_API_KEY"):
+        return "openrouter"
+    
+    # Check GROQ_API_KEY
+    # GROQ_API_KEYをチェック
+    if os.environ.get("GROQ_API_KEY"):
+        return "groq"
+    
+    # Check ANTHROPIC_API_KEY
+    # ANTHROPIC_API_KEYをチェック
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return "anthropic"
+    
     # Check Azure endpoint
     # Azureエンドポイントをチェック
     if os.environ.get("AZURE_OPENAI_ENDPOINT"):
         return "azure"
-    
-    # Check OpenAI base URL
-    # OpenAIベースURLをチェック
-    base_url = os.environ.get("OPENAI_BASE_URL", "")
-    if base_url:
-        if "groq.com" in base_url:
-            return "groq"
-        elif ":11434" in base_url:
-            return "ollama"
-        elif "lmstudio" in base_url.lower():
-            return "lmstudio"
     
     return None
 
@@ -102,7 +120,7 @@ def should_use_chat_completions(provider: str) -> bool:
     
     # Providers that always use chat completions
     # 常にchat completionsを使用するプロバイダー
-    chat_providers = ["azure", "groq", "ollama", "lmstudio", "anthropic", "google"]
+    chat_providers = ["azure", "groq", "ollama", "lmstudio", "openrouter", "anthropic", "google"]
     return provider in chat_providers
 
 
@@ -150,6 +168,16 @@ def get_provider_config(provider: str, model_name: str, tag: Optional[str] = Non
     # LM Studio configuration
     # LM Studio設定
     elif provider == "lmstudio":
-        config["base_url"] = os.environ.get("LMSTUDIO_BASE_URL", "http://localhost:1234")
+        config["base_url"] = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234")
+    
+    # OpenRouter configuration
+    # OpenRouter設定
+    elif provider == "openrouter":
+        config["base_url"] = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+    
+    # Anthropic configuration
+    # Anthropic設定
+    elif provider == "anthropic":
+        config["base_url"] = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1")
     
     return config

@@ -6,7 +6,6 @@ ExtractorAgentは非構造化データから情報抽出を行うエージェン
 構造化されたデータとして出力します。
 """
 
-import logging
 import re
 import json
 from abc import ABC, abstractmethod
@@ -21,7 +20,6 @@ from .flow.context import Context
 from .flow.step import Step
 from .pipeline.llm_pipeline import RefinireAgent
 
-logger = logging.getLogger(__name__)
 
 
 class ExtractionRule(ABC):
@@ -231,7 +229,7 @@ class HTMLExtractionRule(ExtractionRule):
                 return results[0] if results else None
                 
         except Exception as e:
-            logger.warning(f"HTML extraction error: {e}")
+            # HTML extraction error occurred
             return [] if self.multiple else None
 
 
@@ -271,7 +269,7 @@ class JSONExtractionRule(ExtractionRule):
                 return results[0] if isinstance(results, list) and results else results
                 
         except Exception as e:
-            logger.warning(f"JSON extraction error: {e}")
+            # JSON extraction error occurred
             return [] if self.multiple else None
     
     def _extract_from_path(self, data: Any, path: List[str], index: int) -> Any:
@@ -345,7 +343,7 @@ class LLMExtractionRule(ExtractionRule):
     def extract(self, data: str, context: Context) -> Union[Any, List[Any], None]:
         """Extract using LLM pipeline."""
         if not self.llm_pipeline:
-            logger.warning(f"No LLM pipeline provided for {self.name}")
+            # No LLM pipeline provided
             return [] if self.multiple else None
         
         try:
@@ -366,7 +364,7 @@ class LLMExtractionRule(ExtractionRule):
                     parsed = json.loads(extracted_text)
                     return parsed
                 except json.JSONDecodeError:
-                    logger.warning(f"Failed to parse JSON output: {extracted_text}")
+                    # Failed to parse JSON output
                     return [] if self.multiple else None
                     
             elif self.output_format == "list":
@@ -378,7 +376,7 @@ class LLMExtractionRule(ExtractionRule):
                 return extracted_text if extracted_text else ([] if self.multiple else None)
                 
         except Exception as e:
-            logger.error(f"LLM extraction error in {self.name}: {e}")
+            # LLM extraction error occurred
             return [] if self.multiple else None
 
 
@@ -405,7 +403,7 @@ class CustomFunctionExtractionRule(ExtractionRule):
         try:
             return self.extraction_func(data, context)
         except Exception as e:
-            logger.warning(f"Custom extraction function error: {e}")
+            # Custom extraction function error occurred
             return None
 
 
@@ -573,7 +571,8 @@ class ExtractorAgent(Step):
                                                  output_format, multiple))
                     
             else:
-                logger.warning(f"Unknown rule type: {rule_type}")
+                # Unknown rule type - skipping
+                pass
         
         return rules
     
@@ -601,7 +600,7 @@ class ExtractorAgent(Step):
                 data_to_extract = ctx.last_user_input
             
             if not data_to_extract:
-                logger.warning(f"No input data provided for extraction in {self.name}")
+                # No input data provided for extraction
                 data_to_extract = ""
             
             # Perform extraction
@@ -627,11 +626,10 @@ class ExtractorAgent(Step):
                 if self.config.fail_on_error:
                     raise ValueError(error_summary)
                 
-                logger.warning(f"ExtractorAgent '{self.name}': {error_summary}")
+                # ExtractorAgent failed with errors
                 ctx.shared_state[f"{self.name}_status"] = "failed"
             else:
-                logger.info(f"ExtractorAgent '{self.name}': Extraction successful, "
-                          f"{len(extraction_result.extracted_data)} rules processed")
+                # ExtractorAgent extraction successful
                 ctx.shared_state[f"{self.name}_status"] = "success"
             
             # Add warnings to context if any
@@ -647,7 +645,7 @@ class ExtractorAgent(Step):
             return ctx
             
         except Exception as e:
-            logger.error(f"ExtractorAgent '{self.name}' error: {e}")
+            # ExtractorAgent execution error occurred
             
             if self.config.store_result:
                 ctx.shared_state[f"{self.name}_result"] = {
@@ -689,7 +687,7 @@ class ExtractorAgent(Step):
             except Exception as e:
                 error_message = f"Rule '{rule.name}' execution error: {e}"
                 result.add_error(error_message)
-                logger.warning(error_message)
+                # Rule execution error occurred
         
         return result
     

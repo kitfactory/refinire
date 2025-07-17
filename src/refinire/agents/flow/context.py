@@ -133,9 +133,7 @@ class Context(BaseModel):
         except Exception as e:
             # Handle pydantic validation errors gracefully
             # pydanticバリデーションエラーを適切に処理
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to create user message with content type {type(content)}: {e}")
+            # Failed to create user message with content type - continue
             # Create a fallback message
             # フォールバックメッセージを作成
             fallback_message = Message(

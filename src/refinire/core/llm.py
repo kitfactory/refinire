@@ -8,7 +8,6 @@ from agents import OpenAIResponsesModel
 # 日本語: API リクエスト用の HTTP クライアントをインポート
 import httpx
 import asyncio
-import logging
 import os
 
 from .anthropic import ClaudeModel
@@ -17,9 +16,8 @@ from .ollama import OllamaModel
 from .model_parser import parse_model_id, detect_provider_from_environment, get_provider_config
 
 # Define the provider type hint
-ProviderType = Literal["openai", "google", "anthropic", "ollama"]
+ProviderType = Literal["openai", "google", "anthropic", "ollama", "azure", "groq", "lmstudio", "openrouter"]
 
-logger = logging.getLogger(__name__)
 
 def get_llm(
     model: Optional[str] = None,
@@ -110,7 +108,7 @@ def get_llm(
 
     # Handle provider-specific model creation
     # プロバイダー固有のモデル作成を処理
-    if provider == "openai" or provider in ["groq", "lmstudio"]:
+    if provider == "openai" or provider in ["groq", "lmstudio", "openrouter"]:
         # Use OpenAI-compatible API
         # OpenAI互換APIを使用
         openai_kwargs = kwargs.copy()
@@ -123,10 +121,16 @@ def get_llm(
             client_args['api_key'] = api_key
         elif provider == "groq":
             client_args['api_key'] = os.environ.get("GROQ_API_KEY")
+        elif provider == "openrouter":
+            client_args['api_key'] = os.environ.get("OPENROUTER_API_KEY")
+        elif provider == "lmstudio":
+            # LM Studio typically doesn't require API key
+            # LM Studioは通常APIキーを必要としない
+            client_args['api_key'] = "lm-studio"
         
         if base_url:
             client_args['base_url'] = base_url
-        elif provider in ["groq", "lmstudio"]:
+        elif provider in ["groq", "lmstudio", "openrouter"]:
             client_args['base_url'] = provider_config.get("base_url")
 
         # Set model name
@@ -198,13 +202,38 @@ def get_llm(
         # Use parsed model name
         # 解析されたモデル名を使用
         claude_kwargs['model'] = model_name
-        return ClaudeModel(
-            temperature=temperature,
-            api_key=api_key,
-            base_url=base_url, # Although Claude doesn't typically use base_url, pass it if provided
-            thinking=thinking,
-            **claude_kwargs
-        )
+        
+        # Check if using OpenAI-compatible mode via ANTHROPIC_BASE_URL
+        # ANTHROPIC_BASE_URLによるOpenAI互換モードかチェック
+        anthropic_base_url = base_url or os.environ.get("ANTHROPIC_BASE_URL")
+        if anthropic_base_url and anthropic_base_url != "https://api.anthropic.com/v1":
+            # Use OpenAI-compatible client for OpenRouter/LiteLLM etc.
+            # OpenRouter/LiteLLM等でOpenAI互換クライアントを使用
+            client_args = {
+                'api_key': api_key or os.environ.get("ANTHROPIC_API_KEY"),
+                'base_url': anthropic_base_url
+            }
+            openai_client = AsyncOpenAI(**client_args)
+            model_args = {'model': model_name}
+            for key, value in kwargs.items():
+                if key not in ['api_key', 'base_url', 'thinking', 'temperature', 'tracing']:
+                    model_args[key] = value
+            model_args.pop('thinking', None)
+            
+            return OpenAIChatCompletionsModel(
+                openai_client=openai_client,
+                **model_args
+            )
+        else:
+            # Use native Claude API
+            # ネイティブClaude APIを使用
+            return ClaudeModel(
+                temperature=temperature,
+                api_key=api_key,
+                base_url=base_url,
+                thinking=thinking,
+                **claude_kwargs
+            )
     elif provider == "ollama":
         ollama_kwargs = kwargs.copy()
         # Use parsed model configuration
@@ -304,12 +333,14 @@ async def get_available_models_async(
                 # English: If connection fails, return empty list with error info
                 # 日本語: 接続に失敗した場合、エラー情報と共に空のリストを返す
                 result["ollama"] = []
-                logger.warning(f"Could not connect to Ollama at {ollama_base_url}: {e}")
+                from .exceptions import map_httpx_exception
+                raise map_httpx_exception(e, "ollama")
             except Exception as e:
                 # English: Handle other errors
                 # 日本語: その他のエラーを処理
                 result["ollama"] = []
-                logger.warning(f"Error fetching Ollama models: {e}")
+                from .exceptions import RefinireError
+                raise RefinireError(f"Error fetching Ollama models: {e}", provider="ollama")
         else:
             raise ValueError(f"Unsupported provider: {provider}. Must be one of {ProviderType.__args__}")
     

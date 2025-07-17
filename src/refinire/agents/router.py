@@ -10,13 +10,11 @@ based on configurable routing logic and classification results.
 from typing import Any, Dict, List, Optional, Union, Callable, Literal
 from pydantic import BaseModel, Field, field_validator
 from abc import ABC, abstractmethod
-import logging
 
 from .flow.step import Step
 from .flow.context import Context
 from .pipeline.llm_pipeline import RefinireAgent, create_simple_agent
 
-logger = logging.getLogger(__name__)
 
 
 class RouteClassifier(ABC):
@@ -114,16 +112,16 @@ Respond with only the route key (one of: {routes_text})
             # 完全一致しない場合、部分一致を試行
             for route in self.routes:
                 if route.lower() in classified_route or classified_route in route.lower():
-                    logger.warning(f"Partial route match: '{classified_route}' -> '{route}'")
+                    # Partial route match found
                     return route
             
             # Return None to let RouterAgent handle fallback
             # RouterAgentにフォールバックを処理させるためNoneを返す
-            logger.warning(f"Could not classify input, returning None for RouterAgent fallback")
+            # Could not classify input, returning None for RouterAgent fallback
             return None
             
         except Exception as e:
-            logger.error(f"Classification error: {e}")
+            # Classification error occurred
             return None  # Let RouterAgent handle fallback / RouterAgentにフォールバックを処理させる
 
 
@@ -154,13 +152,13 @@ class RuleBasedClassifier(RouteClassifier):
                 if rule_func(input_data, context):
                     return route_key
             except Exception as e:
-                logger.warning(f"Rule evaluation error for route '{route_key}': {e}")
+                # Rule evaluation error occurred
                 continue
         
         # If no rules match, return the first route as fallback
         # ルールに一致しない場合、最初のルートをフォールバックとして返す
         fallback_route = next(iter(self.rules.keys()))
-        logger.warning(f"No rules matched, using fallback route: {fallback_route}")
+        # No rules matched, using fallback route
         return fallback_route
 
 
@@ -334,7 +332,7 @@ Choose the route that best matches the input's intent, content, or characteristi
             # Validate route exists
             # ルートが存在することを検証
             if route_key is None or route_key not in self.config.routes:
-                logger.warning(f"Invalid route key '{route_key}', using default")
+                # Invalid route key, using default
                 route_key = self.config.default_route or next(iter(self.config.routes.keys()))
             
             # Store classification result in context if requested
@@ -353,12 +351,12 @@ Choose the route that best matches the input's intent, content, or characteristi
             next_step_name = self.config.routes[route_key]
             ctx.goto(next_step_name)
             
-            logger.info(f"RouterAgent '{self.name}' classified input as '{route_key}' -> '{next_step_name}'")
+            # RouterAgent classification completed successfully
             
             return ctx
             
         except Exception as e:
-            logger.error(f"RouterAgent '{self.name}' error: {e}")
+            # RouterAgent execution error occurred
             
             # Use fallback route
             # フォールバックルートを使用
@@ -372,7 +370,7 @@ Choose the route that best matches the input's intent, content, or characteristi
                 ctx.shared_state[f"{self.name}_next_step"] = fallback_step
                 ctx.shared_state[f"{self.name}_error"] = str(e)
             
-            logger.info(f"RouterAgent '{self.name}' using fallback route '{fallback_route}' -> '{fallback_step}'")
+            # RouterAgent using fallback route
             
             return ctx
     

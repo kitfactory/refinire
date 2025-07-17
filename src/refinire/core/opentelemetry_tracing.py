@@ -5,11 +5,9 @@ English: Provides OpenTelemetry tracing capabilities when openinference-instrume
 日本語: openinference-instrumentationが利用可能な場合にOpenTelemetryトレーシング機能を提供します。
 """
 
-import logging
 import os
 from typing import Optional, Dict, Any
 
-logger = logging.getLogger(__name__)
 
 try:
     from openinference.instrumentation.openai import OpenAIInstrumentor
@@ -167,14 +165,15 @@ class OpenTelemetryManager:
             REFINIRE_TRACE_RESOURCE_ATTRIBUTES: Additional resource attributes (e.g., "environment=production,team=ai")
         """
         if not OPENINFERENCE_AVAILABLE:
-            logger.warning(
+            from ..exceptions import RefinireConfigurationError
+            raise RefinireConfigurationError(
                 "OpenInference instrumentation not available. "
                 "Install with: pip install refinire[openinference-instrumentation]"
             )
             return False
         
         if self._is_enabled:
-            logger.info("OpenTelemetry tracing already enabled")
+            # OpenTelemetry tracing already enabled
             return True
         
         try:
@@ -199,7 +198,8 @@ class OpenTelemetryManager:
                             key, value = attr_pair.strip().split("=", 1)
                             default_attributes[key.strip()] = value.strip()
                 except Exception as e:
-                    logger.warning(f"Failed to parse REFINIRE_TRACE_RESOURCE_ATTRIBUTES: {e}")
+                    # Failed to parse REFINIRE_TRACE_RESOURCE_ATTRIBUTES
+                    pass
             
             # Override with provided resource attributes
             if resource_attributes:
@@ -220,14 +220,16 @@ class OpenTelemetryManager:
             
             # OTLP exporter if endpoint provided and available
             if env_otlp_endpoint and OTLP_AVAILABLE:
-                logger.info(f"Configuring OTLP exporter with endpoint: {env_otlp_endpoint}")
+                # Configuring OTLP exporter with endpoint
                 otlp_exporter = OTLPSpanExporter(endpoint=env_otlp_endpoint)
                 otlp_processor = BatchSpanProcessor(otlp_exporter)
                 processors.append(otlp_processor)
             elif env_otlp_endpoint and not OTLP_AVAILABLE:
-                logger.warning("OTLP endpoint provided but OTLP exporter not available. Install with: pip install opentelemetry-exporter-otlp")
+                from ..exceptions import RefinireConfigurationError
+                raise RefinireConfigurationError("OTLP endpoint provided but OTLP exporter not available. Install with: pip install opentelemetry-exporter-otlp")
             elif env_otlp_endpoint is None:
-                logger.info("No OTLP endpoint configured. Set REFINIRE_TRACE_OTLP_ENDPOINT to enable OTLP export.")
+                # No OTLP endpoint configured
+                pass
             
             # Add processors to tracer provider
             for processor in processors:
@@ -250,18 +252,22 @@ class OpenTelemetryManager:
                 from agents.tracing import add_trace_processor
                 add_trace_processor(self._tracing_processor)
             except ImportError:
-                logger.debug("Could not register tracing processor - agents.tracing not available")
+                # Could not register tracing processor - agents.tracing not available
+                pass
             
             self._is_enabled = True
-            logger.info(f"OpenTelemetry tracing enabled for service: {env_service_name}")
+            # OpenTelemetry tracing enabled for service
             if env_otlp_endpoint:
-                logger.info(f"Traces will be sent to: {env_otlp_endpoint}")
+                # Traces will be sent to OTLP endpoint
+                pass
             if console_output:
-                logger.info("Console tracing output enabled")
+                # Console tracing output enabled
+                pass
             return True
             
         except Exception as e:
-            logger.error(f"Failed to enable OpenTelemetry tracing: {e}")
+            from ..exceptions import RefinireError
+            raise RefinireError(f"Failed to enable OpenTelemetry tracing: {e}", details={"error": str(e)})
             return False
     
     def disable_opentelemetry_tracing(self) -> None:
@@ -282,10 +288,11 @@ class OpenTelemetryManager:
                 self._tracer_provider = None
             
             self._is_enabled = False
-            logger.info("OpenTelemetry tracing disabled")
+            # OpenTelemetry tracing disabled
             
         except Exception as e:
-            logger.error(f"Error disabling OpenTelemetry tracing: {e}")
+            from ..exceptions import RefinireError
+            raise RefinireError(f"Error disabling OpenTelemetry tracing: {e}", details={"error": str(e)})
     
     def is_enabled(self) -> bool:
         """

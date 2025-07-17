@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 """Flow — Workflow orchestration engine for Step-based workflows.
 
@@ -7,7 +7,6 @@ Flowはステップベースワークフロー用のワークフローオーケ�
 """
 
 import asyncio
-import logging
 from typing import Any, Dict, List, Optional, Callable, Union
 from datetime import datetime
 import traceback
@@ -15,9 +14,9 @@ import traceback
 from .context import Context
 from .step import Step, ParallelStep
 from ...core.trace_registry import get_global_registry, TraceRegistry
+from ...core.exceptions import RefinireError
 
 
-logger = logging.getLogger(__name__)
 
 
 class FlowExecutionError(Exception):
@@ -237,7 +236,9 @@ class Flow:
                 tags={"flow_type": "default"}
             )
         except Exception as e:
-            logger.warning(f"Failed to register trace: {e}")
+            # Failed to register trace, continuing without registration
+            # トレース登録に失敗、登録なしで続行
+            pass
     
     def _extract_agent_names(self) -> List[str]:
         """
@@ -303,7 +304,9 @@ class Flow:
                 add_agent_names=self._extract_agent_names()
             )
         except Exception as e:
-            logger.warning(f"Failed to update trace on completion: {e}")
+            # Failed to update trace on completion, continuing
+            # 完了時のトレース更新に失敗、続行
+            pass
     
     def _update_trace_on_error(self, step_name: str, error: Exception) -> None:
         """
@@ -331,7 +334,9 @@ class Flow:
                 }
             )
         except Exception as e:
-            logger.warning(f"Failed to update trace on error: {e}")
+            # Failed to update trace on error, continuing
+            # エラー時のトレース更新に失敗、続行
+            pass
     
     def _generate_trace_id(self) -> str:
         """
@@ -356,16 +361,15 @@ class Flow:
             if current_trace and hasattr(current_trace, 'trace_id') and current_trace.trace_id:
                 # Use the trace ID from the active trace context
                 # アクティブなトレースコンテキストからtrace IDを使用
-                logger.debug(f"Using trace ID from active trace context: {current_trace.trace_id}")
                 return current_trace.trace_id
         except ImportError:
             # agents.tracing is not available - this is expected and normal
             # agents.tracingが利用できません - これは予期された正常な状況です
-            logger.debug("agents.tracing not available, generating independent trace ID")
+            pass
         except Exception as e:
             # If there's any issue with trace detection, fall back to default behavior
             # トレース検出で問題がある場合は、デフォルトの動作にフォールバック
-            logger.debug(f"Unable to get current trace context ({e}), generating independent trace ID")
+            pass
         
         # Generate independent trace ID with enhanced uniqueness
         # 強化されたユニーク性で独立したtrace IDを生成
@@ -381,7 +385,7 @@ class Flow:
         else:
             trace_id = f"flow_{timestamp}_{random_suffix}"
         
-        logger.debug(f"Generated independent trace ID: {trace_id}")
+        # Generated independent trace ID
         return trace_id
     
     @property
@@ -470,12 +474,10 @@ class Flow:
         except ImportError:
             # agents.tracing is not available - run without trace context
             # agents.tracingが利用できません - トレースコンテキストなしで実行
-            logger.debug("agents.tracing not available, running without trace context")
             return await self._run_with_span(input_data, initial_input, None)
         except Exception as e:
             # If there's any issue with trace creation, fall back to no trace
             # トレース作成で問題がある場合は、トレースなしにフォールバック
-            logger.debug(f"Unable to create trace context ({e}), running without trace context")
             return await self._run_with_span(input_data, initial_input, None)
     
     async def run_streamed(self, input_data: Optional[str] = None, callback: Optional[Callable[[str], None]] = None):
@@ -502,13 +504,11 @@ class Flow:
         except ImportError:
             # agents.tracing is not available - run without trace context
             # agents.tracingが利用できません - トレースコンテキストなしで実行
-            logger.debug("agents.tracing not available, running without trace context")
             async for chunk in self._run_streamed_with_span(input_data, callback):
                 yield chunk
         except Exception as e:
             # If there's any issue with trace creation, fall back to no trace
             # トレース作成で問題がある場合は、トレースなしにフォールバック
-            logger.debug(f"Unable to create trace context ({e}), running without trace context")
             async for chunk in self._run_streamed_with_span(input_data, callback):
                 yield chunk
     
@@ -532,16 +532,15 @@ class Flow:
                 
                 if current_step_name not in self.steps:
                     error_msg = f"Step '{current_step_name}' not found in flow"
-                    logger.error(error_msg)
-                    yield f"Error: {error_msg}"
-                    break
+                    raise RefinireError(error_msg)
                 
                 current_step = self.steps[current_step_name]
                 
                 # Check if step supports streaming (is RefinireAgent with run_streamed)
                 # ステップがストリーミングをサポートしているかチェック（run_streamedを持つRefinireAgent）
                 if hasattr(current_step, 'run_streamed'):
-                    logger.debug(f"Executing streaming step: {current_step_name}")
+                    # Executing streaming step
+                    # ストリーミングステップを実行中
                     
                     step_has_output = False
                     async for chunk in current_step.run_streamed(effective_input, ctx=self.context, callback=callback):
@@ -559,7 +558,8 @@ class Flow:
                 else:
                     # For non-streaming steps, execute normally and yield result
                     # 非ストリーミングステップの場合、通常実行して結果をyield
-                    logger.debug(f"Executing non-streaming step: {current_step_name}")
+                    # Executing non-streaming step
+                    # 非ストリーミングステップを実行中
                     
                     try:
                         if hasattr(current_step, 'run_async'):
@@ -568,9 +568,7 @@ class Flow:
                             result = current_step.run(effective_input, self.context)
                         else:
                             error_msg = f"Step '{current_step_name}' has no run method"
-                            logger.error(error_msg)
-                            yield f"Error: {error_msg}"
-                            break
+                            raise RefinireError(error_msg)
                         
                         # Yield step result
                         # ステップ結果をyield
@@ -591,9 +589,7 @@ class Flow:
                         
                     except Exception as e:
                         error_msg = f"Step '{current_step_name}' failed: {str(e)}"
-                        logger.error(error_msg)
-                        yield f"Error: {error_msg}"
-                        break
+                        raise RefinireError(error_msg)
                 
                 # Determine next step
                 # 次のステップを決定
@@ -611,14 +607,14 @@ class Flow:
             # Flow completed
             # フロー完了
             if execution_count >= self.max_steps:
+                # Flow reached maximum steps limit
+                # フローが最大ステップ数制限に達しました
                 warning_msg = f"Flow reached maximum steps ({self.max_steps})"
-                logger.warning(warning_msg)
                 yield f"Warning: {warning_msg}"
             
         except Exception as e:
             error_msg = f"Flow streaming execution failed: {str(e)}"
-            logger.error(error_msg)
-            yield f"Error: {error_msg}"
+            raise RefinireError(error_msg)
     
     def _create_flow_span(self):
         """
@@ -651,17 +647,15 @@ class Flow:
                     "flow.step_names": list(self.steps.keys())
                 }
             )
-            logger.debug(f"Created flow span: {span_name}")
+            # Created flow span
             return span
         except ImportError:
             # agents.tracing is not available - this is expected and normal
             # agents.tracingが利用できません - これは予期された正常な状況です
-            logger.debug("agents.tracing not available, proceeding without flow span")
             return None
         except Exception as e:
             # Handle any other tracing-related errors gracefully
             # その他のトレーシング関連エラーを適切に処理
-            logger.warning(f"Failed to create flow span due to error: {e}")
             return None
     
     async def _run_with_span(self, input_data: Optional[str], initial_input: Optional[str], span) -> Context:
@@ -690,7 +684,8 @@ class Flow:
         
         try:
             self._running = True
-            logger.debug(f"Flow {self.name} acquired execution lock, starting execution")
+            # Flow acquired execution lock, starting execution
+            # フローが実行ロックを取得し、実行を開始
             
             # Reset context for new execution
             # 新しい実行用にコンテキストをリセット
@@ -731,9 +726,7 @@ class Flow:
                         break
                         
                 except Exception as e:
-                    logger.error(f"Error executing step {step_name}: {e}")
-                    self._handle_step_error(step_name, e)
-                    break
+                    raise RefinireError(f"Error executing step {step_name}: {e}")
             
             # Check for infinite loop
             # 無限ループのチェック
@@ -770,7 +763,8 @@ class Flow:
             # Ensure proper cleanup regardless of how execution ends
             # 実行の終了方法に関係なく適切なクリーンアップを保証
             self._running = False
-            logger.debug(f"Flow {self.name} releasing execution lock")
+            # Flow releasing execution lock
+            # フローが実行ロックを解放
             
             # Release the lock explicitly
             # ロックを明示的に解放
@@ -801,7 +795,8 @@ class Flow:
         
         try:
             self._running = True
-            logger.debug(f"Flow {self.name} acquired execution lock for run_loop, starting execution")
+            # Flow acquired execution lock for run_loop, starting execution
+            # フローがrun_loop用の実行ロックを取得し、実行を開始
             
             # Reset context for new execution
             # 新しい実行用にコンテキストをリセット
@@ -837,9 +832,7 @@ class Flow:
                         continue
                         
                 except Exception as e:
-                    logger.error(f"Error executing step {step_name}: {e}")
-                    self._handle_step_error(step_name, e)
-                    break
+                    raise RefinireError(f"Error executing step {step_name}: {e}")
             
             # Check for infinite loop
             # 無限ループのチェック
@@ -858,7 +851,8 @@ class Flow:
             # Ensure proper cleanup regardless of how execution ends
             # 実行の終了方法に関係なく適切なクリーンアップを保証
             self._running = False
-            logger.debug(f"Flow {self.name} releasing execution lock from run_loop")
+            # Flow releasing execution lock from run_loop
+            # フローがrun_loopから実行ロックを解放
             
             # Release the lock explicitly
             # ロックを明示的に解放
@@ -922,8 +916,7 @@ class Flow:
                 # ループが実行されていない場合、完了まで実行
                 loop.run_until_complete(self._execute_step(step, None))
         except Exception as e:
-            logger.error(f"Error executing step {step_name}: {e}")
-            self._handle_step_error(step_name, e)
+            raise RefinireError(f"Error executing step {step_name}: {e}")
     
     async def _execute_step(self, step: Step, user_input: Optional[str]) -> None:
         """
@@ -942,7 +935,8 @@ class Flow:
             try:
                 hook(step_name, self.context)
             except Exception as e:
-                logger.warning(f"Before step hook error: {e}")
+                # Before step hook error, continue
+                pass
         
         start_time = datetime.now()
         result = None
@@ -957,12 +951,12 @@ class Flow:
                 # ステップが新しいコンテキストを返した場合、それを使用
                 self.context = result
             
-            logger.debug(f"Step {step_name} completed in {datetime.now() - start_time}")
+            # Step completed
+            # ステップが完了しました
             
         except Exception as e:
             error = e
-            logger.error(f"Step {step_name} failed: {e}")
-            logger.debug(traceback.format_exc())
+            raise RefinireError(f"Step {step_name} failed: {e}")
             
             # Add error to context
             # エラーをコンテキストに追加
@@ -974,7 +968,9 @@ class Flow:
                 try:
                     hook(step_name, self.context, e)
                 except Exception as hook_error:
-                    logger.warning(f"Error hook failed: {hook_error}")
+                    # Error hook failed, continuing
+                    # エラーフックが失敗、続行
+                    pass
             
             raise e
         
@@ -985,7 +981,8 @@ class Flow:
                 try:
                     hook(step_name, self.context, result)
                 except Exception as e:
-                    logger.warning(f"After step hook error: {e}")
+                    # After step hook error, continue
+                    pass
     
     def _handle_step_error(self, step_name: str, error: Exception) -> None:
         """

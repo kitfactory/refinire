@@ -19,6 +19,10 @@ import asyncio
 from refinire.core.llm import get_llm
 from refinire.agents.pipeline.llm_pipeline import RefinireAgent
 from refinire.agents.flow.context import Context
+from refinire import (
+    RefinireConnectionError, RefinireTimeoutError, RefinireAuthenticationError,
+    RefinireRateLimitError, RefinireAPIError, RefinireModelError
+)
 
 # Clear other provider environment variables to ensure OpenRouter is used
 # 他のプロバイダーの環境変数をクリアしてOpenRouterが使用されるようにする
@@ -55,9 +59,39 @@ async def basic_openrouter_example():
         print(f"Model: meta-llama/llama-3-8b-instruct")
         print()
         
+    except RefinireConnectionError as e:
+        print(f"Connection failed with Llama 3 8B: {e}")
+        print(f"Llama 3 8Bでの接続失敗: {e}")
+        print("Check your internet connection and OpenRouter service status.")
+        print("インターネット接続とOpenRouterサービスの状態を確認してください。")
+    except RefinireTimeoutError as e:
+        print(f"Request timed out with Llama 3 8B: {e}")
+        print(f"Llama 3 8Bでのリクエストタイムアウト: {e}")
+        print("The request took too long. Try again later.")
+        print("リクエストに時間がかかりすぎました。後でもう一度お試しください。")
+    except RefinireAuthenticationError as e:
+        print(f"Authentication failed with Llama 3 8B: {e}")
+        print(f"Llama 3 8Bでの認証失敗: {e}")
+        print("Check your OPENROUTER_API_KEY environment variable.")
+        print("OPENROUTER_API_KEY環境変数を確認してください。")
+    except RefinireRateLimitError as e:
+        print(f"Rate limit exceeded with Llama 3 8B: {e}")
+        print(f"Llama 3 8Bでのレート制限超過: {e}")
+        print("Wait before making another request or upgrade your plan.")
+        print("次のリクエストまで待つか、プランをアップグレードしてください。")
+    except RefinireAPIError as e:
+        print(f"API error with Llama 3 8B: {e}")
+        print(f"Llama 3 8BでのAPIエラー: {e}")
+        print("OpenRouter API service issue. Check status page.")
+        print("OpenRouter APIサービスの問題。ステータスページを確認してください。")
+    except RefinireModelError as e:
+        print(f"Model error with Llama 3 8B: {e}")
+        print(f"Llama 3 8Bでのモデルエラー: {e}")
+        print("Model may be unavailable or overloaded.")
+        print("モデルが利用できないか、過負荷状態の可能性があります。")
     except Exception as e:
-        print(f"Error with Llama 3 8B: {e}")
-        print(f"Llama 3 8Bでのエラー: {e}")
+        print(f"Unexpected error with Llama 3 8B: {e}")
+        print(f"Llama 3 8Bでの予期しないエラー: {e}")
     
     # Example 2: Using OpenAI GPT-4 through OpenRouter
     # 例2: OpenRouter経由でのOpenAI GPT-4使用
@@ -214,5 +248,101 @@ async def main():
     print("All examples completed successfully!")
     print("すべての例が正常に完了しました！")
 
+async def network_error_handling_example():
+    """
+    Demonstrate network error handling with OpenRouter
+    OpenRouterでのネットワークエラーハンドリングを実演
+    """
+    print("\n=== Network Error Handling Example ===")
+    print("=== ネットワークエラーハンドリング例 ===\n")
+    
+    # Example of comprehensive error handling
+    # 包括的なエラーハンドリングの例
+    def handle_network_errors(model_name: str, task_description: str):
+        """
+        Utility function to handle network errors consistently
+        ネットワークエラーを一貫して処理するユーティリティ関数
+        """
+        def decorator(func):
+            async def wrapper(*args, **kwargs):
+                try:
+                    return await func(*args, **kwargs)
+                except RefinireConnectionError as e:
+                    print(f"❌ Connection failed for {model_name}: {e}")
+                    print(f"❌ {model_name}での接続失敗: {e}")
+                    return None
+                except RefinireTimeoutError as e:
+                    print(f"⏱️ Request timed out for {model_name}: {e}")
+                    print(f"⏱️ {model_name}でのリクエストタイムアウト: {e}")
+                    return None
+                except RefinireAuthenticationError as e:
+                    print(f"🔐 Authentication failed for {model_name}: {e}")
+                    print(f"🔐 {model_name}での認証失敗: {e}")
+                    return None
+                except RefinireRateLimitError as e:
+                    print(f"⚡ Rate limit exceeded for {model_name}: {e}")
+                    print(f"⚡ {model_name}でのレート制限超過: {e}")
+                    return None
+                except RefinireAPIError as e:
+                    print(f"🚫 API error for {model_name}: {e}")
+                    print(f"🚫 {model_name}でのAPIエラー: {e}")
+                    return None
+                except RefinireModelError as e:
+                    print(f"🤖 Model error for {model_name}: {e}")
+                    print(f"🤖 {model_name}でのモデルエラー: {e}")
+                    return None
+                except Exception as e:
+                    print(f"❓ Unexpected error for {model_name}: {e}")
+                    print(f"❓ {model_name}での予期しないエラー: {e}")
+                    return None
+            return wrapper
+        return decorator
+    
+    # Test with a potentially problematic model to demonstrate error handling
+    # エラーハンドリングを実演するために問題のある可能性のあるモデルでテスト
+    @handle_network_errors("test-model", "Error handling test")
+    async def test_error_handling():
+        agent = RefinireAgent(
+            name="openrouter_error_test_agent",
+            generation_instructions="You are a helpful assistant.",
+            model="openrouter://meta-llama/llama-3-8b-instruct",
+            temperature=0.7
+        )
+        
+        ctx = Context()
+        result_ctx = await agent.run_async("Test message", ctx)
+        
+        if result_ctx.result:
+            print(f"✅ Success: {result_ctx.result[:50]}...")
+            print(f"✅ 成功: {result_ctx.result[:50]}...")
+        return result_ctx.result
+    
+    print("Testing error handling with decorator pattern:")
+    print("デコレーターパターンでのエラーハンドリングをテスト:")
+    
+    result = await test_error_handling()
+    
+    if result:
+        print("\n✅ Network error handling test completed successfully!")
+        print("✅ ネットワークエラーハンドリングテストが正常に完了しました！")
+    else:
+        print("\n❌ Network error handling test failed (this is expected for demonstration)")
+        print("❌ ネットワークエラーハンドリングテストが失敗しました（実演のため予想されます）")
+    
+    print("\n💡 Tips for robust error handling:")
+    print("💡 堅牢なエラーハンドリングのためのヒント:")
+    print("  - Always catch specific Refinire exceptions")
+    print("  - 常に特定のRefinire例外をキャッチする")
+    print("  - Provide helpful error messages to users")
+    print("  - ユーザーに役立つエラーメッセージを提供する")
+    print("  - Consider implementing retry logic for transient errors")
+    print("  - 一時的なエラーに対するリトライロジックの実装を検討する")
+    print("  - Log errors for debugging and monitoring")
+    print("  - デバッグと監視のためにエラーをログに記録する")
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    async def run_all_examples():
+        await main()
+        await network_error_handling_example()
+    
+    asyncio.run(run_all_examples())

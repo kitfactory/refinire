@@ -7,7 +7,6 @@ UserInputStep、ConditionStep、ForkStep、JoinStepなどの基本的なステ�
 """
 
 import asyncio
-import logging
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Optional, Union, Awaitable
 from concurrent.futures import ThreadPoolExecutor
@@ -15,7 +14,6 @@ import threading
 
 from .context import Context
 
-logger = logging.getLogger(__name__)
 
 
 class Step(ABC):
@@ -107,7 +105,8 @@ class Step(ABC):
                 ]
                 
         except Exception as e:
-            logger.debug(f"Failed to update span data: {e}")
+            # Failed to update span data
+            pass
     
     @abstractmethod
     async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:

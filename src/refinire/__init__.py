@@ -16,7 +16,7 @@ Key Features:
 - Interactive multi-turn conversation support
 """
 
-__version__ = "0.2.16"
+__version__ = "0.2.18"
 
 # Core LLM functionality - most commonly used
 from .core import (
@@ -46,6 +46,20 @@ from .core import (
     OllamaModel,
     get_message,
     DEFAULT_LANGUAGE
+)
+
+# Exception classes for error handling
+from .core.exceptions import (
+    RefinireError,
+    RefinireNetworkError,
+    RefinireConnectionError,
+    RefinireTimeoutError,
+    RefinireAuthenticationError,
+    RefinireRateLimitError,
+    RefinireAPIError,
+    RefinireModelError,
+    RefinireConfigurationError,
+    RefinireValidationError
 )
 
 # Workflow orchestration
@@ -124,6 +138,18 @@ __all__ = [
     "OllamaModel",
     "get_message",
     "DEFAULT_LANGUAGE",
+    
+    # Exception classes
+    "RefinireError",
+    "RefinireNetworkError",
+    "RefinireConnectionError",
+    "RefinireTimeoutError",
+    "RefinireAuthenticationError",
+    "RefinireRateLimitError",
+    "RefinireAPIError",
+    "RefinireModelError",
+    "RefinireConfigurationError",
+    "RefinireValidationError",
     
     # Workflow orchestration
     "Flow",

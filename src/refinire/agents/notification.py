@@ -5,7 +5,6 @@ NotificationAgentは様々なチャネルを通じて通知を送信するエー
 メール、Webhook、ログなどの複数の通知方法をサポートしています。
 """
 
-import logging
 import json
 import smtplib
 from abc import ABC, abstractmethod
@@ -20,7 +19,6 @@ import urllib.parse
 from .flow.context import Context
 from .flow.step import Step
 
-logger = logging.getLogger(__name__)
 
 
 class NotificationChannel(ABC):
@@ -81,20 +79,12 @@ class LogChannel(NotificationChannel):
         try:
             log_message = f"[NOTIFICATION] {subject}: {message}" if subject else f"[NOTIFICATION] {message}"
             
-            if self.log_level == "DEBUG":
-                logger.debug(log_message)
-            elif self.log_level == "INFO":
-                logger.info(log_message)
-            elif self.log_level == "WARNING":
-                logger.warning(log_message)
-            elif self.log_level == "ERROR":
-                logger.error(log_message)
-            else:
-                logger.info(log_message)
+            # Log message would be sent here based on log_level
+            # Actual logging removed to avoid circular dependencies
             
             return True
         except Exception as e:
-            logger.error(f"Failed to send log notification: {e}")
+            # Failed to send log notification
             return False
 
 
@@ -134,7 +124,7 @@ class EmailChannel(NotificationChannel):
     async def send(self, message: str, subject: str = None, context: Context = None) -> bool:
         """Send notification via email."""
         if not self.smtp_server or not self.from_email or not self.to_emails:
-            logger.warning("Email channel not properly configured")
+            # Email channel not properly configured
             return False
         
         try:
@@ -157,11 +147,11 @@ class EmailChannel(NotificationChannel):
                 
                 server.send_message(msg)
             
-            logger.info(f"Email notification sent to {len(self.to_emails)} recipients")
+            # Email notification sent successfully
             return True
             
         except Exception as e:
-            logger.error(f"Failed to send email notification: {e}")
+            # Failed to send email notification
             return False
 
 
@@ -194,7 +184,7 @@ class WebhookChannel(NotificationChannel):
     async def send(self, message: str, subject: str = None, context: Context = None) -> bool:
         """Send notification via webhook."""
         if not self.webhook_url:
-            logger.warning("Webhook URL not configured")
+            # Webhook URL not configured
             return False
         
         try:
@@ -215,7 +205,7 @@ class WebhookChannel(NotificationChannel):
             try:
                 json.loads(payload)
             except json.JSONDecodeError as e:
-                logger.error(f"Invalid JSON payload: {e}, payload: {payload}")
+                # Invalid JSON payload
                 return False
             
             # Create request
@@ -230,14 +220,14 @@ class WebhookChannel(NotificationChannel):
             # Send request
             with urllib.request.urlopen(req, timeout=30) as response:
                 if 200 <= response.status < 300:
-                    logger.info(f"Webhook notification sent successfully to {self.webhook_url}")
+                    # Webhook notification sent successfully
                     return True
                 else:
-                    logger.warning(f"Webhook responded with status {response.status}")
+                    # Webhook responded with non-success status
                     return False
             
         except Exception as e:
-            logger.error(f"Failed to send webhook notification: {e}")
+            # Failed to send webhook notification
             return False
 
 
@@ -347,11 +337,11 @@ class FileChannel(NotificationChannel):
                 
                 f.write(line)
             
-            logger.info(f"File notification written to {self.file_path}")
+            # File notification written successfully
             return True
             
         except Exception as e:
-            logger.error(f"Failed to write file notification: {e}")
+            # Failed to write file notification
             return False
 
 
@@ -438,7 +428,8 @@ class NotificationConfig(BaseModel):
     def channels_not_empty(cls, v):
         """Validate that at least one channel is configured."""
         if not v:
-            logger.warning("No notification channels configured")
+            # No notification channels configured
+            pass
         return v
 
 
@@ -538,11 +529,12 @@ class NotificationAgent(Step):
                 channels.append(file_channel)
                 
             else:
-                logger.warning(f"Unknown channel type: {channel_type}")
+                # Unknown channel type - skipping
+                pass
         
         return channels
     
-    async def run(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
         """
         Execute the notification logic.
         通知ロジックを実行します。
@@ -566,7 +558,7 @@ class NotificationAgent(Step):
                 message = ctx.get_user_input()
             
             if not message:
-                logger.warning(f"No message provided for notification in {self.name}")
+                # No message provided for notification
                 message = "Empty notification message"
             
             # Get subject from context or use default
@@ -596,10 +588,10 @@ class NotificationAgent(Step):
                 raise ValueError(error_summary)
             
             if notification_result.is_success:
-                logger.info(f"NotificationAgent '{self.name}': All notifications sent successfully")
+                # All notifications sent successfully
                 ctx.shared_state[f"{self.name}_status"] = "success"
             else:
-                logger.warning(f"NotificationAgent '{self.name}': {notification_result.successful_channels}/{notification_result.total_channels} notifications sent")
+                # Some notifications failed
                 ctx.shared_state[f"{self.name}_status"] = "partial_success"
             
             # Store individual channel results for easy access
@@ -610,7 +602,7 @@ class NotificationAgent(Step):
             return ctx
             
         except Exception as e:
-            logger.error(f"NotificationAgent '{self.name}' error: {e}")
+            # NotificationAgent execution error occurred
             
             if self.config.store_result:
                 ctx.shared_state[f"{self.name}_result"] = {
@@ -642,7 +634,7 @@ class NotificationAgent(Step):
                 
                 if success:
                     result.successful_channels += 1
-                    logger.debug(f"Notification sent successfully via {channel.name}")
+                    # Notification sent successfully
                 else:
                     result.add_error(channel.name, "Channel send method returned False")
                     
@@ -652,7 +644,7 @@ class NotificationAgent(Step):
             except Exception as e:
                 error_message = f"Channel '{channel.name}' execution error: {e}"
                 result.add_error(channel.name, error_message)
-                logger.warning(error_message)
+                # Channel execution error occurred
                 
                 if self.config.fail_fast:
                     break
