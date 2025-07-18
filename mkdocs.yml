@@ -38,6 +38,7 @@ plugins:
 nav:
   - はじめに: index.md
   - 最小使用例: minimal_example.md
+  - 環境変数: environment_variables_ja.md
   - APIリファレンス: 
       - 概要: api_reference.md
       - Pipeline: api/pipeline.md

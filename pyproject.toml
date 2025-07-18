@@ -94,7 +94,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = [
     "--import-mode=importlib",
-    "--cov=oneenv",
+    "--cov=refinire",
     "--cov-report=term-missing",
 ]
 
