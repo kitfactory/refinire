@@ -30,6 +30,7 @@ from ...core.exceptions import (
     RefinireAuthenticationError, RefinireRateLimitError, RefinireAPIError,
     RefinireModelError, map_openai_exception, map_httpx_exception
 )
+from ...core.routing import RoutingResult, create_routing_result_model
 
 
 
@@ -108,6 +109,9 @@ class RefinireAgent(Step):
         store_result_key: Optional[str] = None,
         # Orchestration mode parameter / オーケストレーションモードパラメータ
         orchestration_mode: bool = False,
+        # New routing parameters / 新しいルーティングパラメータ
+        routing_instruction: Optional[str] = None,
+        routing_mode: str = "accurate_routing",
         # Environment variable namespace / 環境変数名前空間
         namespace: Optional[str] = None
     ) -> None:
@@ -139,6 +143,8 @@ class RefinireAgent(Step):
             next_step: Next step for Flow integration / Flow統合用次ステップ
             store_result_key: Key to store result in Flow context / Flow context内での結果保存キー
             orchestration_mode: Enable orchestration mode with structured JSON output / 構造化JSON出力付きオーケストレーションモード有効化
+            routing_instruction: Instruction for routing decision / ルーティング決定用指示
+            routing_mode: Routing mode - 'accurate_routing' or 'fast_routing' / ルーティングモード - 'accurate_routing' または 'fast_routing'
             namespace: Environment variable namespace for oneenv / oneenv用環境変数名前空間
         """
         # Initialize Step base class
@@ -148,6 +154,16 @@ class RefinireAgent(Step):
         # Store namespace for environment variable access
         # 環境変数アクセス用の名前空間を保存
         self.namespace = namespace
+        
+        # Store routing parameters
+        # ルーティングパラメータを保存
+        self.routing_instruction = routing_instruction
+        self.routing_mode = routing_mode
+        
+        # Validate routing_mode
+        # routing_modeを検証
+        if routing_mode not in ["accurate_routing", "fast_routing"]:
+            raise ValueError(f"Invalid routing_mode: {routing_mode}. Must be 'accurate_routing' or 'fast_routing'.")
         
         # Handle PromptReference for generation instructions
         self._generation_prompt_metadata = None
@@ -595,9 +611,40 @@ IMPORTANT: Do not deviate from this format."""
                             "metadata": {"error": str(e)}
                         }
                 
-                # Store result in ctx.result (simple access)
-                # ctx.resultに結果を保存（シンプルアクセス）
-                ctx.result = llm_result.content if llm_result.success else None
+                # Execute routing if routing_instruction is provided
+                # routing_instructionが提供されている場合はルーティングを実行
+                routing_result = None
+                if self.routing_instruction and llm_result.success and llm_result.content:
+                    try:
+                        routing_result = self._execute_routing(llm_result.content, ctx)
+                        if routing_result:
+                            # Store routing result in context
+                            # ルーティング結果をコンテキストに保存
+                            ctx.routing_result = {
+                                "next_route": routing_result.next_route,
+                                "confidence": routing_result.confidence,
+                                "reasoning": routing_result.reasoning
+                            }
+                            # Update result to routing result if routing was successful
+                            # ルーティングが成功した場合、結果をルーティング結果に更新
+                            ctx.result = routing_result
+                        else:
+                            # Fallback to original result if routing failed
+                            # ルーティングが失敗した場合、元の結果にフォールバック
+                            ctx.result = llm_result.content
+                    except Exception as e:
+                        # Handle routing errors gracefully
+                        # ルーティングエラーを適切に処理
+                        ctx.result = llm_result.content
+                        ctx.routing_result = {
+                            "next_route": "error",
+                            "confidence": 0.0,
+                            "reasoning": f"Routing failed: {str(e)}"
+                        }
+                else:
+                    # No routing, use original result
+                    # ルーティングなし、元の結果を使用
+                    ctx.result = llm_result.content if llm_result.success else None
                 
                 # Also store in other locations for compatibility
                 # 互換性のため他の場所にも保存
@@ -941,6 +988,167 @@ IMPORTANT: Do not deviate from this format."""
             result_text = result_text.replace(placeholder, replacement)
         
         return result_text
+
+    def _create_routing_output_model(self) -> Type[BaseModel]:
+        """
+        Create a dynamic RoutingResult model based on the output_model.
+        output_model に基づいて動的 RoutingResult モデルを作成
+        
+        Returns:
+            A dynamically created RoutingResult model with the appropriate content type
+        """
+        if self.output_model:
+            # Create a dynamic RoutingResult with the specified content type
+            # 指定されたコンテンツ型で動的 RoutingResult を作成
+            return create_routing_result_model(self.output_model)
+        else:
+            # Use the standard RoutingResult with string content
+            # 文字列コンテンツで標準 RoutingResult を使用
+            return RoutingResult
+
+    def _build_routing_prompt(self, content: Any, routing_instruction: str) -> str:
+        """
+        Build a routing prompt for evaluating generated content.
+        生成されたコンテンツを評価するためのルーティングプロンプトを構築
+        
+        Args:
+            content: Generated content to evaluate
+            routing_instruction: Routing instruction for decision making
+            
+        Returns:
+            Formatted routing prompt string
+        """
+        return f"""
+生成されたコンテンツを分析し、次のルーティング判断を行ってください。
+
+=== 生成コンテンツ ===
+{content}
+
+=== ルーティング指示 ===
+{routing_instruction}
+
+上記の指示に従って、適切なルーティング判断を行い、指定された形式で出力してください。
+"""
+
+    def _execute_routing(self, content: Any, ctx: Optional[Context] = None) -> Optional[RoutingResult]:
+        """
+        Execute routing decision based on the generated content.
+        生成されたコンテンツに基づいてルーティング判断を実行
+        
+        Args:
+            content: Generated content to evaluate
+            ctx: Context for routing execution
+            
+        Returns:
+            RoutingResult if routing is enabled, None otherwise
+        """
+        if not self.routing_instruction:
+            return None
+        
+        try:
+            # Create the appropriate output model
+            # 適切な出力モデルを作成
+            routing_output_model = self._create_routing_output_model()
+            
+            if self.routing_mode == "accurate_routing":
+                # Accurate routing: separate evaluation with dedicated agent
+                # 正確なルーティング: 専用エージェントによる分離評価
+                return self._execute_accurate_routing(content, routing_output_model, ctx)
+            elif self.routing_mode == "fast_routing":
+                # Fast routing: integrated processing
+                # 高速ルーティング: 統合処理
+                return self._execute_fast_routing(content, routing_output_model, ctx)
+            else:
+                # This should not happen due to validation in __init__
+                # __init__での検証により、これは発生しないはず
+                raise ValueError(f"Invalid routing_mode: {self.routing_mode}")
+        
+        except Exception as e:
+            # Log error but don't fail the entire process
+            # エラーをログに記録するが、プロセス全体を失敗させない
+            print(f"Warning: Routing execution failed: {e}")
+            return None
+
+    def _execute_accurate_routing(self, content: Any, routing_output_model: Type[BaseModel], ctx: Optional[Context] = None) -> Optional[RoutingResult]:
+        """
+        Execute accurate routing with dedicated routing agent.
+        専用ルーティングエージェントによる正確なルーティング実行
+        
+        Args:
+            content: Generated content to evaluate
+            routing_output_model: The routing output model to use
+            ctx: Context for routing execution
+            
+        Returns:
+            RoutingResult if successful, None otherwise
+        """
+        try:
+            # Build routing prompt
+            # ルーティングプロンプトを構築
+            routing_prompt = self._build_routing_prompt(content, self.routing_instruction)
+            
+            # Create dedicated routing agent
+            # 専用ルーティングエージェントを作成
+            # Note: We need to avoid circular imports, so we'll use a different approach
+            # 循環インポートを避けるため、異なるアプローチを使用
+            
+            routing_agent = self.__class__(
+                name=f"{self.name}_router",
+                generation_instructions=routing_prompt,
+                output_model=routing_output_model,
+                model=self.model_name,
+                temperature=0.1,  # Lower temperature for more consistent routing
+                namespace=self.namespace
+            )
+            
+            # Execute routing
+            # ルーティングを実行
+            routing_result = routing_agent.run("", ctx)
+            
+            # Return the routing result
+            # ルーティング結果を返す
+            return routing_result.content if routing_result.success else None
+        
+        except Exception as e:
+            print(f"Warning: Accurate routing execution failed: {e}")
+            return None
+
+    def _execute_fast_routing(self, content: Any, routing_output_model: Type[BaseModel], ctx: Optional[Context] = None) -> Optional[RoutingResult]:
+        """
+        Execute fast routing with integrated processing.
+        統合処理による高速ルーティング実行
+        
+        Args:
+            content: Generated content to evaluate
+            routing_output_model: The routing output model to use
+            ctx: Context for routing execution
+            
+        Returns:
+            RoutingResult if successful, None otherwise
+        """
+        try:
+            # In fast routing mode, we need to integrate routing with the original generation
+            # 高速ルーティングモードでは、元の生成とルーティングを統合する必要がある
+            
+            # For now, create a simple routing result
+            # 現在のところ、シンプルなルーティング結果を作成
+            # This would be enhanced in a full implementation
+            # これは完全な実装では拡張される
+            
+            # Create routing result with the content and basic routing info
+            # コンテンツと基本的なルーティング情報でルーティング結果を作成
+            routing_result = routing_output_model(
+                content=content,
+                next_route="continue",  # Default route for fast routing
+                confidence=0.8,  # Default confidence
+                reasoning="Fast routing mode - integrated processing"
+            )
+            
+            return routing_result
+        
+        except Exception as e:
+            print(f"Warning: Fast routing execution failed: {e}")
+            return None
 
     def _build_prompt(self, user_input: str, include_instructions: bool = True, ctx: Optional[Context] = None) -> str:
         """

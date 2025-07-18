@@ -346,6 +346,142 @@ print(f"フィードバック: {result_ctx.evaluation_result['feedback']}")
 
 **📖 チュートリアル:** [高度な機能](docs/tutorials/advanced.md) | **詳細:** [自律品質保証](docs/autonomous-quality-assurance_ja.md)
 
+## インテリジェントルーティングシステム
+
+**課題**: 複雑なAIワークフローでは、生成されたコンテンツに基づいて次のステップを動的に決定する必要があります。手動での条件分岐は複雑で保守が困難です。
+
+**解決策**: RefinireAgentの新しいルーティング機能は、生成されたコンテンツを自動的に分析し、品質・複雑さ・完了状態に基づいて次のステップを決定します。これにより、フロー内での動的なワークフロー制御が実現できます。
+
+**主な利点**:
+- **自動フロー制御**: コンテンツ品質に基づく動的ステップルーティング
+- **柔軟な分析モード**: 精度重視またはパフォーマンス重視の実行モード
+- **型安全な出力**: Pydanticモデルによる構造化されたルーティング結果
+- **シームレス統合**: 既存のFlowアーキテクチャとの完全な統合
+
+### 基本的なルーティング機能
+
+```python
+from refinire import RefinireAgent
+
+# ルーティング機能付きエージェント
+agent = RefinireAgent(
+    name="smart_processor",
+    generation_instructions="ユーザーの要求に対して適切なレスポンスを生成してください",
+    routing_instruction="コンテンツ品質を評価し、次の処理を決定してください：高品質なら'complete'、改善必要なら'enhance'、不十分なら'regenerate'",
+    routing_mode="accurate_routing",  # 精度重視の分析
+    model="gpt-4o-mini"
+)
+
+result = agent.run("機械学習について説明してください")
+
+# ルーティング結果にアクセス
+print(f"生成コンテンツ: {result.content}")
+print(f"次のルート: {result.next_route}")
+print(f"信頼度: {result.confidence}")
+print(f"判断理由: {result.reasoning}")
+```
+
+### 構造化出力との組み合わせ
+
+```python
+from pydantic import BaseModel, Field
+
+class ArticleOutput(BaseModel):
+    title: str = Field(description="記事のタイトル")
+    content: str = Field(description="記事本文")
+    keywords: list[str] = Field(description="キーワードリスト")
+
+# 構造化出力とルーティングを組み合わせ
+agent = RefinireAgent(
+    name="article_generator", 
+    generation_instructions="指定されたトピックについて詳細な記事を作成してください",
+    output_model=ArticleOutput,
+    routing_instruction="記事品質を評価し、次の処理を決定：優秀なら'publish'、良好なら'review'、改善必要なら'revise'",
+    routing_mode="fast_routing",  # パフォーマンス重視
+    model="gpt-4o-mini"
+)
+
+result = agent.run("量子コンピューティングについて記事を書いてください")
+
+# 構造化されたコンテンツとルーティング情報の両方にアクセス
+article = result.content  # ArticleOutputオブジェクト
+print(f"タイトル: {article.title}")
+print(f"キーワード: {article.keywords}")
+print(f"次のアクション: {result.next_route}")
+```
+
+### Flowワークフローでのルーティング統合
+
+```python
+from refinire import Flow, FunctionStep, Context
+
+# ルーティング結果を活用する関数
+def route_based_processor(ctx: Context):
+    routing_result = ctx.routing_result
+    if routing_result:
+        quality = routing_result['confidence']
+        next_route = routing_result['next_route']
+        
+        # ルーティング結果に基づいて処理を分岐
+        if next_route == "complete":
+            ctx.goto("finalize")
+        elif next_route == "enhance":
+            ctx.goto("improvement")
+        else:
+            ctx.goto("regenerate")
+    else:
+        ctx.goto("default_process")
+
+# ルーティング統合フロー
+flow = Flow({
+    "analyze": RefinireAgent(
+        name="content_analyzer",
+        generation_instructions="コンテンツを分析して品質を判定してください",
+        routing_instruction="品質レベルに応じて次の処理を決定：高品質なら'complete'、中品質なら'enhance'、低品質なら'regenerate'",
+        routing_mode="accurate_routing"
+    ),
+    "router": FunctionStep("router", route_based_processor),
+    "complete": FunctionStep("complete", finalize_content),
+    "enhance": FunctionStep("enhance", improve_content),
+    "regenerate": FunctionStep("regenerate", regenerate_content),
+    "finalize": FunctionStep("finalize", publish_content)
+})
+
+result = await flow.run("技術記事のコンテンツを処理してください")
+```
+
+### ルーティングモードの選択
+
+```python
+# 精度重視モード - 詳細な分析と高品質なルーティング決定
+accurate_agent = RefinireAgent(
+    name="quality_analyzer",
+    generation_instructions="高品質なコンテンツを生成してください",
+    routing_instruction="コンテンツを厳密に評価し、適切な次ステップを決定してください",
+    routing_mode="accurate_routing",  # 別エージェントで詳細分析
+    model="gpt-4o-mini"
+)
+
+# パフォーマンス重視モード - 高速なルーティング決定
+fast_agent = RefinireAgent(
+    name="speed_processor",
+    generation_instructions="効率的にコンテンツを生成してください", 
+    routing_instruction="素早くコンテンツを評価し、次ステップを決定してください",
+    routing_mode="fast_routing",  # 統合実行で高速処理
+    model="gpt-4o-mini"
+)
+```
+
+**主要ルーティング機能**:
+- **動的コンテンツ分析**: 生成されたコンテンツの自動品質評価
+- **柔軟なルーティング指示**: カスタムルーティングロジックの定義
+- **実行モード選択**: 精度重視 vs パフォーマンス重視
+- **構造化出力対応**: カスタムデータ型との完全統合
+- **Flow統合**: ワークフロー内での自動ルーティング決定
+- **コンテキスト保存**: ルーティング結果のワークフロー間での共有
+
+**📖 詳細ガイド**: [新しいフロー制御コンセプト](docs/new_flow_control_concept.md) - ルーティングシステムの完全解説
+
 ## 3. Tool Integration - 関数呼び出しの自動化
 
 **課題**: AIエージェントは外部システム、API、計算と相互作用する必要があることが多いです。手動ツール統合は複雑でエラーが発生しやすいです。

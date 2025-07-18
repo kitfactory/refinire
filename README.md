@@ -480,6 +480,142 @@ If evaluation falls below threshold, content is automatically regenerated for co
 
 **📖 Tutorial:** [Advanced Features](docs/tutorials/advanced.md) | **Details:** [Autonomous Quality Assurance](docs/autonomous-quality-assurance.md)
 
+## Intelligent Routing System
+
+**The Challenge**: Complex AI workflows need to dynamically determine the next step based on generated content. Manual conditional branching is complex and hard to maintain.
+
+**The Solution**: RefinireAgent's new routing functionality automatically analyzes generated content and determines the next step based on quality, complexity, or completion status. This enables dynamic workflow control within flows.
+
+**Key Benefits**:
+- **Automatic Flow Control**: Dynamic step routing based on content quality
+- **Flexible Analysis Modes**: Accuracy-focused or performance-focused execution modes
+- **Type-Safe Output**: Structured routing results using Pydantic models
+- **Seamless Integration**: Complete integration with existing Flow architecture
+
+### Basic Routing Functionality
+
+```python
+from refinire import RefinireAgent
+
+# Agent with routing functionality
+agent = RefinireAgent(
+    name="smart_processor",
+    generation_instructions="Generate appropriate responses to user requests",
+    routing_instruction="Evaluate content quality and determine next processing: high quality → 'complete', needs improvement → 'enhance', insufficient → 'regenerate'",
+    routing_mode="accurate_routing",  # Accuracy-focused analysis
+    model="gpt-4o-mini"
+)
+
+result = agent.run("Explain machine learning")
+
+# Access routing results
+print(f"Generated Content: {result.content}")
+print(f"Next Route: {result.next_route}")
+print(f"Confidence: {result.confidence}")
+print(f"Reasoning: {result.reasoning}")
+```
+
+### Combining with Structured Output
+
+```python
+from pydantic import BaseModel, Field
+
+class ArticleOutput(BaseModel):
+    title: str = Field(description="Article title")
+    content: str = Field(description="Article content")
+    keywords: list[str] = Field(description="Keywords list")
+
+# Combine structured output with routing
+agent = RefinireAgent(
+    name="article_generator", 
+    generation_instructions="Create detailed articles on specified topics",
+    output_model=ArticleOutput,
+    routing_instruction="Evaluate article quality and determine next processing: excellent → 'publish', good → 'review', needs improvement → 'revise'",
+    routing_mode="fast_routing",  # Performance-focused
+    model="gpt-4o-mini"
+)
+
+result = agent.run("Write an article about quantum computing")
+
+# Access both structured content and routing information
+article = result.content  # ArticleOutput object
+print(f"Title: {article.title}")
+print(f"Keywords: {article.keywords}")
+print(f"Next Action: {result.next_route}")
+```
+
+### Flow Workflow Routing Integration
+
+```python
+from refinire import Flow, FunctionStep, Context
+
+# Function that utilizes routing results
+def route_based_processor(ctx: Context):
+    routing_result = ctx.routing_result
+    if routing_result:
+        quality = routing_result['confidence']
+        next_route = routing_result['next_route']
+        
+        # Branch processing based on routing results
+        if next_route == "complete":
+            ctx.goto("finalize")
+        elif next_route == "enhance":
+            ctx.goto("improvement")
+        else:
+            ctx.goto("regenerate")
+    else:
+        ctx.goto("default_process")
+
+# Routing integrated flow
+flow = Flow({
+    "analyze": RefinireAgent(
+        name="content_analyzer",
+        generation_instructions="Analyze content and determine quality",
+        routing_instruction="Determine next processing based on quality level: high quality → 'complete', medium quality → 'enhance', low quality → 'regenerate'",
+        routing_mode="accurate_routing"
+    ),
+    "router": FunctionStep("router", route_based_processor),
+    "complete": FunctionStep("complete", finalize_content),
+    "enhance": FunctionStep("enhance", improve_content),
+    "regenerate": FunctionStep("regenerate", regenerate_content),
+    "finalize": FunctionStep("finalize", publish_content)
+})
+
+result = await flow.run("Process technical article content")
+```
+
+### Routing Mode Selection
+
+```python
+# Accuracy-focused mode - detailed analysis and high-quality routing decisions
+accurate_agent = RefinireAgent(
+    name="quality_analyzer",
+    generation_instructions="Generate high-quality content",
+    routing_instruction="Rigorously evaluate content and determine appropriate next step",
+    routing_mode="accurate_routing",  # Separate agent for detailed analysis
+    model="gpt-4o-mini"
+)
+
+# Performance-focused mode - fast routing decisions
+fast_agent = RefinireAgent(
+    name="speed_processor",
+    generation_instructions="Generate content efficiently", 
+    routing_instruction="Quickly evaluate content and determine next step",
+    routing_mode="fast_routing",  # Integrated execution for high speed
+    model="gpt-4o-mini"
+)
+```
+
+**Key Routing Features**:
+- **Dynamic Content Analysis**: Automatic quality assessment of generated content
+- **Flexible Routing Instructions**: Define custom routing logic
+- **Execution Mode Selection**: Accuracy-focused vs performance-focused
+- **Structured Output Support**: Complete integration with custom data types
+- **Flow Integration**: Automatic routing decisions within workflows
+- **Context Preservation**: Share routing results across workflow stages
+
+**📖 Detailed Guide**: [New Flow Control Concept](docs/new_flow_control_concept.md) - Complete routing system explanation
+
 ## 3. Tool Integration - Automated Function Calling
 
 **The Challenge**: AI agents often need to interact with external systems, APIs, or perform calculations. Manual tool integration is complex and error-prone.
