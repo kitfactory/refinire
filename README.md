@@ -779,6 +779,171 @@ for provider, model in providers:
         print(f"✗ {provider}: {model} - {str(e)}")
 ```
 
+## Environment Management with oneenv Namespaces
+
+**The Challenge**: Managing environment variables across different environments (development, testing, production) can be complex and error-prone. Traditional approaches require multiple `.env` files or manual environment switching.
+
+**The Solution**: Refinire supports oneenv 0.4.0+ namespace functionality, allowing you to organize environment variables by namespace and switch between different configurations seamlessly.
+
+**Key Benefits**:
+- **Environment Separation**: Clear separation between development, testing, and production configurations
+- **Namespace Organization**: Group related environment variables by purpose or environment
+- **Simplified Configuration**: Single source of truth for all environment variables
+- **Backward Compatibility**: Works with existing `os.getenv()` patterns
+
+### Basic Namespace Usage
+
+```python
+from refinire import RefinireAgent
+
+# Development environment
+dev_agent = RefinireAgent(
+    name="dev_assistant",
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini",
+    namespace="development"  # Uses development environment variables
+)
+
+# Production environment
+prod_agent = RefinireAgent(
+    name="prod_assistant", 
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini",
+    namespace="production"  # Uses production environment variables
+)
+```
+
+### Environment Configuration Management
+
+Set up different environments with oneenv:
+
+```bash
+# Install oneenv if not already installed
+pip install oneenv
+
+# Initialize environment configuration
+oneenv init
+
+# Set development environment variables
+oneenv set OPENAI_API_KEY "dev-key-here" --namespace development
+oneenv set ANTHROPIC_API_KEY "dev-claude-key" --namespace development
+oneenv set REFINIRE_DEFAULT_LLM_MODEL "gpt-4o-mini" --namespace development
+
+# Set production environment variables  
+oneenv set OPENAI_API_KEY "prod-key-here" --namespace production
+oneenv set ANTHROPIC_API_KEY "prod-claude-key" --namespace production
+oneenv set REFINIRE_DEFAULT_LLM_MODEL "gpt-4o" --namespace production
+
+# Set testing environment variables
+oneenv set OPENAI_API_KEY "test-key-here" --namespace testing
+oneenv set ANTHROPIC_API_KEY "test-claude-key" --namespace testing
+oneenv set REFINIRE_DEFAULT_LLM_MODEL "gpt-4o-mini" --namespace testing
+```
+
+### Provider-Specific Namespace Support
+
+All major providers support namespace-based configuration:
+
+```python
+from refinire import get_llm
+
+# OpenAI with namespace
+openai_llm = get_llm(
+    provider="openai",
+    model="gpt-4o-mini",
+    namespace="development"
+)
+
+# Anthropic with namespace
+anthropic_llm = get_llm(
+    provider="anthropic", 
+    model="claude-3-haiku-20240307",
+    namespace="development"
+)
+
+# Google with namespace
+google_llm = get_llm(
+    provider="google",
+    model="gemini-1.5-flash", 
+    namespace="development"
+)
+
+# Ollama with namespace
+ollama_llm = get_llm(
+    provider="ollama",
+    model="llama3.1:8b",
+    namespace="development"
+)
+```
+
+### Workflow Integration with Namespaces
+
+```python
+from refinire import RefinireAgent, Flow, FunctionStep
+
+# Create environment-aware agents
+dev_analyzer = RefinireAgent(
+    name="dev_analyzer",
+    generation_instructions="Analyze the input data",
+    model="gpt-4o-mini",
+    namespace="development"
+)
+
+prod_analyzer = RefinireAgent(
+    name="prod_analyzer", 
+    generation_instructions="Analyze the input data",
+    model="gpt-4o",
+    namespace="production"
+)
+
+# Environment-specific workflow
+def create_analysis_flow(environment="development"):
+    return Flow({
+        "analyze": RefinireAgent(
+            name="analyzer",
+            generation_instructions="Perform analysis",
+            model="gpt-4o-mini",
+            namespace=environment
+        ),
+        "summarize": RefinireAgent(
+            name="summarizer",
+            generation_instructions="Create summary",
+            model="gpt-4o-mini", 
+            namespace=environment
+        )
+    })
+
+# Use different environments
+dev_flow = create_analysis_flow("development")
+prod_flow = create_analysis_flow("production")
+```
+
+### Environment Variable Mapping
+
+Refinire automatically maps environment variables based on namespace:
+
+| Variable | Development | Production | Testing |
+|----------|-------------|------------|---------|
+| `OPENAI_API_KEY` | `dev-key-here` | `prod-key-here` | `test-key-here` |
+| `ANTHROPIC_API_KEY` | `dev-claude-key` | `prod-claude-key` | `test-claude-key` |
+| `REFINIRE_DEFAULT_LLM_MODEL` | `gpt-4o-mini` | `gpt-4o` | `gpt-4o-mini` |
+
+### Backward Compatibility
+
+If oneenv is not installed or namespace is not specified, Refinire falls back to standard environment variables:
+
+```python
+# Works with or without oneenv
+agent = RefinireAgent(
+    name="compatible_agent",
+    generation_instructions="You are helpful",
+    model="gpt-4o-mini"
+    # No namespace specified - uses standard environment variables
+)
+```
+
+**📖 Complete Environment Setup Guide**: [Environment Variables](docs/environment_variables.md) | [oneenv Documentation](https://github.com/kitadai31/oneenv)
+
 ---
 
 ## Advanced Features

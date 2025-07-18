@@ -928,3 +928,97 @@ refinire-setup
 ```
 
 📖 **完全セットアップガイド**: [環境変数](docs/environment_variables_ja.md) | [CLIドキュメント](docs/cli.md)
+
+## 環境の名前空間管理 - OneEnv 0.4.0対応
+
+**課題**: 開発・本番・テスト環境で異なるAPIキーやモデル設定を管理するのは複雑で、環境の切り替えが困難です。
+
+**解決策**: Refinireはoneenv 0.4.0の名前空間機能に完全対応し、環境ごとに独立した設定を管理できます。同じエージェントコードで異なる環境設定を簡単に切り替えられます。
+
+**主な利点**:
+- **環境の完全分離**: 開発・本番・テスト環境を明確に区別
+- **設定の集約管理**: 環境ごとの設定を一元管理
+- **チーム開発対応**: 各開発者が独自の名前空間を持てる
+- **安全な本番運用**: 環境の誤使用を防止
+
+### 基本的な名前空間の使用
+
+```python
+from refinire import RefinireAgent
+
+# 開発環境のエージェント
+dev_agent = RefinireAgent(
+    name="dev_assistant",
+    generation_instructions="開発環境用のアシスタントです",
+    model="gpt-4o-mini",
+    namespace="development"  # 開発環境の名前空間
+)
+
+# 本番環境のエージェント
+prod_agent = RefinireAgent(
+    name="prod_assistant", 
+    generation_instructions="本番環境用のアシスタントです",
+    model="gpt-4o-mini",
+    namespace="production"  # 本番環境の名前空間
+)
+
+# テスト環境のエージェント
+test_agent = RefinireAgent(
+    name="test_assistant",
+    generation_instructions="テスト環境用のアシスタントです",
+    model="gpt-4o-mini",
+    namespace="testing"  # テスト環境の名前空間
+)
+```
+
+### 環境設定の管理
+
+```bash
+# 開発環境の設定
+oneenv init refinire:core --namespace development
+
+# 本番環境の設定
+oneenv init refinire:core --namespace production
+
+# テスト環境の設定
+oneenv init refinire:core --namespace testing
+```
+
+### プロバイダー固有の名前空間対応
+
+```python
+from refinire import get_llm
+
+# 開発環境では異なるプロバイダーをテスト
+dev_llm = get_llm(
+    model="gpt-4o-mini",
+    namespace="development"
+)
+
+# 本番環境では安定したプロバイダーを使用
+prod_llm = get_llm(
+    model="claude-3-sonnet",
+    namespace="production"
+)
+```
+
+### 名前空間なしのデフォルト動作
+
+```python
+# 名前空間を指定しない場合はデフォルト名前空間を使用
+agent = RefinireAgent(
+    name="default_assistant",
+    generation_instructions="デフォルト設定のアシスタントです",
+    model="gpt-4o-mini"
+    # namespace未指定 = デフォルト名前空間（空文字列）
+)
+```
+
+**主要な名前空間機能**:
+- **環境切り替え**: 同じコードで異なる環境設定を使用
+- **設定の分離**: 環境ごとに完全に独立した設定管理
+- **チーム協力**: 開発者ごとの個別設定対応
+- **本番安全性**: 環境の誤使用防止
+- **後方互換性**: 既存コードはそのまま動作（デフォルト名前空間）
+
+**📖 詳細ガイド**: [環境変数ドキュメント](docs/environment_variables_ja.md) - 名前空間機能の完全解説
