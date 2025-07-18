@@ -13,7 +13,9 @@ Refinire uses environment variables for configuration and integrates with [oneen
 
 ## Usage with oneenv
 
-Install and use oneenv to easily manage these environment variables:
+Refinire integrates with [OneEnv](https://github.com/kitfactory/oneenv) for streamlined environment variable management.
+
+### Installation and Basic Usage
 
 ```bash
 pip install oneenv
@@ -22,6 +24,36 @@ oneenv init refinire:tracing
 oneenv init refinire:agents
 oneenv init refinire:development
 ```
+
+### Template Registration
+
+Refinire automatically registers its templates with OneEnv via entry points:
+
+```toml
+[project.entry-points."oneenv.templates"]
+core = "refinire.templates:core_template"
+tracing = "refinire.templates:tracing_template"
+agents = "refinire.templates:agents_template" 
+development = "refinire.templates:development_template"
+```
+
+### Interactive CLI Setup
+
+For the best experience, use the Refinire CLI wizard:
+
+```bash
+# Install with CLI support
+pip install "refinire[cli]"
+
+# Run interactive setup
+refinire-setup
+```
+
+The CLI provides:
+- **Interactive provider selection** with rich terminal interface
+- **Smart template generation** based on your choices
+- **OneEnv API integration** for optimal template creation
+- **Fallback support** if OneEnv is unavailable
 
 ## Core LLM Provider Configuration
 **Template**: `core`

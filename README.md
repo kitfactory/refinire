@@ -24,6 +24,13 @@
 pip install refinire
 ```
 
+**Optional**: Set up environment variables easily with the interactive CLI:
+
+```bash
+pip install "refinire[cli]"
+refinire-setup
+```
+
 ```python
 from refinire import RefinireAgent
 
@@ -708,6 +715,32 @@ print(f"Improvement opportunities: {len(improvement_candidates)}")
 pip install refinire
 ```
 
+### Environment Setup (Recommended)
+
+Set up your environment variables interactively:
+
+```bash
+# Install with CLI support
+pip install "refinire[cli]"
+
+# Run interactive setup wizard
+refinire-setup
+```
+
+The CLI will guide you through:
+- **Provider Selection**: Choose from OpenAI, Anthropic, Google, OpenRouter, Groq, Ollama, or LM Studio
+- **Feature Configuration**: Enable tracing, agent settings, or development features
+- **Template Generation**: Create a customized `.env` file
+
+**Manual Setup**: Alternatively, set environment variables manually:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+export REFINIRE_DEFAULT_LLM_MODEL="gpt-4o-mini"
+```
+
+📖 **Complete Guide**: [Environment Variables](docs/environment_variables.md) | [CLI Tool](docs/cli.md)
+
 ### Your First Agent (30 seconds)
 
 ```python
@@ -1048,6 +1081,14 @@ export REFINIRE_TRACE_RESOURCE_ATTRIBUTES="environment=production,team=ai"
 # Use oneenv for easy configuration management
 oneenv init --template refinire.tracing
 ```
+
+**Interactive Setup**: Use the Refinire CLI for guided configuration:
+
+```bash
+refinire-setup
+```
+
+📖 **Complete Setup Guide**: [Environment Variables](docs/environment_variables.md) | [CLI Documentation](docs/cli.md)
 
 ### Automatic Span Coverage
 

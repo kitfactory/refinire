@@ -13,7 +13,9 @@ Refinireは設定に環境変数を使用し、[oneenv](https://github.com/kitfa
 
 ## oneenvでの使用方法
 
-oneenvをインストールして、これらの環境変数を簡単に管理：
+Refinireは[OneEnv](https://github.com/kitfactory/oneenv)と統合して環境変数管理を効率化します。
+
+### インストールと基本的な使用方法
 
 ```bash
 pip install oneenv
@@ -22,6 +24,36 @@ oneenv init refinire:tracing
 oneenv init refinire:agents
 oneenv init refinire:development
 ```
+
+### テンプレート登録
+
+Refinireはエントリーポイントを通じてOneEnvにテンプレートを自動登録します：
+
+```toml
+[project.entry-points."oneenv.templates"]
+core = "refinire.templates:core_template"
+tracing = "refinire.templates:tracing_template"
+agents = "refinire.templates:agents_template" 
+development = "refinire.templates:development_template"
+```
+
+### 対話型CLIセットアップ
+
+最良の体験のために、Refinire CLIウィザードを使用してください：
+
+```bash
+# CLI対応でインストール
+pip install "refinire[cli]"
+
+# 対話型セットアップを実行
+refinire-setup
+```
+
+CLIの提供機能：
+- **対話型プロバイダー選択** - リッチなターミナルインターフェース
+- **スマートテンプレート生成** - 選択に基づいた最適化
+- **OneEnv API統合** - 最適なテンプレート作成
+- **フォールバック対応** - OneEnvが利用できない場合の代替機能
 
 ## コアLLMプロバイダー設定
 **テンプレート**: `core`

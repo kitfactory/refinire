@@ -1,19 +1,26 @@
 # Refinire — Refined Simplicity for Agentic AI
 ひらめきを"すぐに動く"へ、直感的エージェント・フレームワーク
 
-## Why Refinire?
+## なぜRefinireなのか？
 
-- **Simple installation** — Just `pip install refinire`
-- **Simplify LLM-specific configuration** — No complex setup required
-- **Unified API across providers** — OpenAI / Anthropic / Google / Ollama  
-- **Built-in evaluation & regeneration loops** — Quality assurance out of the box
-- **One-line parallel processing** — Complex async operations with just `{"parallel": [...]}`
-- **Comprehensive observability** — Automatic tracing with OpenTelemetry integration
+- **シンプルなインストール** — `pip install refinire`だけ
+- **LLM固有の設定を簡素化** — 複雑なセットアップは不要
+- **プロバイダー間の統一API** — OpenAI / Anthropic / Google / Ollama
+- **組み込み評価 & 再生成ループ** — 品質保証が標準装備
+- **1行での並列処理** — `{"parallel": [...]}`で複雑な非同期操作
+- **包括的な可観測性** — OpenTelemetry統合による自動トレーシング
 
 # 30-Second Quick Start
 
 ```bash
 > pip install refinire
+```
+
+**オプション**: 対話型CLIで環境変数を簡単に設定:
+
+```bash
+pip install "refinire[cli]"
+refinire-setup
 ```
 
 ```python
@@ -839,3 +846,85 @@ result = agent.run("{{user_type}}ユーザーからの{{service_level}}要求に
 - **直感的な開発**: すべての開発者に馴染みのある自然なPythonデコレータパターン
 
 **このリリースは、Refinireを最も開発者フレンドリーなAIエージェントプラットフォームにするための大きな前進を表しています。**
+
+---
+
+## インストール & クイックスタート
+
+### インストール
+
+```bash
+pip install refinire
+```
+
+### 環境設定（推奨）
+
+対話型で環境変数を設定:
+
+```bash
+# CLI対応でインストール
+pip install "refinire[cli]"
+
+# 対話型セットアップウィザードを実行
+refinire-setup
+```
+
+CLIが以下をガイドします:
+- **プロバイダー選択**: OpenAI、Anthropic、Google、OpenRouter、Groq、Ollama、LM Studioから選択
+- **機能設定**: トレーシング、エージェント設定、開発機能を有効化
+- **テンプレート生成**: カスタマイズされた`.env`ファイルを作成
+
+**手動設定**: 代わりに環境変数を手動で設定:
+
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+export REFINIRE_DEFAULT_LLM_MODEL="gpt-4o-mini"
+```
+
+📖 **完全ガイド**: [環境変数](docs/environment_variables_ja.md) | [CLIツール](docs/cli.md)
+
+### 最初のエージェント（30秒）
+
+```python
+from refinire import RefinireAgent
+
+# 作成
+agent = RefinireAgent(
+    name="hello_world",
+    generation_instructions="親切なアシスタントです。",
+    model="gpt-4o-mini"
+)
+
+# 実行
+result = agent.run("こんにちは！")
+print(result.content)
+```
+
+### プロバイダーの柔軟性
+
+```python
+from refinire import get_llm
+
+# 複数のプロバイダーをテスト
+providers = [
+    ("openai", "gpt-4o-mini"),
+    ("anthropic", "claude-3-haiku-20240307"),
+    ("google", "gemini-1.5-flash"),
+    ("ollama", "llama3.1:8b")
+]
+
+for provider, model in providers:
+    try:
+        llm = get_llm(provider=provider, model=model)
+        print(f"✓ {provider}: {model} - Ready")
+    except Exception as e:
+        print(f"✗ {provider}: {model} - {str(e)}")
+```
+
+**対話型セットアップ**: Refinire CLIで簡単設定:
+
+```bash
+refinire-setup
+```
+
+📖 **完全セットアップガイド**: [環境変数](docs/environment_variables_ja.md) | [CLIドキュメント](docs/cli.md)
