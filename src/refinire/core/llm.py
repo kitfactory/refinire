@@ -9,6 +9,12 @@ from agents import OpenAIResponsesModel
 import httpx
 import asyncio
 import os
+# English: Import oneenv for environment variable management
+# 日本語: 環境変数管理のためのoneenvをインポート
+try:
+    import oneenv
+except ImportError:
+    oneenv = None
 
 from .anthropic import ClaudeModel
 from .gemini import GeminiModel
@@ -19,6 +25,32 @@ from .model_parser import parse_model_id, detect_provider_from_environment, get_
 ProviderType = Literal["openai", "google", "anthropic", "ollama", "azure", "groq", "lmstudio", "openrouter"]
 
 
+def _get_env_var(key: str, default: str = "", namespace: Optional[str] = None) -> str:
+    """
+    Get environment variable value using oneenv or fallback to os.environ.
+    
+    English: Get environment variable value using oneenv or fallback to os.environ.
+    日本語: oneenvを使用して環境変数値を取得、利用できない場合はos.environにフォールバック。
+    
+    Args:
+        key (str): Environment variable key
+        default (str): Default value if key not found
+        namespace (Optional[str]): oneenv namespace
+        
+    Returns:
+        str: Environment variable value
+    """
+    if oneenv is not None:
+        try:
+            return oneenv.env().load(namespace or "").get(key, default)
+        except Exception:
+            # Fallback to os.environ if oneenv fails
+            return os.environ.get(key, default)
+    else:
+        # Fallback to os.environ if oneenv is not available
+        return os.environ.get(key, default)
+
+
 def get_llm(
     model: Optional[str] = None,
     provider: Optional[ProviderType] = None,
@@ -26,6 +58,7 @@ def get_llm(
     api_key: Optional[str] = None,
     base_url: Optional[str] = None,
     thinking: bool = False,
+    namespace: Optional[str] = None,
     **kwargs: Any,
 ) -> Model:
     """
@@ -50,6 +83,8 @@ def get_llm(
             プロバイダー API のベース URL (必要な場合、例: セルフホストの Ollama や OpenAI 互換 API)。
         thinking (bool): Enable thinking mode for Claude models. Defaults to False.
             Claude モデルの思考モードを有効にするか。デフォルトは False。
+        namespace (Optional[str]): Environment variable namespace for oneenv. Defaults to None (empty namespace).
+            oneenv用の環境変数名前空間。デフォルトは None (空の名前空間)。
         tracing (bool): Whether to enable tracing for the Agents SDK. Defaults to False.
             Agents SDK のトレーシングを有効化するか。デフォルトは False。
         **kwargs (Any): Additional keyword arguments to pass to the model constructor.
@@ -69,7 +104,7 @@ def get_llm(
 
 
     if model is None:
-        model = os.environ.get("REFINIRE_DEFAULT_LLM_MODEL", "gpt-4o-mini")
+        model = _get_env_var("REFINIRE_DEFAULT_LLM_MODEL", "gpt-4o-mini", namespace)
 
     # Parse model ID to extract provider, model name, and tag
     # モデルIDを解析してプロバイダー、モデル名、タグを抽出
@@ -83,7 +118,7 @@ def get_llm(
         else:
             # Try environment detection first
             # まず環境検出を試す
-            env_provider = detect_provider_from_environment()
+            env_provider = detect_provider_from_environment(namespace)
             if env_provider:
                 provider = env_provider
             else:
@@ -104,7 +139,7 @@ def get_llm(
     
     # Get provider-specific configuration
     # プロバイダー固有の設定を取得
-    provider_config = get_provider_config(provider, model_name, model_tag)
+    provider_config = get_provider_config(provider, model_name, model_tag, namespace)
 
     # Handle provider-specific model creation
     # プロバイダー固有のモデル作成を処理
@@ -120,9 +155,9 @@ def get_llm(
         if api_key:
             client_args['api_key'] = api_key
         elif provider == "groq":
-            client_args['api_key'] = os.environ.get("GROQ_API_KEY")
+            client_args['api_key'] = _get_env_var("GROQ_API_KEY", "", namespace)
         elif provider == "openrouter":
-            client_args['api_key'] = os.environ.get("OPENROUTER_API_KEY")
+            client_args['api_key'] = _get_env_var("OPENROUTER_API_KEY", "", namespace)
         elif provider == "lmstudio":
             # LM Studio typically doesn't require API key
             # LM Studioは通常APIキーを必要としない
@@ -169,9 +204,9 @@ def get_llm(
         
         # Azure requires specific configuration
         # Azureは特定の設定が必要
-        client_args['api_key'] = api_key or os.environ.get("AZURE_OPENAI_API_KEY")
+        client_args['api_key'] = api_key or _get_env_var("AZURE_OPENAI_API_KEY", "", namespace)
         client_args['api_version'] = provider_config["api_version"]
-        client_args['azure_endpoint'] = base_url or os.environ.get("AZURE_OPENAI_ENDPOINT")
+        client_args['azure_endpoint'] = base_url or _get_env_var("AZURE_OPENAI_ENDPOINT", "", namespace)
         
         # Create Azure client
         # Azureクライアントを作成
@@ -195,6 +230,7 @@ def get_llm(
             temperature=temperature,
             api_key=api_key,
             base_url=base_url, # Although Gemini doesn't typically use base_url, pass it if provided
+            namespace=namespace,
             **gemini_kwargs
         )
     elif provider == "anthropic":
@@ -205,12 +241,12 @@ def get_llm(
         
         # Check if using OpenAI-compatible mode via ANTHROPIC_BASE_URL
         # ANTHROPIC_BASE_URLによるOpenAI互換モードかチェック
-        anthropic_base_url = base_url or os.environ.get("ANTHROPIC_BASE_URL")
+        anthropic_base_url = base_url or _get_env_var("ANTHROPIC_BASE_URL", "", namespace)
         if anthropic_base_url and anthropic_base_url != "https://api.anthropic.com/v1":
             # Use OpenAI-compatible client for OpenRouter/LiteLLM etc.
             # OpenRouter/LiteLLM等でOpenAI互換クライアントを使用
             client_args = {
-                'api_key': api_key or os.environ.get("ANTHROPIC_API_KEY"),
+                'api_key': api_key or _get_env_var("ANTHROPIC_API_KEY", "", namespace),
                 'base_url': anthropic_base_url
             }
             openai_client = AsyncOpenAI(**client_args)
@@ -232,6 +268,7 @@ def get_llm(
                 api_key=api_key,
                 base_url=base_url,
                 thinking=thinking,
+                namespace=namespace,
                 **claude_kwargs
             )
     elif provider == "ollama":
@@ -244,6 +281,7 @@ def get_llm(
             temperature=temperature,
             base_url=base_url or provider_config.get("base_url"),
             api_key=api_key,
+            namespace=namespace,
             **ollama_kwargs
         )
     else:
@@ -251,7 +289,8 @@ def get_llm(
 
 async def get_available_models_async(
     providers: List[ProviderType],
-    ollama_base_url: Optional[str] = None
+    ollama_base_url: Optional[str] = None,
+    namespace: Optional[str] = None
 ) -> dict[str, List[str]]:
     """
     Get available model names for specified providers.
@@ -309,7 +348,7 @@ async def get_available_models_async(
             # English: Get Ollama base URL from parameter, environment variable, or default
             # 日本語: パラメータ、環境変数、またはデフォルトから Ollama ベース URL を取得
             if ollama_base_url is None:
-                ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+                ollama_base_url = _get_env_var("OLLAMA_BASE_URL", "http://localhost:11434", None)
             
             try:
                 # English: Fetch available models from Ollama API
@@ -348,7 +387,8 @@ async def get_available_models_async(
 
 def get_available_models(
     providers: List[ProviderType],
-    ollama_base_url: Optional[str] = None
+    ollama_base_url: Optional[str] = None,
+    namespace: Optional[str] = None
 ) -> dict[str, List[str]]:
     """
     Get available model names for specified providers (synchronous version).
@@ -377,9 +417,9 @@ def get_available_models(
         # 日本語: 実行中のループ内にいる場合、異なる方法で処理する必要がある
         import concurrent.futures
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, get_available_models_async(providers, ollama_base_url))
+            future = executor.submit(asyncio.run, get_available_models_async(providers, ollama_base_url, namespace))
             return future.result()
     except RuntimeError:
         # English: No running event loop, safe to use asyncio.run()
         # 日本語: 実行中のイベントループがない場合、asyncio.run() を安全に使用
-        return asyncio.run(get_available_models_async(providers, ollama_base_url)) 
+        return asyncio.run(get_available_models_async(providers, ollama_base_url, namespace)) 

@@ -107,7 +107,9 @@ class RefinireAgent(Step):
         next_step: Optional[str] = None,
         store_result_key: Optional[str] = None,
         # Orchestration mode parameter / オーケストレーションモードパラメータ
-        orchestration_mode: bool = False
+        orchestration_mode: bool = False,
+        # Environment variable namespace / 環境変数名前空間
+        namespace: Optional[str] = None
     ) -> None:
         """
         Initialize Refinire Agent as a Step
@@ -137,10 +139,15 @@ class RefinireAgent(Step):
             next_step: Next step for Flow integration / Flow統合用次ステップ
             store_result_key: Key to store result in Flow context / Flow context内での結果保存キー
             orchestration_mode: Enable orchestration mode with structured JSON output / 構造化JSON出力付きオーケストレーションモード有効化
+            namespace: Environment variable namespace for oneenv / oneenv用環境変数名前空間
         """
         # Initialize Step base class
         # Step基底クラスを初期化
         super().__init__(name)
+        
+        # Store namespace for environment variable access
+        # 環境変数アクセス用の名前空間を保存
+        self.namespace = namespace
         
         # Handle PromptReference for generation instructions
         self._generation_prompt_metadata = None
@@ -161,7 +168,7 @@ class RefinireAgent(Step):
         # Handle model parameter - convert string to Model instance using get_llm()
         # modelパラメータを処理 - 文字列の場合はget_llm()を使用してModelインスタンスに変換
         if isinstance(model, str):
-            self.model = get_llm(model=model, temperature=temperature)
+            self.model = get_llm(model=model, temperature=temperature, namespace=namespace)
             self.model_name = model
         else:
             # Assume it's already a Model instance
@@ -175,7 +182,7 @@ class RefinireAgent(Step):
             self.evaluation_model = self.model
             self.evaluation_model_name = self.model_name
         elif isinstance(evaluation_model, str):
-            self.evaluation_model = get_llm(model=evaluation_model, temperature=temperature)
+            self.evaluation_model = get_llm(model=evaluation_model, temperature=temperature, namespace=namespace)
             self.evaluation_model_name = evaluation_model
         else:
             self.evaluation_model = evaluation_model

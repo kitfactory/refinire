@@ -7,6 +7,39 @@ import os
 from typing import Tuple, Optional, Dict, Any
 from urllib.parse import urlparse
 
+# English: Import oneenv for environment variable management
+# 日本語: 環境変数管理のためのoneenvをインポート
+try:
+    import oneenv
+except ImportError:
+    oneenv = None
+
+
+def _get_env_var(key: str, default: str = "", namespace: Optional[str] = None) -> str:
+    """
+    Get environment variable value using oneenv or fallback to os.environ.
+    
+    English: Get environment variable value using oneenv or fallback to os.environ.
+    日本語: oneenvを使用して環境変数値を取得、利用できない場合はos.environにフォールバック。
+    
+    Args:
+        key (str): Environment variable key
+        default (str): Default value if key not found
+        namespace (Optional[str]): oneenv namespace
+        
+    Returns:
+        str: Environment variable value
+    """
+    if oneenv is not None:
+        try:
+            return oneenv.env().load(namespace or "").get(key, default)
+        except Exception:
+            # Fallback to os.environ if oneenv fails
+            return os.environ.get(key, default)
+    else:
+        # Fallback to os.environ if oneenv is not available
+        return os.environ.get(key, default)
+
 
 def parse_model_id(model_id: str) -> Tuple[Optional[str], str, Optional[str]]:
     """
@@ -52,7 +85,7 @@ def parse_model_id(model_id: str) -> Tuple[Optional[str], str, Optional[str]]:
     return provider, model_name, tag
 
 
-def detect_provider_from_environment() -> Optional[str]:
+def detect_provider_from_environment(namespace: Optional[str] = None) -> Optional[str]:
     """
     Detect provider from environment variables
     環境変数からプロバイダーを検出
@@ -71,32 +104,32 @@ def detect_provider_from_environment() -> Optional[str]:
     """
     # Check OLLAMA_BASE_URL first
     # OLLAMA_BASE_URLを最初にチェック
-    if os.environ.get("OLLAMA_BASE_URL"):
+    if _get_env_var("OLLAMA_BASE_URL", "", namespace):
         return "ollama"
     
     # Check LM_STUDIO_BASE_URL
     # LM_STUDIO_BASE_URLをチェック
-    if os.environ.get("LM_STUDIO_BASE_URL"):
+    if _get_env_var("LM_STUDIO_BASE_URL", "", namespace):
         return "lmstudio"
     
     # Check OPENROUTER_API_KEY
     # OPENROUTER_API_KEYをチェック
-    if os.environ.get("OPENROUTER_API_KEY"):
+    if _get_env_var("OPENROUTER_API_KEY", "", namespace):
         return "openrouter"
     
     # Check GROQ_API_KEY
     # GROQ_API_KEYをチェック
-    if os.environ.get("GROQ_API_KEY"):
+    if _get_env_var("GROQ_API_KEY", "", namespace):
         return "groq"
     
     # Check ANTHROPIC_API_KEY
     # ANTHROPIC_API_KEYをチェック
-    if os.environ.get("ANTHROPIC_API_KEY"):
+    if _get_env_var("ANTHROPIC_API_KEY", "", namespace):
         return "anthropic"
     
     # Check Azure endpoint
     # Azureエンドポイントをチェック
-    if os.environ.get("AZURE_OPENAI_ENDPOINT"):
+    if _get_env_var("AZURE_OPENAI_ENDPOINT", "", namespace):
         return "azure"
     
     return None
@@ -115,7 +148,7 @@ def should_use_chat_completions(provider: str) -> bool:
     """
     # OpenAI with FORCE_CHAT environment variable
     # FORCE_CHAT環境変数付きのOpenAI
-    if provider == "openai" and os.environ.get("FORCE_CHAT", "").lower() in ["1", "true", "yes"]:
+    if provider == "openai" and _get_env_var("FORCE_CHAT", "", None).lower() in ["1", "true", "yes"]:
         return True
     
     # Providers that always use chat completions
@@ -124,7 +157,7 @@ def should_use_chat_completions(provider: str) -> bool:
     return provider in chat_providers
 
 
-def get_provider_config(provider: str, model_name: str, tag: Optional[str] = None) -> Dict[str, Any]:
+def get_provider_config(provider: str, model_name: str, tag: Optional[str] = None, namespace: Optional[str] = None) -> Dict[str, Any]:
     """
     Get provider-specific configuration
     プロバイダー固有の設定を取得
@@ -146,7 +179,7 @@ def get_provider_config(provider: str, model_name: str, tag: Optional[str] = Non
     # Azure-specific configuration
     # Azure固有の設定
     if provider == "azure":
-        config["api_version"] = tag or os.environ.get("AZURE_OPENAI_API_VERSION", "2024-10-21")
+        config["api_version"] = tag or _get_env_var("AZURE_OPENAI_API_VERSION", "2024-10-21", namespace)
         config["deployment_name"] = model_name
         # Azure uses deployment name, not model name
         # Azureはモデル名ではなくデプロイメント名を使用
@@ -158,26 +191,26 @@ def get_provider_config(provider: str, model_name: str, tag: Optional[str] = Non
             # Ollama uses model:tag format
             # Ollamaはmodel:tag形式を使用
             config["model"] = f"{model_name}:{tag}"
-        config["base_url"] = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        config["base_url"] = _get_env_var("OLLAMA_BASE_URL", "http://localhost:11434", namespace)
     
     # Groq-specific configuration
     # Groq固有の設定
     elif provider == "groq":
-        config["base_url"] = os.environ.get("GROQ_BASE_URL", "https://api.groq.com")
+        config["base_url"] = _get_env_var("GROQ_BASE_URL", "https://api.groq.com", namespace)
     
     # LM Studio configuration
     # LM Studio設定
     elif provider == "lmstudio":
-        config["base_url"] = os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234")
+        config["base_url"] = _get_env_var("LM_STUDIO_BASE_URL", "http://localhost:1234", namespace)
     
     # OpenRouter configuration
     # OpenRouter設定
     elif provider == "openrouter":
-        config["base_url"] = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+        config["base_url"] = _get_env_var("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1", namespace)
     
     # Anthropic configuration
     # Anthropic設定
     elif provider == "anthropic":
-        config["base_url"] = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1")
+        config["base_url"] = _get_env_var("ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1", namespace)
     
     return config
