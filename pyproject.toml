@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "refinire"
-version = "0.3.0"
+version = "0.3.1"
 description = "Refined simplicity for AI agents - Build intelligent workflows with automatic quality assurance and multi-provider LLM support"
 readme = "README.md"
 license = {text = "MIT"}
