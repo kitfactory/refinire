@@ -52,6 +52,14 @@ from .message import get_message, DEFAULT_LANGUAGE
 # Prompt management
 from .prompt_store import PromptStore, StoredPrompt, PromptReference, P, detect_system_language, get_default_storage_dir
 
+# Trace context management
+from .trace_context import (
+    get_current_trace_context,
+    has_active_trace_context,
+    create_trace_context_if_needed,
+    TraceContextManager
+)
+
 __all__ = [
     # LLM abstraction
     "ProviderType", 
@@ -89,5 +97,11 @@ __all__ = [
     "PromptReference",
     "P",
     "detect_system_language",
-    "get_default_storage_dir"
+    "get_default_storage_dir",
+    
+    # Trace context management
+    "get_current_trace_context",
+    "has_active_trace_context",
+    "create_trace_context_if_needed",
+    "TraceContextManager"
 ]

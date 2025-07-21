@@ -45,7 +45,12 @@ from .core import (
     GeminiModel,
     OllamaModel,
     get_message,
-    DEFAULT_LANGUAGE
+    DEFAULT_LANGUAGE,
+    # Trace context management
+    get_current_trace_context,
+    has_active_trace_context,
+    create_trace_context_if_needed,
+    TraceContextManager
 )
 
 # Exception classes for error handling
@@ -79,7 +84,11 @@ from .agents.flow import (
     create_simple_flow,
     create_conditional_flow,
     create_simple_condition,
-    create_lambda_step
+    create_lambda_step,
+    # Simple Flow (easier alternative)
+    SimpleFlow,
+    create_simple_flow_v2,
+    simple_step
 )
 
 # Modern agent functionality
@@ -168,6 +177,10 @@ __all__ = [
     "create_conditional_flow",
     "create_simple_condition",
     "create_lambda_step",
+    # Simple Flow
+    "SimpleFlow",
+    "create_simple_flow_v2", 
+    "simple_step",
     
     # Agent functionality
     "RefinireAgent",
@@ -210,6 +223,12 @@ __all__ = [
     "is_opentelemetry_enabled", 
     "is_openinference_available",
     "get_tracer",
+    
+    # Trace context management
+    "get_current_trace_context",
+    "has_active_trace_context", 
+    "create_trace_context_if_needed",
+    "TraceContextManager",
     
     # Environment templates
     "core_template"

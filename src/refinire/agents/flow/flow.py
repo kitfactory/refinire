@@ -461,19 +461,17 @@ class Flow:
         Raises:
             FlowExecutionError: If execution fails / 実行失敗時
         """
-        # Try to create trace context if agents.tracing is available
-        # agents.tracingが利用可能な場合はトレースコンテキストを作成を試行
+        # Create trace context intelligently - only if no active trace exists
+        # インテリジェントにトレースコンテキストを作成 - アクティブなトレースが存在しない場合のみ
         try:
-            from agents.tracing import trace
+            from ...core.trace_context import TraceContextManager
             
-            # Create trace context for this flow execution
-            # このフロー実行用のトレースコンテキストを作成
             trace_name = f"Flow({self.name or 'unnamed'})"
-            with trace(trace_name):
+            with TraceContextManager(trace_name):
                 return await self._run_with_span(input_data, initial_input, None)
         except ImportError:
-            # agents.tracing is not available - run without trace context
-            # agents.tracingが利用できません - トレースコンテキストなしで実行
+            # trace_context not available - fallback to original behavior
+            # trace_contextが利用できません - 元の動作にフォールバック
             return await self._run_with_span(input_data, initial_input, None)
         except Exception as e:
             # If there's any issue with trace creation, fall back to no trace
@@ -493,17 +491,17 @@ class Flow:
             str: Streaming content chunks from supported steps / サポートされたステップからのストリーミングコンテンツチャンク
         """
         try:
-            from agents.tracing import trace
+            from ...core.trace_context import TraceContextManager
             
-            # Create trace context for this flow execution
-            # このフロー実行用のトレースコンテキストを作成
+            # Create trace context intelligently - only if no active trace exists
+            # インテリジェントにトレースコンテキストを作成 - アクティブなトレースが存在しない場合のみ
             trace_name = f"Flow({self.name or 'unnamed'})"
-            with trace(trace_name):
+            with TraceContextManager(trace_name):
                 async for chunk in self._run_streamed_with_span(input_data, callback):
                     yield chunk
         except ImportError:
-            # agents.tracing is not available - run without trace context
-            # agents.tracingが利用できません - トレースコンテキストなしで実行
+            # trace_context not available - fallback to original behavior
+            # trace_contextが利用できません - 元の動作にフォールバック
             async for chunk in self._run_streamed_with_span(input_data, callback):
                 yield chunk
         except Exception as e:

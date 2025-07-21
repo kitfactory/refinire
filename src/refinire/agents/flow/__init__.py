@@ -22,6 +22,7 @@ from .step import (
     create_lambda_step
 )
 from .flow import Flow, FlowExecutionError, create_simple_flow, create_conditional_flow
+from .simple_flow import SimpleFlow, create_simple_flow as create_simple_flow_v2, simple_step
 
 __all__ = [
     # Context management
@@ -44,5 +45,10 @@ __all__ = [
     "Flow",
     "FlowExecutionError",
     "create_simple_flow",
-    "create_conditional_flow"
+    "create_conditional_flow",
+    
+    # Simple Flow (simplified version)
+    "SimpleFlow",
+    "create_simple_flow_v2",
+    "simple_step"
 ]

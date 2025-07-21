@@ -28,7 +28,7 @@ async def flow_demo():
         return
     
     # Define workflow functions / ワークフロー関数を定義
-    async def analyze_topic(context: Context) -> str:
+    async def analyze_topic(user_input: str, context: Context) -> Context:
         """Analyze the topic and determine content type"""
         print("📋 Step 1: Analyzing topic...")
         print("📋 ステップ1: トピック分析中...")
@@ -51,8 +51,8 @@ Analyze the given topic and determine:
             model="gpt-4o-mini"
         )
         
-        user_input = context.shared_state.get('user_topic', 'AI and the future of work')
-        result = await analyzer.run_async(f"Analyze this topic: {user_input}")
+        topic = context.shared_state.get('user_topic', user_input)
+        result = await analyzer.run_async(f"Analyze this topic: {topic}")
         
         if result.success:
             analysis = result.content
@@ -60,28 +60,37 @@ Analyze the given topic and determine:
             print(f"   ✅ Analysis complete: {analysis[:100]}...")
             
             # Determine complexity for routing
-            if 'complex' in analysis.lower():
+            analysis_lower = analysis.lower()
+            if 'complex' in analysis_lower and 'simple' not in analysis_lower:
                 context.shared_state['complexity'] = 'complex'
-            elif 'medium' in analysis.lower():
-                context.shared_state['complexity'] = 'medium'
+            elif 'medium' in analysis_lower:
+                context.shared_state['complexity'] = 'medium' 
+            elif 'simple' in analysis_lower:
+                context.shared_state['complexity'] = 'simple'
             else:
                 context.shared_state['complexity'] = 'simple'
-            
-            return analysis
         else:
             print(f"   ❌ Analysis failed: {result.content}")
             context.shared_state['complexity'] = 'simple'
-            return "Analysis failed"
-    
-    def route_by_complexity(context: Context) -> str:
-        """Route based on content complexity"""
-        complexity = context.shared_state.get('complexity', 'simple')
-        print(f"🔀 Routing by complexity: {complexity}")
-        print(f"🔀 複雑度によるルーティング: {complexity}")
+            context.shared_state['analysis'] = "Analysis failed"
         
-        return complexity  # Return the complexity directly for the condition mapping
+        return context
     
-    async def create_detailed_outline(context: Context) -> str:
+    def is_simple(context: Context) -> bool:
+        """Check if content is simple"""
+        complexity = context.shared_state.get('complexity', 'simple')
+        print(f"🔀 Checking if simple: {complexity}")
+        print(f"🔀 シンプルかチェック: {complexity}")
+        return complexity == 'simple'
+    
+    def is_complex(context: Context) -> bool:
+        """Check if content is complex"""
+        complexity = context.shared_state.get('complexity', 'simple')
+        print(f"🔀 Checking if complex: {complexity}")
+        print(f"🔀 複雑度かチェック: {complexity}")
+        return complexity == 'complex'
+    
+    async def create_detailed_outline(user_input: str, context: Context) -> Context:
         """Create detailed outline for complex content"""
         print("📝 Step 2a: Creating detailed outline...")
         print("📝 ステップ2a: 詳細アウトライン作成中...")
@@ -113,12 +122,13 @@ Include:
             outline = result.content
             context.shared_state['outline'] = outline
             print(f"   ✅ Detailed outline created: {len(outline)} characters")
-            return outline
         else:
             print(f"   ❌ Outline creation failed: {result.content}")
-            return "Outline creation failed"
+            context.shared_state['outline'] = "Outline creation failed"
+        
+        return context
     
-    async def create_standard_outline(context: Context) -> str:
+    async def create_standard_outline(user_input: str, context: Context) -> Context:
         """Create standard outline for medium complexity content"""
         print("📝 Step 2b: Creating standard outline...")
         print("📝 ステップ2b: 標準アウトライン作成中...")
@@ -150,12 +160,13 @@ Include:
             outline = result.content
             context.shared_state['outline'] = outline
             print(f"   ✅ Standard outline created: {len(outline)} characters")
-            return outline
         else:
             print(f"   ❌ Outline creation failed: {result.content}")
-            return "Outline creation failed"
+            context.shared_state['outline'] = "Outline creation failed"
+        
+        return context
     
-    async def create_simple_content(context: Context) -> str:
+    async def create_simple_content(user_input: str, context: Context) -> Context:
         """Create simple content directly without outline"""
         print("📝 Step 2c: Creating simple content...")
         print("📝 ステップ2c: シンプルコンテンツ作成中...")
@@ -186,12 +197,13 @@ Keep it:
             content = result.content
             context.shared_state['final_content'] = content
             print(f"   ✅ Simple content created: {len(content)} characters")
-            return content
         else:
             print(f"   ❌ Content creation failed: {result.content}")
-            return "Content creation failed"
+            context.shared_state['final_content'] = "Content creation failed"
+        
+        return context
     
-    async def write_final_content(context: Context) -> str:
+    async def write_final_content(user_input: str, context: Context) -> Context:
         """Write final content based on outline"""
         print("✍️  Step 3: Writing final content...")
         print("✍️  ステップ3: 最終コンテンツ作成中...")
@@ -224,12 +236,13 @@ Make it:
             content = result.content
             context.shared_state['final_content'] = content
             print(f"   ✅ Final content created: {len(content)} characters")
-            return content
         else:
             print(f"   ❌ Content writing failed: {result.content}")
-            return "Content writing failed"
+            context.shared_state['final_content'] = "Content writing failed"
+        
+        return context
     
-    async def review_content(context: Context) -> str:
+    async def review_content(user_input: str, context: Context) -> Context:
         """Review and improve the final content"""
         print("🔍 Step 4: Reviewing content...")
         print("🔍 ステップ4: コンテンツレビュー中...")
@@ -259,31 +272,37 @@ Review the content and provide:
             review = result.content
             context.shared_state['review'] = review
             print(f"   ✅ Review completed: {review[:100]}...")
-            return review
         else:
             print(f"   ❌ Review failed: {result.content}")
-            return "Review failed"
+            context.shared_state['review'] = "Review failed"
+        
+        return context
     
     # Create the workflow / ワークフローを作成
-    workflow = Flow({
-        "start": FunctionStep("analyze", analyze_topic),
-        "route": ConditionStep("route", route_by_complexity, {"simple": "simple_content", "medium": "standard_outline", "complex": "detailed_outline"}),
-        "simple_content": FunctionStep("simple", create_simple_content),
-        "standard_outline": FunctionStep("std_outline", create_standard_outline),
-        "detailed_outline": FunctionStep("det_outline", create_detailed_outline),
-        "write": FunctionStep("write", write_final_content),
-        "review": FunctionStep("review", review_content)
-    })
+    # This workflow uses step sequencing and conditional routing
+    # analyze -> route_simple -> (simple_content OR route_complex) -> review/write -> review
+    workflow = Flow(
+        start="start",
+        steps={
+            "start": FunctionStep("analyze", analyze_topic, next_step="route_simple"),
+            "route_simple": ConditionStep("route_simple", is_simple, "simple_content", "route_complex"),
+            "route_complex": ConditionStep("route_complex", is_complex, "detailed_outline", "standard_outline"),
+            "simple_content": FunctionStep("simple", create_simple_content, next_step="review"),
+            "standard_outline": FunctionStep("std_outline", create_standard_outline, next_step="write"),
+            "detailed_outline": FunctionStep("det_outline", create_detailed_outline, next_step="write"),
+            "write": FunctionStep("write", write_final_content, next_step="review"),
+            "review": FunctionStep("review", review_content)
+        },
+        name="content_creation_workflow"
+    )
     
     # Execute the workflow / ワークフローを実行
     print("\n🚀 Starting content creation workflow...")
     print("🚀 コンテンツ作成ワークフロー開始...")
     
-    # Test with different topics / 異なるトピックでテスト
+    # Test with different topics / 異なるトピックでテスト  
     test_topics = [
-        "Getting started with Python programming",
-        "The impact of artificial intelligence on healthcare",
-        "Hello World"
+        "Hello World"  # Simple test case only
     ]
     
     for i, topic in enumerate(test_topics, 1):
@@ -295,16 +314,16 @@ Review the content and provide:
         context.shared_state['user_topic'] = topic
         
         try:
-            result = await workflow.run(context)
+            result = await workflow.run(topic, context)
             
             if result:
                 print(f"\n✅ Workflow completed successfully!")
                 print(f"✅ ワークフロー正常完了！")
                 
                 # Show results / 結果を表示
-                final_content = context.shared_state.get('final_content', 'No content generated')
-                review = context.shared_state.get('review', 'No review available')
-                complexity = context.shared_state.get('complexity', 'unknown')
+                final_content = result.shared_state.get('final_content', 'No content generated')
+                review = result.shared_state.get('review', 'No review available')
+                complexity = result.shared_state.get('complexity', 'unknown')
                 
                 print(f"\n📊 Results for '{topic}':")
                 print(f"📊 '{topic}' の結果:")

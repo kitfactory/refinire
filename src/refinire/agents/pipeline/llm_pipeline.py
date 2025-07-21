@@ -496,15 +496,13 @@ IMPORTANT: Do not deviate from this format."""
             ctx = Context()
             if user_input:
                 ctx.add_user_message(user_input)
-        # Try to create trace context if agents.tracing is available
-        # agents.tracingが利用可能な場合はトレースコンテキストを作成を試行
+        # Create trace context intelligently - only if no active trace exists
+        # インテリジェントにトレースコンテキストを作成 - アクティブなトレースが存在しない場合のみ
         try:
-            from agents.tracing import trace
+            from ...core.trace_context import TraceContextManager
             
-            # Create trace context for this agent execution
-            # このエージェント実行用のトレースコンテキストを作成
             trace_name = f"RefinireAgent({self.name})"
-            with trace(trace_name):
+            with TraceContextManager(trace_name):
                 result_ctx = await self._execute_with_context(user_input, ctx, None)
                 
                 # Return orchestration result if in orchestration mode
@@ -513,9 +511,8 @@ IMPORTANT: Do not deviate from this format."""
                     return result_ctx.result
                 return result_ctx
         except ImportError:
-            # agents.tracing is not available - run without trace context
-            # agents.tracingが利用できません - トレースコンテキストなしで実行
-            # agents.tracing not available, running without trace context
+            # trace_context not available - fallback to original behavior
+            # trace_contextが利用できません - 元の動作にフォールバック
             result_ctx = await self._execute_with_context(user_input, ctx, None)
             
             # Return orchestration result if in orchestration mode

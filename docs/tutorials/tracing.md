@@ -9,6 +9,40 @@ Refinire offers two levels of tracing:
 1. **Built-in Console Tracing** - Always available, no additional dependencies
 2. **OpenTelemetry Tracing** - Advanced observability with OTLP export (requires optional dependencies)
 
+## Intelligent Trace Context Management
+
+Refinire automatically manages trace contexts to avoid the common "Trace already exists" warning. The system intelligently creates traces based on the execution context:
+
+### Automatic Trace Creation Rules
+
+1. **Single RefinireAgent Execution**: Creates a new trace for the agent
+2. **Flow Execution**: Creates a single trace for the entire flow 
+3. **RefinireAgent within Flow**: Uses the existing Flow trace (no new trace)
+4. **Nested Flows**: Share the parent flow's trace context
+
+This design ensures clean trace hierarchies without nested trace warnings, while maintaining full observability.
+
+### Example: No Trace Warnings
+
+```python
+from refinire import RefinireAgent
+from refinire.agents.flow import SimpleFlow, simple_step, Context
+
+# Single agent - creates its own trace
+agent = RefinireAgent(name="single", generation_instructions="Be helpful")
+result = await agent.run_async("Hello")  # ✅ New trace created
+
+# Flow with agent - shares trace context  
+async def flow_step(user_input: str, context: Context) -> Context:
+    agent = RefinireAgent(name="flow_agent", generation_instructions="Be helpful")
+    result = await agent.run_async(user_input)  # ✅ Uses Flow's trace
+    context.shared_state['result'] = result.content
+    return context
+
+flow = SimpleFlow([simple_step("step", flow_step)])
+result = await flow.run("Hello from flow")  # ✅ Single trace for entire flow
+```
+
 ## Built-in Console Tracing
 
 By default, Refinire displays detailed trace information in the console with color-coded output:
@@ -280,6 +314,56 @@ Complete workflows automatically create top-level spans:
 - **`flow_finished`**: Whether the flow reached a natural end
 - **`flow_result`**: Final result from the flow (truncated to 500 chars)
 - **`flow_error`**: Error message if flow execution failed
+
+### Trace Context Management for Workflows
+
+Refinire's intelligent trace management ensures clean trace hierarchies:
+
+```python
+# Complex workflow with multiple agents
+from refinire import RefinireAgent
+from refinire.agents.flow import Flow, FunctionStep, ConditionStep, Context
+
+async def analyze_content(user_input: str, context: Context) -> Context:
+    analyzer = RefinireAgent(
+        name="content_analyzer", 
+        generation_instructions="Analyze and categorize content"
+    )
+    # ✅ Uses Flow's trace - no new trace created
+    result = await analyzer.run_async(user_input)
+    context.shared_state['analysis'] = result.content
+    return context
+
+async def generate_response(user_input: str, context: Context) -> Context:
+    generator = RefinireAgent(
+        name="response_generator",
+        generation_instructions="Generate detailed response"
+    )
+    # ✅ Uses Flow's trace - no new trace created  
+    result = await generator.run_async(user_input)
+    context.shared_state['response'] = result.content
+    return context
+
+# Single trace for the entire workflow
+flow = Flow(
+    start="analyze",
+    steps={
+        "analyze": FunctionStep("analyze", analyze_content, next_step="generate"),
+        "generate": FunctionStep("generate", generate_response)
+    },
+    name="content_workflow"
+)
+
+# ✅ Creates one trace: "Flow(content_workflow)"
+# All internal agents share this trace
+result = await flow.run("Analyze this content")
+```
+
+**Benefits of Intelligent Trace Management:**
+- **No nested trace warnings**: Eliminates "Trace already exists" messages
+- **Clean hierarchy**: Single trace per workflow execution
+- **Full visibility**: All agent operations captured within flow trace
+- **Consistent behavior**: Works across Flow, SimpleFlow, and nested workflows
 
 ### Advanced Workflow Tracing (Optional)
 
@@ -621,6 +705,7 @@ Refinire includes comprehensive examples in the `examples/` directory:
 - **`opentelemetry_tracing_example.py`** - Basic OpenTelemetry setup and usage
 - **`grafana_tempo_tracing_example.py`** - Grafana Tempo integration examples
 - **`oneenv_tracing_example.py`** - Environment configuration with oneenv
+- **`trace_context_management_example.py`** - Intelligent trace context management demonstration
 
 ### Running the Examples
 
@@ -633,11 +718,142 @@ python examples/grafana_tempo_tracing_example.py
 
 # OneEnv configuration demo
 python examples/oneenv_tracing_example.py
+
+# Trace context management demonstration
+python examples/trace_context_management_example.py
+```
+
+## Trace Context Management API
+
+For advanced use cases, Refinire provides utilities for manual trace context management:
+
+### Basic Trace Context Utilities
+
+```python
+from refinire import (
+    get_current_trace_context,
+    has_active_trace_context,
+    TraceContextManager
+)
+
+# Check if there's an active trace
+if has_active_trace_context():
+    print("Running within an existing trace")
+else:
+    print("No active trace context")
+
+# Get current trace details (returns None if no active trace)
+current_trace = get_current_trace_context()
+if current_trace:
+    print(f"Active trace ID: {current_trace.trace_id}")
+```
+
+### Manual Trace Context Management
+
+```python
+from refinire import TraceContextManager
+
+# Intelligent trace creation - only creates if no active trace
+async def my_workflow():
+    with TraceContextManager("my-workflow"):
+        # This creates a trace only if none exists
+        agent = RefinireAgent(name="worker", generation_instructions="Help users")
+        result = await agent.run_async("Hello")  # Uses existing trace
+        return result
+
+# Force new trace creation (advanced use case)
+async def force_new_trace():
+    with TraceContextManager("forced-trace", force_new_trace=True):
+        # Always creates a new trace, even if one exists
+        agent = RefinireAgent(name="isolated", generation_instructions="Work independently")
+        result = await agent.run_async("Independent work")
+        return result
+```
+
+### Integration with Custom Code
+
+```python
+from refinire import TraceContextManager, RefinireAgent
+
+async def document_processing_pipeline(documents: list):
+    """Process multiple documents with proper trace management"""
+    
+    # Create a trace for the entire pipeline
+    with TraceContextManager("document-pipeline"):
+        results = []
+        
+        for i, doc in enumerate(documents):
+            # Each agent operation uses the pipeline trace
+            processor = RefinireAgent(
+                name=f"doc_processor_{i}",
+                generation_instructions="Process and summarize documents"
+            )
+            
+            # No new trace created - uses pipeline trace
+            result = await processor.run_async(f"Process: {doc}")
+            results.append(result.content)
+            
+        return results
+
+# Usage
+docs = ["Document 1 content", "Document 2 content"]
+processed = await document_processing_pipeline(docs)
+```
+
+### Error Handling with Trace Context
+
+```python
+from refinire import TraceContextManager, has_active_trace_context
+
+async def robust_workflow():
+    try:
+        # Check trace context before starting
+        if not has_active_trace_context():
+            print("Starting new trace for workflow")
+        
+        with TraceContextManager("robust-workflow"):
+            agent = RefinireAgent(
+                name="robust_agent",
+                generation_instructions="Handle tasks robustly"
+            )
+            
+            result = await agent.run_async("Complex task")
+            return result
+            
+    except Exception as e:
+        print(f"Workflow failed: {e}")
+        # Trace context automatically handles cleanup
+        raise
 ```
 
 ## Best Practices
 
-### 1. Resource Attributes
+### 1. Trace Context Best Practices
+
+**✅ Recommended:**
+- Let Refinire manage trace context automatically (default behavior)
+- Use Flow/SimpleFlow for workflows (automatic trace management)
+- Only use manual trace management for specific integration needs
+
+**❌ Avoid:**
+- Manually creating traces within Flow executions
+- Forcing new traces unless absolutely necessary
+- Ignoring trace context in custom workflow code
+
+```python
+# ✅ Good: Let Flow manage traces
+flow = SimpleFlow([simple_step("work", my_function)])
+result = await flow.run("input")
+
+# ❌ Avoid: Manual trace creation within flows
+async def bad_step(user_input, context):
+    with TraceContextManager("unnecessary-trace", force_new_trace=True):
+        # This creates nested traces unnecessarily
+        agent = RefinireAgent(...)
+        return await agent.run_async(user_input)
+```
+
+### 2. Resource Attributes
 Always include meaningful resource attributes:
 
 ```python
