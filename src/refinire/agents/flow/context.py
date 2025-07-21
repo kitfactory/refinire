@@ -55,6 +55,7 @@ class Context(BaseModel):
     result: Any = None  # Complete LLM API response object (recommended for advanced usage) / 完全なLLM API応答オブジェクト（高度な使用推奨）
     evaluation_result: Optional[Dict[str, Any]] = None  # Latest evaluation result / 最新の評価結果
     routing_result: Optional[Dict[str, Any]] = None  # Latest routing result / 最新のルーティング結果
+    error: Optional[Dict[str, Any]] = None  # Error information / エラー情報
     
     
     # Flow control / フロー制御
@@ -129,9 +130,9 @@ class Context(BaseModel):
             if not self.evaluation_result.get('passed', True):
                 return False
         
-        # Check for error indicators in shared state
-        # 共有状態でエラー指標をチェック
-        if 'error' in self.shared_state:
+        # Check for error information
+        # エラー情報をチェック
+        if self.error is not None:
             return False
             
         # Check routing result for error conditions
@@ -535,33 +536,40 @@ class Context(BaseModel):
             self._finalize_current_span()
             self.current_span_id = None
     
-    def set_artifact(self, key: str, value: Any) -> None:
+    def set_error(self, step: str, error: Exception, **kwargs) -> None:
         """
-        Set artifact value (stored in shared_state['artifacts'])
-        成果物の値を設定（shared_state['artifacts']に保存）
+        Set error information
+        エラー情報を設定
         
         Args:
-            key: Artifact key / 成果物キー
-            value: Artifact value / 成果物値
+            step: Step name where error occurred / エラーが発生したステップ名
+            error: Error exception / エラー例外
+            **kwargs: Additional error metadata / 追加エラーメタデータ
         """
-        if 'artifacts' not in self.shared_state:
-            self.shared_state['artifacts'] = {}
-        self.shared_state['artifacts'][key] = value
+        self.error = {
+            "step": step,
+            "message": str(error),
+            "type": type(error).__name__,
+            "timestamp": datetime.now(),
+            **kwargs
+        }
     
-    def get_artifact(self, key: str, default: Any = None) -> Any:
+    def clear_error(self) -> None:
         """
-        Get artifact value (from shared_state['artifacts'])
-        成果物の値を取得（shared_state['artifacts']から）
+        Clear error information
+        エラー情報をクリア
+        """
+        self.error = None
+    
+    def has_error(self) -> bool:
+        """
+        Check if context has error information
+        コンテキストにエラー情報があるかチェック
         
-        Args:
-            key: Artifact key / 成果物キー
-            default: Default value if not found / 見つからない場合のデフォルト値
-            
         Returns:
-            Any: Artifact value / 成果物値
+            bool: True if error exists / エラーが存在する場合True
         """
-        artifacts = self.shared_state.get('artifacts', {})
-        return artifacts.get(key, default)
+        return self.error is not None
     
     def get_current_span_info(self) -> Optional[Dict[str, Any]]:
         """

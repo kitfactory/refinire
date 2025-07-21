@@ -295,8 +295,10 @@ class TestFlowTracing:
         assert flow1.trace_id != flow2.trace_id
         
         # Both should contain microsecond-level timestamps (6 digits)
-        assert len(flow1.trace_id.split('_')[-1]) == 6  # Microseconds
-        assert len(flow2.trace_id.split('_')[-1]) == 6
+        # Microseconds are the second-to-last part (before UUID suffix)
+        # マイクロ秒は最後から2番目の部分（UUIDサフィックスの前）
+        assert len(flow1.trace_id.split('_')[-2]) == 6  # Microseconds
+        assert len(flow2.trace_id.split('_')[-2]) == 6
 
 
 if __name__ == "__main__":

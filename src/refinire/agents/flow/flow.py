@@ -1025,11 +1025,7 @@ class Flow:
         # Mark flow as finished on error
         # エラー時はフローを完了としてマーク
         self.context.finish()
-        self.context.set_artifact("error", {
-            "step": step_name,
-            "error": str(error),
-            "type": type(error).__name__
-        })
+        self.context.set_error(step_name, error)
         
         # Update trace registry with error
         # エラーでトレースレジストリを更新

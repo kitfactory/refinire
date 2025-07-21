@@ -7,7 +7,7 @@ import pytest
 import asyncio
 from typing import Optional
 
-from refinire import Flow, Step, UserInputStep, DebugStep, Context, create_simple_agent
+from refinire import Flow, Step, UserInputStep, DebugStep, Context, create_simple_agent, FunctionStep
 
 
 class DummyStep(Step):
@@ -228,13 +228,20 @@ class TestFlowConstructor:
         リスト内で異なるステップタイプを混合することをテスト。
         """
         gen_agent = create_simple_agent(
-            name="generator",
+            name="generator_agent",
             instructions="Generate content"
         )
+        
+        # Wrap RefinireAgent in FunctionStep for proper Flow usage
+        # RefinireAgentを適切なFlow使用のためFunctionStepでラップ
+        def agent_wrapper(user_input, ctx):
+            return gen_agent.run_async(user_input, ctx)
+        
+        agent_step = FunctionStep("generator", agent_wrapper)
         debug_step = DebugStep("debugger", "Debug message")
         user_step = UserInputStep("input", "Please provide input", "generator")
         
-        flow = Flow(steps=[user_step, gen_agent, debug_step])
+        flow = Flow(steps=[user_step, agent_step, debug_step])
         
         assert flow.start == "input"
         assert len(flow.steps) == 3
@@ -242,7 +249,7 @@ class TestFlowConstructor:
         
         # Check sequential linking (where applicable)
         # シーケンシャルリンク（該当する場合）をチェック
-        assert gen_agent.next_step == "debugger"
+        assert agent_step.next_step == "debugger"
     
     def test_context_initialization(self):
         """Test that context is properly initialized.

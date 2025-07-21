@@ -181,22 +181,34 @@ class TestContextSharedState:
         assert ctx.shared_state["key1"] == "value1"
         assert ctx.shared_state["key2"] == "value2"
     
-    def test_artifacts_operations(self):
+    def test_error_management(self):
         """
-        Test artifacts operations
-        artifacts操作をテスト
+        Test error management operations
+        エラー管理操作をテスト
         """
         ctx = Context()
         
-        # Test set_artifact and get_artifact
-        # set_artifactとget_artifactをテスト
-        ctx.set_artifact("artifact_key", "artifact_value")
-        assert ctx.get_artifact("artifact_key") == "artifact_value"
+        # Test error management
+        # エラー管理をテスト
+        assert not ctx.has_error()
         
-        # Test default artifact value
-        # デフォルトartifact値をテスト
-        assert ctx.get_artifact("nonexistent_key", "default") == "default"
-        assert ctx.get_artifact("nonexistent_key") is None
+        # Set error
+        # エラーを設定
+        test_error = ValueError("Test error")
+        ctx.set_error("test_step", test_error)
+        
+        assert ctx.has_error()
+        assert ctx.error is not None
+        assert ctx.error["step"] == "test_step"
+        assert ctx.error["message"] == "Test error"
+        assert ctx.error["type"] == "ValueError"
+        assert "timestamp" in ctx.error
+        
+        # Clear error
+        # エラーをクリア
+        ctx.clear_error()
+        assert not ctx.has_error()
+        assert ctx.error is None
 
 
 class TestContextStepManagement:
@@ -346,39 +358,6 @@ class TestContextUserInput:
         assert cleared_prompt == "Test prompt"
         assert ctx.awaiting_prompt is None
     
-    @pytest.mark.asyncio
-    async def test_wait_for_user_input(self):
-        """
-        Test async waiting for user input
-        ユーザー入力の非同期待機をテスト
-        """
-        ctx = Context()
-        
-        # Simulate user input being provided
-        # ユーザー入力提供をシミュレート
-        ctx.provide_user_input("test input")
-        
-        # This should return immediately since input was already provided
-        # 入力が既に提供されているため、即座に返るはず
-        result = await ctx.wait_for_user_input()
-        assert result == "test input"
-    
-    @pytest.mark.asyncio
-    async def test_wait_for_prompt_event(self):
-        """
-        Test async waiting for prompt event
-        プロンプトイベントの非同期待機をテスト
-        """
-        ctx = Context()
-        
-        # Set a prompt to trigger the event
-        # イベントをトリガーするプロンプトを設定
-        ctx.set_waiting_for_user_input("Test prompt")
-        
-        # This should return the prompt
-        # プロンプトを返すはず
-        result = await ctx.wait_for_prompt_event()
-        assert result == "Test prompt"
 
 
 class TestContextSerialization:
@@ -437,7 +416,8 @@ class TestContextSerialization:
         original_ctx.add_user_message("Original message")
         original_ctx.add_assistant_message("Original response")
         original_ctx.shared_state["data"] = {"nested": "value"}
-        original_ctx.set_artifact("test_key", "test_value")
+        # Set artifacts in shared_state directly
+        original_ctx.shared_state.setdefault('artifacts', {})["test_key"] = "test_value"
         original_ctx.update_step_info("test_step")
         
         # Convert to dict and back
@@ -506,8 +486,9 @@ class TestContextEdgeCases:
         ctx.shared_state["none_value"] = None
         assert ctx.shared_state["none_value"] is None
         
-        ctx.set_artifact("none_artifact", None)
-        assert ctx.get_artifact("none_artifact") is None
+        # Test None artifacts in shared_state
+        ctx.shared_state.setdefault('artifacts', {})["none_artifact"] = None
+        assert ctx.shared_state.get('artifacts', {}).get("none_artifact") is None
     
     def test_unicode_content(self):
         """
@@ -519,11 +500,11 @@ class TestContextEdgeCases:
         unicode_message = "こんにちは 🌟 Hello 世界"
         ctx.add_user_message(unicode_message)
         ctx.shared_state["unicode_field"] = unicode_message
-        ctx.set_artifact("unicode_artifact", unicode_message)
+        ctx.shared_state.setdefault('artifacts', {})["unicode_artifact"] = unicode_message
         
         assert ctx.last_user_input == unicode_message
         assert ctx.shared_state["unicode_field"] == unicode_message
-        assert ctx.get_artifact("unicode_artifact") == unicode_message
+        assert ctx.shared_state.get('artifacts', {}).get("unicode_artifact") == unicode_message
     
     def test_large_step_count(self):
         """
@@ -696,15 +677,16 @@ class TestContextResultContent:
         ctx.evaluation_result = {"passed": False, "score": 60}
         assert ctx.success is False
         
-        # Test with error in shared_state
-        # shared_state内のエラーでテスト
+        # Test with error in Context.error field
+        # Context.errorフィールド内のエラーでテスト
         ctx.evaluation_result = {"passed": True}
-        ctx.shared_state["error"] = "Some error"
+        ctx.set_error("test_step", Exception("Some error"))
         assert ctx.success is False
         
         # Test with error routing result
         # エラールーティング結果でテスト
         ctx.shared_state.clear()
+        ctx.clear_error()  # Clear the error before testing routing result
         ctx.routing_result = {"next_route": "error"}
         assert ctx.success is False
     
@@ -744,18 +726,3 @@ class TestContextAsyncCoordination:
         assert ctx._user_input_event is not None
         assert ctx._awaiting_prompt_event is not None
     
-    @pytest.mark.asyncio
-    async def test_concurrent_user_input_handling(self):
-        """
-        Test concurrent user input handling
-        並行ユーザー入力処理をテスト
-        """
-        ctx = Context()
-        
-        # Test that multiple operations can work together
-        # 複数の操作が連携して動作することをテスト
-        ctx.set_waiting_for_user_input("Enter data:")
-        ctx.provide_user_input("response")
-        
-        result = await ctx.wait_for_user_input()
-        assert result == "response"

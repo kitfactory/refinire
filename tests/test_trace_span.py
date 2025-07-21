@@ -15,7 +15,8 @@ from refinire import Flow, Context, FunctionStep
 
 def simple_function(input_data: str, ctx: Context) -> Context:
     """Simple test function / 簡単なテスト関数"""
-    ctx.set_artifact("result", f"processed: {input_data}")
+    # Store result in shared_state
+    ctx.shared_state.setdefault('artifacts', {})["result"] = f"processed: {input_data}"
     return ctx
 
 
