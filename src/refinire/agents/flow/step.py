@@ -109,7 +109,7 @@ class Step(ABC):
             pass
     
     @abstractmethod
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute step asynchronously and return updated context
         ステップを非同期実行し、更新されたコンテキストを返す
@@ -155,7 +155,7 @@ class UserInputStep(Step):
         self.prompt = prompt
         self.next_step = next_step
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute user input step
         ユーザー入力ステップを実行
@@ -172,7 +172,20 @@ class UserInputStep(Step):
         # If user input is provided, process it
         # ユーザー入力が提供されている場合、処理する
         if user_input is not None:
-            ctx.provide_user_input(user_input)
+            # Add user message and proceed to next step
+            # ユーザーメッセージを追加し、次のステップに進む
+            ctx.add_user_message(user_input)
+            ctx.awaiting_prompt = None
+            ctx.awaiting_user_input = False
+            
+            # Update routing_result with user input information
+            # ユーザー入力情報でrouting_resultを更新
+            if not ctx.routing_result:
+                ctx.routing_result = {}
+            ctx.routing_result['user_input_received'] = True
+            ctx.routing_result['prompt_fulfilled'] = self.prompt
+            ctx.routing_result['last_input'] = user_input
+            
             if self.next_step:
                 ctx.goto(self.next_step)
             else:
@@ -180,9 +193,23 @@ class UserInputStep(Step):
             # Note: If next_step is None, flow will end
             # 注：next_stepがNoneの場合、フローは終了
         else:
-            # Set waiting state for user input
-            # ユーザー入力の待機状態を設定
-            ctx.set_waiting_for_user_input(self.prompt)
+            # Set waiting state for user input using routing_result
+            # routing_resultを使用してユーザー入力の待機状態を設定
+            ctx.awaiting_prompt = self.prompt
+            ctx.awaiting_user_input = True
+            
+            # Set routing_result to indicate user input is needed
+            # ユーザー入力が必要であることを示すrouting_resultを設定
+            if not ctx.routing_result:
+                ctx.routing_result = {}
+            ctx.routing_result['needs_user_input'] = True
+            ctx.routing_result['prompt'] = self.prompt
+            ctx.routing_result['step_name'] = self.name
+            
+            # Set awaiting prompt event if available
+            # 利用可能な場合は待機プロンプトイベントを設定
+            if ctx._awaiting_prompt_event:
+                ctx._awaiting_prompt_event.set()
         
         return ctx
 
@@ -218,7 +245,7 @@ class ConditionStep(Step):
         self.if_true = if_true
         self.if_false = if_false
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute condition step
         条件ステップを実行
@@ -307,7 +334,7 @@ class FunctionStep(Step):
         self.function = function
         self.next_step = next_step
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute function step
         関数ステップを実行
@@ -391,7 +418,7 @@ class ForkStep(Step):
         self.branches = branches
         self.join_step = join_step
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute fork step
         フォークステップを実行
@@ -444,7 +471,7 @@ class JoinStep(Step):
         self.join_type = join_type
         self.next_step = next_step
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute join step
         ジョインステップを実行
@@ -504,7 +531,7 @@ class DebugStep(Step):
         self.print_context = print_context
         self.next_step = next_step
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute debug step
         デバッグステップを実行
@@ -525,10 +552,12 @@ class DebugStep(Step):
             debug_info += f" | User Input: {user_input}"
         debug_info += f" | Step Count: {ctx.step_count} | Next Label: {ctx.next_label}"
         
-        logger.debug(debug_info)
+        # Use print instead of logger for debugging
+        # デバッグにはloggerの代わりにprintを使用
+        print(debug_info)
         
         if self.print_context:
-            logger.debug(f"Context: {ctx.model_dump()}")
+            print(f"Context: {ctx.model_dump()}")
         
         # Add debug message to system messages
         # デバッグメッセージをシステムメッセージに追加
@@ -637,7 +666,7 @@ class ParallelStep(Step):
             if not hasattr(step, 'name') or not step.name:
                 raise ValueError(f"All parallel steps must have valid names: {step}")
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Execute parallel steps
         並列ステップを実行

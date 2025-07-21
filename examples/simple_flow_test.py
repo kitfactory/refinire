@@ -22,7 +22,9 @@ async def main():
         ctx.add_assistant_message("Function executed successfully")
         # Finish the flow since this is the last step
         ctx.finish()
-        print(f"Context after function: finished={ctx.is_finished()}, next_label={ctx.next_label}")
+        # routing_result contains routing information instead of next_label
+        routing_info = ctx.routing_result.get('next_route') if ctx.routing_result else None
+        print(f"Context after function: finished={ctx.is_finished()}, routing_info={routing_info}")
         return ctx
     
     # Create a simple flow with one step

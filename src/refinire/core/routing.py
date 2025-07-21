@@ -34,9 +34,9 @@ class RoutingResult(BaseModel):
                   ルーティング判断の理由
     """
     
-    content: Union[str, Any] = Field(
-        description="Generated content (custom type when output_model is specified, string otherwise)",
-        examples=["Generated text content", {"task_result": "completed", "score": 0.85}]
+    content: str = Field(
+        description="Generated content as string",
+        examples=["Generated text content", "Task completed successfully", "Code generation result"]
     )
     
     next_route: str = Field(
@@ -249,11 +249,16 @@ def create_routing_result_model(content_type: Type[BaseModel]) -> Type[BaseModel
         ... )
     """
     from pydantic import create_model
+    from typing import Union
     
-    # Create fields dictionary with custom content type
-    # カスタムコンテンツ型でフィールド辞書を作成
+    # Use Union[str, content_type] to ensure compatibility with both string and structured content
+    # 文字列と構造化コンテンツの両方との互換性を確保するためUnion[str, content_type]を使用
+    content_field_type = Union[str, content_type]
+    
+    # Create fields dictionary with compatible content type
+    # 互換性のあるコンテンツ型でフィールド辞書を作成
     fields = {
-        'content': (content_type, Field(description="Generated content")),
+        'content': (content_field_type, Field(description="Generated content")),
         'next_route': (str, Field(description="Name of the next route to execute")),
         'confidence': (float, Field(ge=0.0, le=1.0, description="Confidence level of the routing decision")),
         'reasoning': (str, Field(description="Reason for the routing decision")),

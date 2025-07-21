@@ -413,7 +413,7 @@ with tracer.start_as_current_span("multi-agent-workflow") as workflow_span:
     with tracer.start_as_current_span(f"{expert_key}-response") as expert_span:
         result = await agents[expert_key].run_async(user_query, ctx)
         expert_span.set_attribute("expert.type", expert_key)
-        expert_span.set_attribute("response.length", len(str(result.result)))
+        expert_span.set_attribute("response.length", len(str(result.content)))
 ```
 
 ## 可観測性プラットフォームとの統合
@@ -523,7 +523,7 @@ ctx = Context()
 
 # これによりTempoに送信されるトレースが生成されます
 result = await agent.run_async("分散トレーシングの利点について説明してください", ctx)
-print(f"応答: {result.result}")
+print(f"応答: {result.content}")
 
 # クリーンアップ
 disable_opentelemetry_tracing()
@@ -735,7 +735,7 @@ duration = time.time() - start_time
 
 span.set_attribute("operation.duration_ms", duration * 1000)
 span.set_attribute("tokens.input", len(query.split()))
-span.set_attribute("tokens.output", len(str(result.result).split()))
+span.set_attribute("tokens.output", len(str(result.content).split()))
 ```
 
 ## トラブルシューティング

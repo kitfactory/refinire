@@ -366,7 +366,7 @@ with tracer.start_as_current_span("multi-agent-workflow") as workflow_span:
     with tracer.start_as_current_span(f"{expert_key}-response") as expert_span:
         result = await agents[expert_key].run_async(user_query, ctx)
         expert_span.set_attribute("expert.type", expert_key)
-        expert_span.set_attribute("response.length", len(str(result.result)))
+        expert_span.set_attribute("response.length", len(str(result.content)))
 ```
 
 ## Integration with Observability Platforms
@@ -476,7 +476,7 @@ ctx = Context()
 
 # This will generate traces sent to Tempo
 result = await agent.run_async("Explain the benefits of distributed tracing", ctx)
-print(f"Response: {result.result}")
+print(f"Response: {result.content}")
 
 # Clean up
 disable_opentelemetry_tracing()
@@ -688,7 +688,7 @@ duration = time.time() - start_time
 
 span.set_attribute("operation.duration_ms", duration * 1000)
 span.set_attribute("tokens.input", len(query.split()))
-span.set_attribute("tokens.output", len(str(result.result).split()))
+span.set_attribute("tokens.output", len(str(result.content).split()))
 ```
 
 ## Troubleshooting

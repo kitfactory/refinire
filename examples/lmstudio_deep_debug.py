@@ -89,7 +89,7 @@ def test_refinire_agent_detailed():
             print(f"Result context type: {type(result_context)}")
             print(f"Result context.result: {getattr(result_context, 'result', 'No result attribute')}")
             print(f"Result context.shared_state: {result_context.shared_state}")
-            print(f"Result context.prev_outputs: {getattr(result_context, 'prev_outputs', 'No prev_outputs')}")
+            print(f"Result context.prev_outputs (moved to shared_state): {getattr(result_context, 'prev_outputs', 'Field removed - use shared_state')}")
             
             # Check multiple possible result locations
             debug_result = result_context.shared_state.get('debug_result')

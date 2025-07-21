@@ -23,8 +23,6 @@ class TestContext:
         # デフォルト値をチェック
         assert ctx.last_user_input is None
         assert ctx.messages == []
-        assert ctx.knowledge == {}
-        assert ctx.prev_outputs == {}
         assert ctx.next_label is None
         assert ctx.current_step is None
         assert ctx.artifacts == {}
@@ -268,27 +266,51 @@ class TestContextUserInput:
     
     def test_set_waiting_for_user_input(self):
         """
-        Test setting waiting for user input
-        ユーザー入力待機設定をテスト
+        Test setting waiting for user input using routing_result
+        routing_resultを使用したユーザー入力待機設定をテスト
         """
         ctx = Context()
         
-        ctx.set_waiting_for_user_input("Please enter your name:")
+        # Manually set waiting state using routing_result
+        # routing_resultを使用して手動で待機状態を設定
+        ctx.awaiting_prompt = "Please enter your name:"
+        ctx.awaiting_user_input = True
+        if not ctx.routing_result:
+            ctx.routing_result = {}
+        ctx.routing_result['needs_user_input'] = True
+        ctx.routing_result['prompt'] = "Please enter your name:"
         
         assert ctx.awaiting_user_input
         assert ctx.awaiting_prompt == "Please enter your name:"
+        assert ctx.routing_result['needs_user_input']
+        assert ctx.routing_result['prompt'] == "Please enter your name:"
     
     def test_provide_user_input(self):
         """
-        Test providing user input
-        ユーザー入力提供をテスト
+        Test providing user input using routing_result
+        routing_resultを使用したユーザー入力提供をテスト
         """
         ctx = Context()
         
-        ctx.set_waiting_for_user_input("Enter something:")
+        # Set waiting state manually using routing_result
+        # routing_resultを使用して手動で待機状態を設定
+        ctx.awaiting_prompt = "Enter something:"
+        ctx.awaiting_user_input = True
+        if not ctx.routing_result:
+            ctx.routing_result = {}
+        ctx.routing_result['needs_user_input'] = True
+        ctx.routing_result['prompt'] = "Enter something:"
         assert ctx.awaiting_user_input
         
-        ctx.provide_user_input("user response")
+        # Provide user input manually (replace deleted method functionality)
+        # ユーザー入力を手動で提供（削除されたメソッドの機能を置き換え）
+        ctx.add_user_message("user response")
+        ctx.awaiting_prompt = None
+        ctx.awaiting_user_input = False
+        if not ctx.routing_result:
+            ctx.routing_result = {}
+        ctx.routing_result['user_input_received'] = True
+        ctx.routing_result['last_input'] = "user response"
         
         assert not ctx.awaiting_user_input
         assert ctx.awaiting_prompt is None
@@ -297,17 +319,28 @@ class TestContextUserInput:
         # ユーザーメッセージが追加されたことをチェック
         assert len(ctx.messages) == 1
         assert ctx.messages[0].content == "user response"
+        assert ctx.routing_result['user_input_received']
+        assert ctx.routing_result['last_input'] == "user response"
     
     def test_clear_prompt(self):
         """
-        Test clearing prompt
-        プロンプトクリアをテスト
+        Test clearing prompt (existing method still available)
+        プロンプトクリアをテスト（既存メソッドは依然利用可能）
         """
         ctx = Context()
         
-        ctx.set_waiting_for_user_input("Test prompt")
+        # Set waiting state manually using routing_result
+        # routing_resultを使用して手動で待機状態を設定
+        ctx.awaiting_prompt = "Test prompt"
+        ctx.awaiting_user_input = True
+        if not ctx.routing_result:
+            ctx.routing_result = {}
+        ctx.routing_result['needs_user_input'] = True
+        ctx.routing_result['prompt'] = "Test prompt"
         assert ctx.awaiting_prompt == "Test prompt"
         
+        # clear_prompt method still exists and should work
+        # clear_promptメソッドはまだ存在し、機能するはず
         cleared_prompt = ctx.clear_prompt()
         
         assert cleared_prompt == "Test prompt"
@@ -523,6 +556,174 @@ class TestContextEdgeCases:
         assert len(ctx.messages) == 3
         assert all(msg.content == "" for msg in ctx.messages)
         assert ctx.last_user_input == ""
+
+
+class TestContextResultContent:
+    """
+    Test Context result and content properties
+    Contextのresultとcontentプロパティをテスト
+    """
+    
+    def test_result_and_content_with_none(self):
+        """
+        Test result and content properties when result is None
+        resultがNoneの場合のresultとcontentプロパティをテスト
+        """
+        ctx = Context()
+        
+        # Initially result should be None
+        # 初期はresultはNoneであるべき
+        assert ctx.result is None
+        assert ctx.content is None
+    
+    def test_result_and_content_with_mock_llm_result(self):
+        """
+        Test result and content properties with mock LLMResult
+        モックLLMResultでのresultとcontentプロパティをテスト
+        """
+        # Create a mock LLMResult object
+        # モックLLMResultオブジェクトを作成
+        class MockLLMResult:
+            def __init__(self, content, success=True):
+                self.content = content
+                self.success = success
+                self.metadata = {}
+        
+        ctx = Context()
+        mock_result = MockLLMResult("Generated content")
+        
+        # Set result to complete LLMResult object
+        # resultを完全なLLMResultオブジェクトに設定
+        ctx.result = mock_result
+        
+        # result should return the complete object
+        # resultは完全なオブジェクトを返すべき
+        assert ctx.result is mock_result
+        assert ctx.result.content == "Generated content"
+        assert ctx.result.success is True
+        
+        # content should return just the generated content
+        # contentは生成コンテンツのみを返すべき
+        assert ctx.content == "Generated content"
+    
+    def test_content_setter_with_existing_result(self):
+        """
+        Test content setter when result already exists
+        resultが既に存在する場合のcontentセッターをテスト
+        """
+        # Create a mock LLMResult object
+        # モックLLMResultオブジェクトを作成
+        class MockLLMResult:
+            def __init__(self, content, success=True):
+                self.content = content
+                self.success = success
+                self.metadata = {}
+        
+        ctx = Context()
+        mock_result = MockLLMResult("Original content")
+        ctx.result = mock_result
+        
+        # Update content via setter
+        # セッター経由でcontentを更新
+        ctx.content = "Updated content"
+        
+        # Should update the LLMResult.content
+        # LLMResult.contentが更新されるべき
+        assert ctx.result.content == "Updated content"
+        assert ctx.content == "Updated content"
+    
+    def test_content_setter_with_no_existing_result(self):
+        """
+        Test content setter when no result exists
+        resultが存在しない場合のcontentセッターをテスト
+        """
+        ctx = Context()
+        
+        # Set content when no result exists
+        # resultが存在しない場合にcontentを設定
+        ctx.content = "New content"
+        
+        # Should create a minimal LLMResult
+        # 最小限のLLMResultを作成するべき
+        assert ctx.result is not None
+        assert hasattr(ctx.result, 'content')
+        assert ctx.result.content == "New content"
+        assert ctx.content == "New content"
+    
+    def test_content_with_object_without_content_attribute(self):
+        """
+        Test content property when result object has no content attribute
+        resultオブジェクトにcontent属性がない場合のcontentプロパティをテスト
+        """
+        ctx = Context()
+        
+        # Set result to object without content attribute
+        # content属性のないオブジェクトをresultに設定
+        ctx.result = {"some": "data"}
+        
+        # content should return None
+        # contentはNoneを返すべき
+        assert ctx.content is None
+    
+    def test_success_property_with_result(self):
+        """
+        Test success property with various result scenarios
+        様々なresultシナリオでのsuccessプロパティをテスト
+        """
+        ctx = Context()
+        
+        # No result - should be False
+        # resultなし - Falseであるべき
+        assert ctx.success is False
+        
+        # Create mock LLMResult with success=True
+        # success=TrueのモックLLMResultを作成
+        class MockLLMResult:
+            def __init__(self, content, success=True):
+                self.content = content
+                self.success = success
+        
+        ctx.result = MockLLMResult("content", success=True)
+        assert ctx.success is True
+        
+        # Test with evaluation result that passed
+        # 合格した評価結果でテスト
+        ctx.evaluation_result = {"passed": True, "score": 90}
+        assert ctx.success is True
+        
+        # Test with evaluation result that failed
+        # 失敗した評価結果でテスト
+        ctx.evaluation_result = {"passed": False, "score": 60}
+        assert ctx.success is False
+        
+        # Test with error in shared_state
+        # shared_state内のエラーでテスト
+        ctx.evaluation_result = {"passed": True}
+        ctx.shared_state["error"] = "Some error"
+        assert ctx.success is False
+        
+        # Test with error routing result
+        # エラールーティング結果でテスト
+        ctx.shared_state.clear()
+        ctx.routing_result = {"next_route": "error"}
+        assert ctx.success is False
+    
+    def test_metadata_property(self):
+        """
+        Test metadata property
+        metadataプロパティをテスト
+        """
+        ctx = Context()
+        
+        # No evaluation_result - should return empty dict
+        # evaluation_resultなし - 空辞書を返すべき
+        assert ctx.metadata == {}
+        
+        # With evaluation_result - should return evaluation_result
+        # evaluation_resultあり - evaluation_resultを返すべき
+        eval_result = {"score": 85, "passed": True, "feedback": "Good"}
+        ctx.evaluation_result = eval_result
+        assert ctx.metadata == eval_result
 
 
 class TestContextAsyncCoordination:

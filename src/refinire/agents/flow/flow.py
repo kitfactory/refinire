@@ -572,8 +572,8 @@ class Flow:
                         
                         # Yield step result
                         # ステップ結果をyield
-                        if hasattr(result, 'result') and result.result:
-                            step_output = str(result.result)
+                        if hasattr(result, 'result') and result.content:
+                            step_output = str(result.content)
                             if callback:
                                 callback(step_output)
                             yield step_output
@@ -825,11 +825,20 @@ class Flow:
                     # If step is waiting for user input, wait for feed()
                     # ステップがユーザー入力を待機している場合、feed()を待つ
                     if self.context.awaiting_user_input:
-                        await self.context.wait_for_user_input()
-                        # After receiving input, continue with the same step
-                        # 入力受信後、同じステップで継続
-                        current_input = self.context.last_user_input
-                        continue
+                        # Check routing_result for user input requirements
+                        # routing_resultでユーザー入力要件をチェック
+                        if self.context.routing_result and self.context.routing_result.get('needs_user_input'):
+                            # Wait for user input event using the private attribute
+                            # プライベート属性を使用してユーザー入力イベントを待機
+                            if self.context._user_input_event:
+                                await self.context._user_input_event.wait()
+                                self.context._user_input_event.clear()
+                            # After receiving input, continue with the same step
+                            # 入力受信後、同じステップで継続
+                            current_input = self.context.last_user_input
+                            continue
+                        else:
+                            break
                         
                 except Exception as e:
                     raise RefinireError(f"Error executing step {step_name}: {e}")
@@ -877,7 +886,23 @@ class Flow:
         Args:
             user_input: User input text / ユーザー入力テキスト
         """
-        self.context.provide_user_input(user_input)
+        # Add user message and clear waiting state
+        # ユーザーメッセージを追加し、待機状態をクリア
+        self.context.add_user_message(user_input)
+        self.context.awaiting_prompt = None
+        self.context.awaiting_user_input = False
+        
+        # Update routing_result to indicate input received
+        # 入力受信を示すためにrouting_resultを更新
+        if not self.context.routing_result:
+            self.context.routing_result = {}
+        self.context.routing_result['user_input_received'] = True
+        self.context.routing_result['last_input'] = user_input
+        
+        # Set user input event if available
+        # 利用可能な場合はユーザー入力イベントを設定
+        if self.context._user_input_event:
+            self.context._user_input_event.set()
     
     def step(self) -> None:
         """

@@ -56,7 +56,7 @@ def test_flow_fix():
         
         result = asyncio.run(flow.run(input_text))
         print(f"✅ Flow completed successfully!")
-        print(f"Result: {result.result}")
+        print(f"Result: {result.content}")
         
         # Test 3: Test RefinireAgent run_async method  
         print("📝 Testing RefinireAgent.run_async()...")
@@ -66,7 +66,7 @@ def test_flow_fix():
             print(f"✅ RefinireAgent.run_async() completed successfully!")
             # agent_result is a Context object
             if hasattr(agent_result, 'result'):
-                print(f"Agent result: {agent_result.result}")
+                print(f"Agent result: {agent_result.content}")
             else:
                 print(f"Agent result: {agent_result}")
         except Exception as e:

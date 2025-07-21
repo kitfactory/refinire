@@ -101,7 +101,7 @@ async def test_gen_agent_with_tools():
         context
     )
     
-    print(f"Result: {result_context.prev_outputs.get('tool_agent')}")
+    print(f"Result: {result_context.shared_state.get('tool_agent')}")
     
     # Test calculation query
     print("\n🧮 Testing calculation query:")
@@ -112,7 +112,7 @@ async def test_gen_agent_with_tools():
         context
     )
     
-    print(f"Result: {result_context.prev_outputs.get('tool_agent')}")
+    print(f"Result: {result_context.shared_state.get('tool_agent')}")
 
 
 async def test_clarify_agent_with_tools():
@@ -145,7 +145,7 @@ async def test_clarify_agent_with_tools():
         context
     )
     
-    print(f"Clarification result: {result_context.prev_outputs.get('clarify_tool_agent')}")
+    print(f"Clarification result: {result_context.shared_state.get('clarify_tool_agent')}")
 
 
 async def test_direct_llm_pipeline_with_tools():

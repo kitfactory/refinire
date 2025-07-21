@@ -129,8 +129,8 @@ async def study_basic_generation():
     result = await agent.run_async("What is artificial intelligence?")
     print(f"Input: What is artificial intelligence?")
     print(f"Output: {result.content}")
-    print(f"Success: {result.success}")
-    print(f"Metadata: {result.metadata}")
+    print(f"Result type: {type(result.content)}")
+    print(f"Messages: {len(result.messages)} messages")
 
 
 # ============================================================================

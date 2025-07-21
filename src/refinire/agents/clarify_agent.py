@@ -649,7 +649,7 @@ class ClarifyAgent(RefinireAgent):
                 # English: Clarification completed - store final result
                 # 日本語: 明確化完了 - 最終結果を保存
                 ctx.shared_state[self.store_result_key] = result.data
-                ctx.prev_outputs[self.name] = result.data
+                ctx.shared_state[f"{self.name}_result"] = result.data
                 
                 # English: Add completion message
                 # 日本語: 完了メッセージを追加
@@ -675,7 +675,7 @@ class ClarifyAgent(RefinireAgent):
                 # English: Store intermediate result for potential continuation
                 # 日本語: 継続可能性のため中間結果を保存
                 ctx.shared_state[self.store_result_key] = result
-                ctx.prev_outputs[self.name] = result
+                ctx.shared_state[f"{self.name}_result"] = result
                 
                 # English: Check if max turns reached and force completion
                 # 日本語: 最大ターン数に達した場合は強制完了
@@ -701,7 +701,7 @@ class ClarifyAgent(RefinireAgent):
                 remaining_turns=0
             )
             ctx.shared_state[self.store_result_key] = error_result
-            ctx.prev_outputs[self.name] = error_result
+            ctx.shared_state[f"{self.name}_result"] = error_result
             
             # English: Error occurred during clarification
             # 日本語: 明確化中にエラーが発生

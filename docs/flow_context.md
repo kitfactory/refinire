@@ -43,7 +43,7 @@ Flow/Step ベースへ移行した **agents‑sdk‑models** に最適化した�
 | ------ | ------------- | ------------------------ |
 | 型      | 任意クラス         | dict + Memory + metadata |
 | 会話履歴   | Runner 内部保持   | Memory クラス               |
-| ルーティング | コード内 handoff  | RunnableConditional      |
+| ルーティング | routing_result フィールド + handoff  | RunnableConditional      |
 | 依存性注入  | Context フィールド | dict / metadata          |
 | 型安全性   | 高（型付きクラス）     | 低（自由キー）                  |
 
@@ -55,7 +55,7 @@ Flow/Step ベースへ移行した **agents‑sdk‑models** に最適化した�
 
 1. **型安全で読みやすい** : Pydantic `BaseModel` を採用し IDE 補完を活用。
 2. **履歴も保持** : Agents SDK 依存を避け、Flow 内で一貫管理。
-3. **ルーティング内包** : `next_label: str | None` をフィールド化し Step 返却で更新。
+3. **ルーティング内包** : `routing_result` フィールドで Step 返却を制御。backward compatibility で `next_label` プロパティを提供。
 4. **辞書互換** : `as_dict()/from_dict()` で LCEL とのブリッジを提供。
 
 ### 5.2 フィールド例
@@ -64,11 +64,25 @@ Flow/Step ベースへ移行した **agents‑sdk‑models** に最適化した�
 class Context(BaseModel):
     last_user_input: str | None = None      # 直近ユーザー入力
     messages: list[Message] = []            # 会話履歴
-    knowledge: dict[str, Any] = {}          # RAG など外部知識
-    prev_outputs: dict[str, Any] = {}       # 前 Step 生成物
-    next_label: str | None = None           # ルーティング指示
-    artifacts: dict[str, Any] = {}          # Flow 全体成果物
-    shared_state: dict[str, Any] = {}       # 任意共有値
+    # Note: Simplified Context design - removed redundant fields:
+    # 注意: 簡素化されたContext設計 - 冗長なフィールドを削除:
+    # - knowledge -> use shared_state["knowledge"]
+    # - prev_outputs -> agent results auto-stored in shared_state["agent_name_result"]
+    # - artifacts -> use shared_state["artifacts"] 
+    # - next_label -> use routing_result["next_route"] (compatibility property available)
+    
+    routing_result: dict[str, Any] | None = None  # フロールーティング制御情報（次ステップ決定に使用）
+    shared_state: dict[str, Any] = {}       # 全ワークフローデータを格納
+    
+    @property
+    def next_label(self) -> str | None:
+        """backward compatibility property for next_label"""
+        return self.routing_result.get('next_route') if self.routing_result else None
+        
+    @property  
+    def artifacts(self) -> dict[str, Any]:
+        """backward compatibility property for artifacts"""
+        return self.shared_state.get('artifacts', {})
 
     def as_dict(self) -> dict[str, Any]:
         """LCEL 互換辞書へ変換"""
@@ -96,8 +110,22 @@ async def step_example(ctx: Context) -> Context:
     answer = await model.invoke(ctx.messages)
     ctx.messages.append(answer)
 
-    # 3. ルーティング判定
-    ctx.next_label = "done" if is_ok(answer) else "retry"
+    # 3. ルーティング判定とrouting_result設定（next_labelは自動設定）
+    if is_ok(answer):
+        ctx.routing_result = {
+            "next_route": "done",
+            "confidence": 0.9,
+            "reasoning": "回答が完了基準を満たしています"
+        }
+        # ctx.next_label は routing_result["next_route"] から自動取得されます
+    else:
+        ctx.routing_result = {
+            "next_route": "retry", 
+            "confidence": 0.8,
+            "reasoning": "回答の品質が不十分のため再試行が必要"
+        }
+        # shared_stateに必要に応じて追加データを保存
+        ctx.shared_state["retry_count"] = ctx.shared_state.get("retry_count", 0) + 1
     return ctx
 ```
 
@@ -112,7 +140,7 @@ async def step_example(ctx: Context) -> Context:
 | ------------------- | -------------------- |
 | 型安全・補完が効く           | Pydantic バリデーションコスト増 |
 | LCEL との双方向変換で使いまわせる | 二重保持でメモリ消費           |
-| ルーティングが明示的          | Agents SDK 的には少し冗長   |
+| routing_resultで一元化された制御 | Agents SDK 的には少し冗長   |
 
 ### 5.6 今後の拡張イメージ
 

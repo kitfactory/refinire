@@ -8,7 +8,7 @@ This provides a simple one-line function to chat with AI.
 """
 
 import os
-from refinire import RefinireAgent, Context, disable_tracing
+from refinire import RefinireAgent, disable_tracing
 
 
 def ask_ai(question: str) -> str:
@@ -34,10 +34,24 @@ def ask_ai(question: str) -> str:
         model="gpt-4o-mini"
     )
     
-    context = Context()
-    result = agent.run(question, context)
-    
-    return result.shared_state.get('chat_ai_result', 'No response')
+    try:
+        result = agent.run(question)
+        
+        # Get the response from messages
+        # メッセージから応答を取得
+        if result.messages:
+            # Find the last assistant message
+            # 最後のアシスタントメッセージを検索
+            for message in reversed(result.messages):
+                if message.role == "assistant":
+                    return message.content
+        
+        # Fallback to result if available
+        # 利用可能な場合はresultにフォールバック
+        return result.content or "No response"
+        
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 def main():

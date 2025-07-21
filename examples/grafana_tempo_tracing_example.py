@@ -92,8 +92,8 @@ async def basic_tempo_tracing_example():
     for i, query in enumerate(queries, 1):
         print(f"\n🔍 Query {i}: {query}")
         result = await agent.run_async(query, ctx)
-        print(f"📝 Response length: {len(str(result.result))} characters")
-        print(f"📊 First 100 chars: {str(result.result)[:100]}...")
+        print(f"📝 Response length: {len(str(result.content))} characters")
+        print(f"📊 First 100 chars: {str(result.content)[:100]}...")
     
     print(f"\n✅ All traces sent to Grafana Tempo at {tempo_endpoint}")
     print("🔗 Check your Grafana Tempo UI to view the traces!")
@@ -186,7 +186,7 @@ async def advanced_tempo_workflow_example():
                 # Step 1: Analyze question type
                 with tracer.start_as_current_span("analysis-phase") as analysis_span:
                     analysis_result = await analyzer_agent.run_async(question, ctx)
-                    category = str(analysis_result.result).lower().strip()
+                    category = str(analysis_result.content).lower().strip()
                     analysis_span.set_attribute("analysis.category", category)
                     question_span.set_attribute("question.category", category)
                 
@@ -195,19 +195,19 @@ async def advanced_tempo_workflow_example():
                     with tracer.start_as_current_span("monitoring-expert-response") as expert_span:
                         expert_result = await monitoring_expert.run_async(question, ctx)
                         expert_span.set_attribute("expert.type", "monitoring")
-                        expert_span.set_attribute("response.length", len(str(expert_result.result)))
+                        expert_span.set_attribute("response.length", len(str(expert_result.content)))
                         question_span.set_attribute("expert.assigned", "monitoring")
                 elif "deployment" in category:
                     with tracer.start_as_current_span("deployment-expert-response") as expert_span:
                         expert_result = await deployment_expert.run_async(question, ctx)
                         expert_span.set_attribute("expert.type", "deployment")
-                        expert_span.set_attribute("response.length", len(str(expert_result.result)))
+                        expert_span.set_attribute("response.length", len(str(expert_result.content)))
                         question_span.set_attribute("expert.assigned", "deployment")
                 else:
                     with tracer.start_as_current_span("general-response") as expert_span:
                         expert_result = await monitoring_expert.run_async(question, ctx)
                         expert_span.set_attribute("expert.type", "general")
-                        expert_span.set_attribute("response.length", len(str(expert_result.result)))
+                        expert_span.set_attribute("response.length", len(str(expert_result.content)))
                         question_span.set_attribute("expert.assigned", "general")
                 
                 question_span.set_attribute("processing.status", "completed")
@@ -269,7 +269,7 @@ async def environment_variable_example():
         ctx
     )
     
-    print(f"✅ Traced response: {str(result.result)[:150]}...")
+    print(f"✅ Traced response: {str(result.content)[:150]}...")
     print("\n🔗 Trace sent to Grafana Tempo with environment-based configuration!")
     
     # Clean up environment variables

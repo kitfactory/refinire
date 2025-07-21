@@ -33,9 +33,9 @@ async def test_run_async_flow():
         print(f"DEBUG RUN_ASYNC: result value: {result}")
         
         if isinstance(result, Context):
-            print(f"DEBUG RUN_ASYNC: result.result type: {type(result.result)}")
-            print(f"DEBUG RUN_ASYNC: result.result value: {result.result}")
-            print(f"DEBUG RUN_ASYNC: isinstance(result.result, dict): {isinstance(result.result, dict)}")
+            print(f"DEBUG RUN_ASYNC: result.content type: {type(result.content)}")
+            print(f"DEBUG RUN_ASYNC: result.content value: {result.content}")
+            print(f"DEBUG RUN_ASYNC: isinstance(result.content, dict): {isinstance(result.content, dict)}")
         
         return result
     

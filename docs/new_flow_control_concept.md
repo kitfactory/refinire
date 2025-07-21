@@ -256,7 +256,7 @@ def _build_routing_prompt(self, content: Any, routing_instruction: str) -> str:
 ```python
 from refinire.agents.flow import Flow
 from refinire.agents.pipeline import RefinireAgent
-from refinire.core.context import Context
+from refinire.agents.flow.context import Context
 from pydantic import BaseModel, Field
 
 class ContentResult(BaseModel):
@@ -304,6 +304,11 @@ context.shared_state["user_request"] = "技術記事を作成してください"
 result = quality_flow.run("start", context)
 print(f"最終コンテンツ: {result.content}")
 print(f"品質スコア: {result.quality_score}")
+
+# Flowクラスでrouting_resultに基づく次エージェント選択の例
+# 各エージェントのrouting_instructionによってrouting_result.next_routeが設定され、
+# Flowがそれに基づいて次のステップを決定する
+print(f"最終ルーティング結果: {result.routing_result}")
 ```
 
 ### 複雑性に応じた処理分岐フロー
@@ -386,7 +391,7 @@ context = Context()
 context.shared_state["user_task"] = "データ分析レポートを作成してください"
 
 result = task_flow.run("start", context)
-print(f"最終結果: {result.result}")
+print(f"最終結果: {result.content}")
 print(f"完了状態: {result.completion_status}")
 ```
 
@@ -484,21 +489,19 @@ print(f"最終推奨事項: {result.final_recommendations}")
 # フロー実行中にルーティング情報にアクセス
 def custom_flow_handler(step_name: str, result: Any, context: Context):
     """カスタムフローハンドラー"""
-    if hasattr(result, 'next_route'):
-        print(f"ステップ '{step_name}' の次のルート: {result.next_route}")
-        print(f"信頼度: {result.confidence}")
-        print(f"理由: {result.reasoning}")
+    # routing_resultから次のルート情報を取得
+    if context.routing_result:
+        print(f"ステップ '{step_name}' の次のルート: {context.routing_result.get('next_route')}")
+        print(f"信頼度: {context.routing_result.get('confidence')}")
+        print(f"理由: {context.routing_result.get('reasoning')}")
         
         # ルーティング情報をコンテキストに保存
-        context.shared_state[f"{step_name}_routing"] = {
-            "next_route": result.next_route,
-            "confidence": result.confidence,
-            "reasoning": result.reasoning
-        }
+        context.shared_state[f"{step_name}_routing"] = context.routing_result.copy()
         
         # 信頼度が低い場合の処理
-        if result.confidence < 0.7:
-            print(f"警告: {step_name} の信頼度が低いです ({result.confidence})")
+        confidence = context.routing_result.get('confidence', 1.0)
+        if confidence < 0.7:
+            print(f"警告: {step_name} の信頼度が低いです ({confidence})")
     
     return result
 
@@ -512,6 +515,11 @@ result = quality_flow.run("start", context)
 for key, value in context.shared_state.items():
     if key.endswith("_routing"):
         print(f"{key}: {value}")
+
+# Context.routing_resultによるFlow制御
+# Flowクラスは各ステップ実行後にContext.routing_resultを確認し、
+# next_routeの値に基づいて次に実行するエージェント/ステップを決定する
+print(f"最終ルーティング状態: {result.routing_result}")
 ```
 
 ### 条件分岐とループ処理

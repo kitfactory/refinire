@@ -215,9 +215,9 @@ def create_orchestration_workflow():
         Route based on agent recommendations
         エージェント推奨に基づくルーティング
         """
-        if hasattr(ctx, 'result') and isinstance(ctx.result, dict):
-            next_task = ctx.result.get('next_hint', {}).get('task', 'unknown')
-            confidence = ctx.result.get('next_hint', {}).get('confidence', 0.0)
+        if hasattr(ctx, 'content') and isinstance(ctx.content, dict):
+            next_task = ctx.content.get('next_hint', {}).get('task', 'unknown')
+            confidence = ctx.content.get('next_hint', {}).get('confidence', 0.0)
             
             logger.info(f"Routing decision: next_task={next_task}, confidence={confidence}")
             
@@ -233,7 +233,7 @@ def create_orchestration_workflow():
                     return 'cleanup'
             
             # Fallback based on status / ステータスベースのフォールバック
-            if ctx.result.get('status') == 'failed':
+            if ctx.content.get('status') == 'failed':
                 return 'error'
         
         return 'end'

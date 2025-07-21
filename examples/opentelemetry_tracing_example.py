@@ -216,22 +216,22 @@ async def multi_agent_tracing_example():
             # Step 1: Analyze content type
             with tracer.start_as_current_span("content-analysis") as analysis_span:
                 analysis_result = await analyzer.run_async(user_query, ctx)
-                analysis_span.set_attribute("analysis.result", str(analysis_result.result))
-                print(f"Analysis: {analysis_result.result}")
+                analysis_span.set_attribute("analysis.result", str(analysis_result.content))
+                print(f"Analysis: {analysis_result.content}")
             
             # Step 2: Route to appropriate expert
-            if "technical" in str(analysis_result.result).lower():
+            if "technical" in str(analysis_result.content).lower():
                 with tracer.start_as_current_span("technical-response") as tech_span:
                     expert_result = await technical_expert.run_async(user_query, ctx)
                     tech_span.set_attribute("expert.type", "technical")
-                    tech_span.set_attribute("response.length", len(str(expert_result.result)))
-                    print(f"Technical Expert Response: {str(expert_result.result)[:200]}...")
+                    tech_span.set_attribute("response.length", len(str(expert_result.content)))
+                    print(f"Technical Expert Response: {str(expert_result.content)[:200]}...")
             else:
                 with tracer.start_as_current_span("business-response") as biz_span:
                     expert_result = await business_expert.run_async(user_query, ctx)
                     biz_span.set_attribute("expert.type", "business")
-                    biz_span.set_attribute("response.length", len(str(expert_result.result)))
-                    print(f"Business Expert Response: {str(expert_result.result)[:200]}...")
+                    biz_span.set_attribute("response.length", len(str(expert_result.content)))
+                    print(f"Business Expert Response: {str(expert_result.content)[:200]}...")
             
             span.set_attribute("pipeline.status", "completed")
     

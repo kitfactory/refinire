@@ -103,7 +103,7 @@ input_text = "Analyze this data"
 # Normal mode returns Context
 normal_result = normal_agent.run(input_text)
 print(f"Normal result type: {type(normal_result)}")  # <class 'Context'>
-print(f"Content: {normal_result.result}")
+print(f"Content: {normal_result.content}")
 
 # Orchestration mode returns dict
 orch_result = orchestration_agent.run(input_text)

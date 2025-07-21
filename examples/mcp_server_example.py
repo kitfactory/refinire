@@ -72,7 +72,7 @@ async def main():
         # 注意: 実際のMCPサーバーが動作している場合に機能します
         ctx = Context()
         result = await agent.run_async(user_input, ctx)
-        print(f"🤖 Agent: {result.result}")
+        print(f"🤖 Agent: {result.content}")
         
     except Exception as e:
         print(f"❌ Error with MCP integration: {e}")
@@ -116,7 +116,7 @@ async def main():
         print(f"\n💬 User: {user_input}")
         
         result = await agent_with_context.run_async(user_input, ctx)
-        print(f"🤖 Agent: {result.result}")
+        print(f"🤖 Agent: {result.content}")
         
         print(f"📋 Context after execution:")
         print(f"   - Shared state: {ctx.shared_state}")

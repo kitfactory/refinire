@@ -52,21 +52,134 @@ class Context(BaseModel):
     # Core state / コア状態
     last_user_input: Optional[str] = None  # Most recent user input / 直近のユーザー入力
     messages: List[Message] = Field(default_factory=list)  # Conversation history / 会話履歴
-    result: Any = None  # Latest execution result / 最新の実行結果
+    result: Any = None  # Complete LLM API response object (recommended for advanced usage) / 完全なLLM API応答オブジェクト（高度な使用推奨）
     evaluation_result: Optional[Dict[str, Any]] = None  # Latest evaluation result / 最新の評価結果
     routing_result: Optional[Dict[str, Any]] = None  # Latest routing result / 最新のルーティング結果
     
-    # External data / 外部データ
-    knowledge: Dict[str, Any] = Field(default_factory=dict)  # External knowledge (RAG, etc.) / 外部知識（RAGなど）
-    prev_outputs: Dict[str, Any] = Field(default_factory=dict)  # Previous step outputs / 前ステップの出力
     
     # Flow control / フロー制御
-    next_label: Optional[str] = None  # Next step routing instruction / 次ステップのルーティング指示
     current_step: Optional[str] = None  # Current step name / 現在のステップ名
     
+    @property
+    def content(self) -> Any:
+        """
+        Access to generated content only (recommended for most users)
+        生成されたコンテンツのみにアクセス（一般ユーザー推奨）
+        
+        Returns the actual generated content from LLMResult.content
+        LLMResult.contentから実際の生成コンテンツを返す
+        """
+        if self.result and hasattr(self.result, 'content'):
+            return self.result.content
+        
+        # Fallback: Check if there's an error message in the last assistant message
+        # フォールバック: 最後のアシスタントメッセージにエラーメッセージがあるかチェック
+        if self.messages:
+            for message in reversed(self.messages):
+                if message.role == 'system' and 'error' in message.content.lower():
+                    return f"[Error] {message.content}"
+        
+        return None
+    
+    @content.setter
+    def content(self, value: Any) -> None:
+        """
+        Setter for content property - updates LLMResult.content
+        contentプロパティのセッター - LLMResult.contentを更新
+        """
+        if self.result and hasattr(self.result, 'content'):
+            self.result.content = value
+        else:
+            # Create minimal LLMResult if none exists
+            # LLMResultが存在しない場合は最小限のものを作成
+            try:
+                from refinire.agents.pipeline.llm_pipeline import LLMResult
+                self.result = LLMResult(content=value, success=True)
+            except ImportError:
+                # Fallback: store directly if LLMResult not available
+                # フォールバック: LLMResultが利用できない場合は直接格納
+                self.result = value
+    
+    @property
+    def success(self) -> bool:
+        """
+        Indicates if the operation was successful
+        操作が成功したかを示す
+        
+        Success is True when:
+        - Result is not None
+        - If evaluation_result exists, evaluation passed
+        - No error indicators are present
+        
+        成功条件:
+        - 結果がNoneでない
+        - 評価結果がある場合、評価に合格
+        - エラー指標がない
+        """
+        # Basic check: must have a result
+        # 基本チェック: 結果が必要
+        if self.result is None:
+            return False
+        
+        # Check evaluation result if available
+        # 評価結果がある場合はチェック
+        if self.evaluation_result:
+            # If evaluation was performed, it must have passed
+            # 評価が実行された場合、合格している必要がある
+            if not self.evaluation_result.get('passed', True):
+                return False
+        
+        # Check for error indicators in shared state
+        # 共有状態でエラー指標をチェック
+        if 'error' in self.shared_state:
+            return False
+            
+        # Check routing result for error conditions
+        # ルーティング結果でエラー条件をチェック
+        if self.routing_result:
+            if self.routing_result.get('next_route') == 'error':
+                return False
+        
+        return True
+    
+    @property
+    def metadata(self) -> Dict[str, Any]:
+        """
+        Metadata information (returns evaluation_result or empty dict)
+        メタデータ情報（evaluation_resultまたは空辞書を返す）
+        """
+        return self.evaluation_result or {}
+    
+    @property
+    def artifacts(self) -> Dict[str, Any]:
+        """
+        Compatibility property for artifacts (stored in shared_state)
+        artifactsの互換性プロパティ（shared_stateに保存）
+        """
+        return self.shared_state.get('artifacts', {})
+    
+    @property
+    def next_label(self) -> Optional[str]:
+        """
+        Compatibility property for next_label (stored in routing_result)
+        next_labelの互換性プロパティ（routing_resultに保存）
+        """
+        if self.routing_result:
+            return self.routing_result.get('next_route')
+        return None
+    
+    @next_label.setter
+    def next_label(self, value: Optional[str]) -> None:
+        """
+        Setter for next_label (stores in routing_result)
+        next_labelのセッター（routing_resultに保存）
+        """
+        if not self.routing_result:
+            self.routing_result = {}
+        self.routing_result['next_route'] = value
+    
     # Results / 結果
-    artifacts: Dict[str, Any] = Field(default_factory=dict)  # Flow-wide artifacts / フロー全体の成果物
-    shared_state: Dict[str, Any] = Field(default_factory=dict)  # Arbitrary shared values / 任意の共有値
+    shared_state: Dict[str, Any] = Field(default_factory=dict)  # Arbitrary shared values (includes artifacts) / 任意の共有値（成果物を含む）
     
     # User interaction / ユーザー対話
     awaiting_prompt: Optional[str] = None  # Prompt waiting for user input / ユーザー入力待ちのプロンプト
@@ -177,32 +290,7 @@ class Context(BaseModel):
         )
         self.messages.append(message)
     
-    def set_waiting_for_user_input(self, prompt: str) -> None:
-        """
-        Set context to wait for user input with a prompt
-        プロンプトでユーザー入力待ち状態に設定
-        
-        Args:
-            prompt: Prompt to display to user / ユーザーに表示するプロンプト
-        """
-        self.awaiting_prompt = prompt
-        self.awaiting_user_input = True
-        if self._awaiting_prompt_event:
-            self._awaiting_prompt_event.set()
     
-    def provide_user_input(self, user_input: str) -> None:
-        """
-        Provide user input and clear waiting state
-        ユーザー入力を提供し、待ち状態をクリア
-        
-        Args:
-            user_input: User input text / ユーザー入力テキスト
-        """
-        self.add_user_message(user_input)
-        self.awaiting_prompt = None
-        self.awaiting_user_input = False
-        if self._user_input_event:
-            self._user_input_event.set()
     
     def clear_prompt(self) -> Optional[str]:
         """
@@ -218,18 +306,6 @@ class Context(BaseModel):
             self._awaiting_prompt_event.clear()
         return prompt
     
-    async def wait_for_user_input(self) -> str:
-        """
-        Async wait for user input
-        ユーザー入力を非同期で待機
-        
-        Returns:
-            str: User input / ユーザー入力
-        """
-        if self._user_input_event:
-            await self._user_input_event.wait()
-            self._user_input_event.clear()
-        return self.last_user_input or ""
     
     async def wait_for_prompt_event(self) -> str:
         """
@@ -245,30 +321,36 @@ class Context(BaseModel):
     
     def goto(self, label: str) -> None:
         """
-        Set next step routing
-        次ステップのルーティングを設定
+        Set next step routing (stores in routing_result)
+        次ステップのルーティングを設定（routing_resultに保存）
         
         Args:
             label: Next step label / 次ステップのラベル
         """
-        self.next_label = label
+        if not self.routing_result:
+            self.routing_result = {}
+        self.routing_result['next_route'] = label
     
     def finish(self) -> None:
         """
-        Mark flow as finished
-        フローを完了としてマーク
+        Mark flow as finished (clears routing_result)
+        フローを完了としてマーク（routing_resultをクリア）
         """
-        self.next_label = None
+        if not self.routing_result:
+            self.routing_result = {}
+        self.routing_result['next_route'] = None
     
     def is_finished(self) -> bool:
         """
-        Check if flow is finished
-        フローが完了しているかチェック
+        Check if flow is finished (checks routing_result)
+        フローが完了しているかチェック（routing_resultを確認）
         
         Returns:
             bool: True if finished / 完了している場合True
         """
-        return self.next_label is None
+        if self.routing_result:
+            return self.routing_result.get('next_route') is None
+        return True  # No routing result means finished
     
     @property
     def finished(self) -> bool:
@@ -312,6 +394,16 @@ class Context(BaseModel):
             Context: New context instance / 新しいコンテキストインスタンス
         """
         data = data.copy()
+        
+        # Handle next_label -> routing_result conversion
+        # next_label -> routing_result変換を処理
+        if "next_label" in data:
+            next_label = data.pop("next_label")
+            if next_label is not None:
+                if "routing_result" not in data:
+                    data["routing_result"] = {}
+                data["routing_result"]["next_route"] = next_label
+        
         # Convert history to messages
         # 履歴をメッセージに変換
         history = data.pop("history", [])
@@ -445,19 +537,21 @@ class Context(BaseModel):
     
     def set_artifact(self, key: str, value: Any) -> None:
         """
-        Set artifact value
-        成果物の値を設定
+        Set artifact value (stored in shared_state['artifacts'])
+        成果物の値を設定（shared_state['artifacts']に保存）
         
         Args:
             key: Artifact key / 成果物キー
             value: Artifact value / 成果物値
         """
-        self.artifacts[key] = value
+        if 'artifacts' not in self.shared_state:
+            self.shared_state['artifacts'] = {}
+        self.shared_state['artifacts'][key] = value
     
     def get_artifact(self, key: str, default: Any = None) -> Any:
         """
-        Get artifact value
-        成果物の値を取得
+        Get artifact value (from shared_state['artifacts'])
+        成果物の値を取得（shared_state['artifacts']から）
         
         Args:
             key: Artifact key / 成果物キー
@@ -466,7 +560,8 @@ class Context(BaseModel):
         Returns:
             Any: Artifact value / 成果物値
         """
-        return self.artifacts.get(key, default)
+        artifacts = self.shared_state.get('artifacts', {})
+        return artifacts.get(key, default)
     
     def get_current_span_info(self) -> Optional[Dict[str, Any]]:
         """

@@ -1269,12 +1269,14 @@ if result_ctx.evaluation_result:
 next_agent = create_simple_agent("summarizer", "Create summaries")
 summary_ctx = next_agent.run(f"Summarize: {result_ctx.result}", result_ctx)
 
-# Access previous agent outputs
-analyzer_output = summary_ctx.prev_outputs["analyzer"]
-summarizer_output = summary_ctx.prev_outputs["summarizer"]
+# Access previous agent outputs (stored in shared_state)
+analyzer_output = summary_ctx.shared_state.get("prev_outputs_analyzer")
+summarizer_output = summary_ctx.shared_state.get("prev_outputs_summarizer")
 
-# Custom data storage
+# Custom data storage (including artifacts, knowledge, etc.)
 result_ctx.shared_state["custom_data"] = {"key": "value"}
+result_ctx.shared_state["artifacts"] = {"result": "final_output"}
+result_ctx.shared_state["knowledge"] = {"domain_info": "research_data"}
 ```
 
 **Seamless data flow between agents with automatic result tracking.**

@@ -115,7 +115,7 @@ class TestFlowLockManagement(unittest.TestCase):
             
             # Execute flow
             result = await flow.run("test_input")
-            self.assertIsNotNone(result.result)
+            self.assertIsNotNone(result.content)
             
             # Verify lock is released after execution
             self.assertFalse(flow._execution_lock.locked())
@@ -253,7 +253,7 @@ class TestFlowLockManagement(unittest.TestCase):
         async def test_reset():
             # Execute flow
             result = await flow.run("test_input")
-            self.assertIsNotNone(result.result)
+            self.assertIsNotNone(result.content)
             
             # Reset should clear state
             flow.reset()

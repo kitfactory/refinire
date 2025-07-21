@@ -112,7 +112,7 @@ async def oneenv_tracing_example():
         ctx
     )
     
-    print(f"\n📝 Agent response: {str(result.result)[:200]}...")
+    print(f"\n📝 Agent response: {str(result.content)[:200]}...")
     print("\n✅ Trace sent using oneenv-configured settings!")
     
     # Clean up

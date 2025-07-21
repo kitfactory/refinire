@@ -50,7 +50,7 @@ class TestTracingIndependence:
         # Test flow execution
         result = await flow.run("Hello World")
         assert result is not None
-        assert result.result == "Processed: Hello World"
+        assert result.content == "Processed: Hello World"
 
     def test_context_initialization(self):
         """Test Context initialization with various trace_id values"""

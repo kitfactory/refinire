@@ -23,12 +23,10 @@ try:
         OTLP_AVAILABLE = True
     except ImportError:
         OTLP_AVAILABLE = False
-        logger.debug("OTLP exporter not available - OTLP export will be disabled")
         
-except ImportError as e:
+except ImportError:
     OPENINFERENCE_AVAILABLE = False
     OTLP_AVAILABLE = False
-    logger.debug(f"OpenInference instrumentation not available: {e}. Install with: pip install refinire[openinference-instrumentation]")
 
 
 class OpenTelemetryTracingProcessor:
@@ -75,8 +73,10 @@ class OpenTelemetryTracingProcessor:
             if hasattr(span_data, 'instructions'):
                 otel_span.set_attribute("instructions", str(span_data.instructions))
                 
-        except Exception as e:
-            logger.debug(f"Failed to create OpenTelemetry span: {e}")
+        except Exception:
+            # Failed to create OpenTelemetry span - silently continue
+            # OpenTelemetryスパンの作成に失敗 - 静かに続行
+            pass
     
     def on_span_end(self, span):
         """Called when a span ends - finish corresponding OpenTelemetry span"""
@@ -113,8 +113,10 @@ class OpenTelemetryTracingProcessor:
             # End the span
             otel_span.end()
             
-        except Exception as e:
-            logger.debug(f"Failed to end OpenTelemetry span: {e}")
+        except Exception:
+            # Failed to end OpenTelemetry span - silently continue
+            # OpenTelemetryスパンの終了に失敗 - 静かに続行
+            pass
     
     def shutdown(self):
         """Shutdown the processor"""

@@ -331,7 +331,7 @@ class TestOrchestrationMode:
             # In normal mode, should return Context
             # 通常モードでは、Contextを返す必要がある
             assert isinstance(result, Context)
-            assert result.result == "Normal response"
+            assert result.content == "Normal response"
     
     def test_orchestration_mode_factory_functions(self):
         """Test that factory functions work with orchestration_mode / ファクトリ関数がorchestration_modeで動作することをテスト"""

@@ -800,12 +800,14 @@ if result_ctx.evaluation_result:
 next_agent = create_simple_agent("summarizer", "要約を作成してください")
 summary_ctx = next_agent.run(f"要約: {result_ctx.result}", result_ctx)
 
-# 前のエージェントの出力にアクセス
-analyzer_output = summary_ctx.prev_outputs["analyzer"]
-summarizer_output = summary_ctx.prev_outputs["summarizer"]
+# 前のエージェントの出力にアクセス（shared_stateに保存）
+analyzer_output = summary_ctx.shared_state.get("prev_outputs_analyzer")
+summarizer_output = summary_ctx.shared_state.get("prev_outputs_summarizer")
 
-# カスタムデータ保存
+# カスタムデータ保存（artifacts、knowledge等も含む）
 result_ctx.shared_state["custom_data"] = {"key": "value"}
+result_ctx.shared_state["artifacts"] = {"result": "最終出力"}
+result_ctx.shared_state["knowledge"] = {"domain_info": "研究データ"}
 ```
 
 **自動結果追跡によるエージェント間のシームレスなデータフロー。**

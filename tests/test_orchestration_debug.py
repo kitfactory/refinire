@@ -33,7 +33,7 @@ def test_basic_orchestration():
         print(f"Result: {result.get('result', 'none')}")
     else:
         print("❌ Orchestration mode not working - returned Context")
-        print(f"Context result: {result.result}")
+        print(f"Context result: {result.content}")
 
 def test_structured_orchestration():
     """Test orchestration with structured output"""

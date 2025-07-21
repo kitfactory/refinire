@@ -169,7 +169,7 @@ async def structured_output_example():
         ctx = Context()
         result_ctx = await agent.run_async("Analyze this task: 'Create a REST API for a todo application with authentication'", ctx)
         
-        result = result_ctx.result
+        result = result_ctx.content
         
         print("Task Analysis Result:")
         print("タスク分析結果:")

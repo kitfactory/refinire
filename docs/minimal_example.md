@@ -27,26 +27,33 @@ python examples/minimal/minimal_example.py
 ### シンプルなテキスト生成
 
 ```python
-from agents_sdk_models import Pipeline, LLM
+from refinire import RefinireAgent
 
-llm = LLM(provider="openai", model="gpt-4o-mini")
-pipeline = Pipeline()
-result = pipeline.run("Hello, world!", llm=llm)
-print(result.result)
+agent = RefinireAgent(
+    name="hello_agent",
+    generation_instructions="You are a helpful assistant.",
+    model="gpt-4o-mini"
+)
+result = agent.run("Hello, world!")
+print(result.content)
 ```
 
 ### コンテキスト変数を使用した生成
 
 ```python
-from agents_sdk_models import Pipeline, LLM, Context
+from refinire import RefinireAgent
+from refinire.agents.flow.context import Context
 
-llm = LLM(provider="openai", model="gpt-4o-mini")
-pipeline = Pipeline()
+agent = RefinireAgent(
+    name="context_agent", 
+    generation_instructions="You are a helpful assistant. Use any variables provided in context.",
+    model="gpt-4o-mini"
+)
+
 context = Context()
-
-context.add_variable("user_name", "Alice")
-result = pipeline.run("Hello {user_name}!", llm=llm, context=context)
-print(result.result)  # "Hello Alice! ..."
+context.shared_state["user_name"] = "Alice"
+result = agent.run("Hello {user_name}!", ctx=context)
+print(result.content)  # "Hello Alice! ..."
 ```
 
 ## Doctest の例

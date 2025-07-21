@@ -76,14 +76,14 @@ async def test_streaming_with_structured_output():
         print("Agent (Non-streaming): ")
         
         ctx = agent.run("How to bake a chocolate cake")
-        print(f"Structured result: {ctx.result}")
-        print(f"Result type: {type(ctx.result)}")
+        print(f"Structured result: {ctx.content}")
+        print(f"Result type: {type(ctx.content)}")
         
-        if hasattr(ctx.result, 'title'):
-            print(f"- Title: {ctx.result.title}")
-            print(f"- Steps: {ctx.result.steps}")
-            print(f"- Time: {ctx.result.estimated_time}")
-            print(f"- Difficulty: {ctx.result.difficulty}")
+        if hasattr(ctx.content, 'title'):
+            print(f"- Title: {ctx.content.title}")
+            print(f"- Steps: {ctx.content.steps}")
+            print(f"- Time: {ctx.content.estimated_time}")
+            print(f"- Difficulty: {ctx.content.difficulty}")
         
     except Exception as e:
         print(f"\n❌ Test failed: {e}")
@@ -123,8 +123,8 @@ async def test_simple_structured_streaming():
         # Non-streaming comparison
         print("\nAgent (Non-streaming): ")
         ctx = agent.run(user_input)
-        print(f"Structured result: {ctx.result}")
-        print(f"Result type: {type(ctx.result)}")
+        print(f"Structured result: {ctx.content}")
+        print(f"Result type: {type(ctx.content)}")
         
     except Exception as e:
         print(f"\n❌ Simple test failed: {e}")

@@ -103,7 +103,7 @@ input_text = "このデータを分析してください"
 # 通常モードはContextを返す
 normal_result = normal_agent.run(input_text)
 print(f"通常結果の型: {type(normal_result)}")  # <class 'Context'>
-print(f"コンテンツ: {normal_result.result}")
+print(f"コンテンツ: {normal_result.content}")
 
 # オーケストレーション・モードは辞書を返す
 orch_result = orchestration_agent.run(input_text)

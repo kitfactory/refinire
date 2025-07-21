@@ -44,6 +44,30 @@ flow = Flow(start="step1", steps={"step1": step1, "step2": step2})
 | `feed`        | sync / async | `feed(user_input: str) -> None`            | ユーザー入力を `ctx.last_user_input` に格納し、`run_loop` を再開させる。                      |                                               |
 | `step`        | sync         | `step() -> None`                           | 非同期を使わず 1 ステップだけ同期的に進める。LLM 呼び出し中はブロック。                                    |                                               |
 
+### Flowクラスのルーティング制御
+
+**重要**: Flowクラスは各ステップ実行後に`context.routing_result`を確認し、以下の方法で次のエージェント/ステップを自動選択します：
+
+1. **routing_result.next_route**: 次に実行するステップ名を指定
+2. **ルーティング信頼度**: `routing_result.confidence`で判断の確実性を評価
+3. **ユーザー入力制御**: `routing_result.needs_user_input`でユーザー入力の必要性を判定
+
+```python
+# Flow内でのrouting_result処理例
+def _execute_next_step(self, context: Context) -> str:
+    if context.routing_result:
+        next_route = context.routing_result.get('next_route', 'end')
+        confidence = context.routing_result.get('confidence', 1.0)
+        
+        # 信頼度チェック
+        if confidence < 0.5:
+            # 信頼度が低い場合はエラールートへ
+            return 'error_handler'
+        
+        return next_route
+    return 'end'
+```
+
 ### ライフサイクル図（概要）
 
 1. `flow.run_loop()` をタスク起動

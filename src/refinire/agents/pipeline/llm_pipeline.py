@@ -184,7 +184,24 @@ class RefinireAgent(Step):
         # Handle model parameter - convert string to Model instance using get_llm()
         # modelパラメータを処理 - 文字列の場合はget_llm()を使用してModelインスタンスに変換
         if isinstance(model, str):
-            self.model = get_llm(model=model, temperature=temperature, namespace=namespace)
+            # Detect provider from model name to avoid environment override
+            # モデル名からプロバイダーを検出して環境オーバーライドを回避
+            def detect_provider_from_model_name(model_name: str) -> Optional[str]:
+                """Detect provider from model name patterns"""
+                if "gpt" in model_name.lower() or "o3" in model_name.lower() or "o4" in model_name.lower():
+                    return "openai"
+                elif "gemini" in model_name.lower():
+                    return "google"
+                elif "claude" in model_name.lower():
+                    return "anthropic"
+                else:
+                    return None  # Let get_llm decide
+            
+            detected_provider = detect_provider_from_model_name(model)
+            if detected_provider:
+                self.model = get_llm(provider=detected_provider, model=model, temperature=temperature, namespace=namespace)
+            else:
+                self.model = get_llm(model=model, temperature=temperature, namespace=namespace)
             self.model_name = model
         else:
             # Assume it's already a Model instance
@@ -198,7 +215,13 @@ class RefinireAgent(Step):
             self.evaluation_model = self.model
             self.evaluation_model_name = self.model_name
         elif isinstance(evaluation_model, str):
-            self.evaluation_model = get_llm(model=evaluation_model, temperature=temperature, namespace=namespace)
+            # Apply same provider detection logic for evaluation model
+            # 評価モデルにも同じプロバイダー検出ロジックを適用
+            detected_provider = detect_provider_from_model_name(evaluation_model)
+            if detected_provider:
+                self.evaluation_model = get_llm(provider=detected_provider, model=evaluation_model, temperature=temperature, namespace=namespace)
+            else:
+                self.evaluation_model = get_llm(model=evaluation_model, temperature=temperature, namespace=namespace)
             self.evaluation_model_name = evaluation_model
         else:
             self.evaluation_model = evaluation_model
@@ -268,6 +291,23 @@ class RefinireAgent(Step):
             "tools": sdk_tools,
             "model": self.model  # Pass the Model instance to the Agent
         }
+        
+        # Add timeout setting to SDK agent if specified
+        # timeout設定が指定されている場合はSDKエージェントに追加
+        if self.timeout and self.timeout != 30.0:  # Only if different from default
+            # OpenAI Agents SDK may support timeout in model settings
+            # OpenAI Agents SDKはmodel設定でtimeoutをサポートしている可能性
+            try:
+                # Try to set timeout in model if supported
+                # サポートされている場合はモデルにtimeoutを設定
+                if hasattr(self.model, 'timeout'):
+                    self.model.timeout = self.timeout
+                elif hasattr(self.model, 'settings') and hasattr(self.model.settings, 'timeout'):
+                    self.model.settings.timeout = self.timeout
+            except Exception:
+                # If timeout setting fails, continue without it
+                # timeout設定が失敗した場合は、それなしで続行
+                pass
         
         # Add MCP servers support if specified
         # MCPサーバーが指定されている場合は追加
@@ -439,18 +479,23 @@ IMPORTANT: Do not deviate from this format."""
                 }
             return ctx
     
-    async def run_async(self, user_input: Optional[str], ctx: Context) -> Context:
+    async def run_async(self, user_input: Optional[str], ctx: Optional[Context] = None) -> Context:
         """
         Run the agent asynchronously and return Context with result
         エージェントを非同期実行し、結果付きContextを返す
         
         Args:
             user_input: User input for the agent / エージェント用ユーザー入力
-            ctx: Workflow context / ワークフローコンテキスト
+            ctx: Optional workflow context (creates new if None) / オプションのワークフローコンテキスト（Noneの場合は新作成）
         
         Returns:
             Context: Updated context with result in ctx.result / ctx.resultに結果が格納された更新Context
         """
+        # Create context if not provided / 提供されていない場合はContextを作成
+        if ctx is None:
+            ctx = Context()
+            if user_input:
+                ctx.add_user_message(user_input)
         # Try to create trace context if agents.tracing is available
         # agents.tracingが利用可能な場合はトレースコンテキストを作成を試行
         try:
@@ -616,40 +661,41 @@ IMPORTANT: Do not deviate from this format."""
                 routing_result = None
                 if self.routing_instruction and llm_result.success and llm_result.content:
                     try:
-                        routing_result = self._execute_routing(llm_result.content, ctx)
+                        routing_result = await self._execute_routing(llm_result.content, ctx)
                         if routing_result:
-                            # Store routing result in context
-                            # ルーティング結果をコンテキストに保存
+                            # Store routing result in context without overwriting the main result
+                            # メイン結果を上書きせずにルーティング結果をコンテキストに保存
                             ctx.routing_result = {
                                 "next_route": routing_result.next_route,
                                 "confidence": routing_result.confidence,
-                                "reasoning": routing_result.reasoning
+                                "reasoning": routing_result.reasoning,
+                                "routing_content": routing_result.content  # Store routing-specific content separately
                             }
-                            # Update result to routing result if routing was successful
-                            # ルーティングが成功した場合、結果をルーティング結果に更新
-                            ctx.result = routing_result
+                            # Keep the original LLM result as the main result
+                            # 元のLLM結果をメイン結果として保持
+                            ctx.result = llm_result
                         else:
-                            # Fallback to original result if routing failed
-                            # ルーティングが失敗した場合、元の結果にフォールバック
-                            ctx.result = llm_result.content
+                            # Store original result when routing failed
+                            # ルーティングが失敗した場合、元の結果を格納
+                            ctx.result = llm_result
                     except Exception as e:
-                        # Handle routing errors gracefully
-                        # ルーティングエラーを適切に処理
-                        ctx.result = llm_result.content
+                        # Handle routing errors gracefully - store complete LLMResult object
+                        # ルーティングエラーを適切に処理 - 完全なLLMResultオブジェクトを格納
+                        ctx.result = llm_result
                         ctx.routing_result = {
                             "next_route": "error",
                             "confidence": 0.0,
                             "reasoning": f"Routing failed: {str(e)}"
                         }
                 else:
-                    # No routing, use original result
-                    # ルーティングなし、元の結果を使用
-                    ctx.result = llm_result.content if llm_result.success else None
+                    # No routing, use original result - store complete LLMResult object
+                    # ルーティングなし、元の結果を使用 - 完全なLLMResultオブジェクトを格納
+                    ctx.result = llm_result
                 
-                # Also store in other locations for compatibility
-                # 互換性のため他の場所にも保存
-                ctx.shared_state[self.store_result_key] = ctx.result
-                ctx.prev_outputs[self.name] = ctx.result
+                # Store generated content in shared_state for workflow access
+                # ワークフローアクセス用にshared_stateに生成コンテンツを保存
+                ctx.shared_state[self.store_result_key] = ctx.content  # Custom key storage
+                ctx.shared_state[f"{self.name}_result"] = ctx.content  # Agent name-based storage
                 
                 # Add span metadata for result
                 # 結果のスパンメタデータを追加
@@ -676,7 +722,7 @@ IMPORTANT: Do not deviate from this format."""
             error_msg = f"RefinireAgent {self.name} execution error: {str(e)}"
             ctx.add_system_message(error_msg)
             ctx.shared_state[self.store_result_key] = None
-            ctx.prev_outputs[self.name] = None
+            ctx.shared_state[f"{self.name}_result"] = None
             
             # Add error to span if available
             # スパンが利用可能な場合はエラーを追加
@@ -737,7 +783,42 @@ IMPORTANT: Do not deviate from this format."""
                     self._sdk_agent.instructions = instructions
             
             # full_promptを使用してRunner.runを呼び出し
-            result = await Runner.run(self._sdk_agent, full_prompt)
+            # Configure timeout by creating a new OpenAI client with custom timeout
+            # カスタムタイムアウトで新しいOpenAIクライアントを作成してタイムアウトを設定
+            custom_run_config = None
+            
+            if self.timeout and self.timeout != 30.0:  # Only if different from default
+                try:
+                    import httpx
+                    from openai import AsyncOpenAI
+                    from agents import RunConfig
+                    from agents.models.openai_provider import OpenAIProvider
+                    
+                    # Create a custom OpenAI client with our timeout
+                    # 指定されたタイムアウトでカスタムOpenAIクライアントを作成
+                    custom_client = AsyncOpenAI(
+                        timeout=httpx.Timeout(timeout=self.timeout)
+                    )
+                    
+                    # Create a custom OpenAI provider with our client
+                    # カスタムクライアントでカスタムOpenAIプロバイダーを作成
+                    custom_provider = OpenAIProvider(openai_client=custom_client)
+                    
+                    # Create a RunConfig with the custom provider
+                    # カスタムプロバイダーでRunConfigを作成
+                    custom_run_config = RunConfig(model_provider=custom_provider)
+                    
+                except Exception:
+                    # If custom client creation fails, continue without it
+                    # カスタムクライアント作成が失敗した場合は、それなしで続行
+                    pass
+            
+            # Execute with OpenAI Agents SDK using custom timeout if available
+            # カスタムタイムアウトが利用可能な場合はそれを使用してOpenAI Agents SDKで実行
+            if custom_run_config:
+                result = await Runner.run(self._sdk_agent, full_prompt, run_config=custom_run_config)
+            else:
+                result = await Runner.run(self._sdk_agent, full_prompt)
             content = result.final_output
             if not content and hasattr(result, 'output') and result.output:
                 content = result.output
@@ -997,14 +1078,20 @@ IMPORTANT: Do not deviate from this format."""
         Returns:
             A dynamically created RoutingResult model with the appropriate content type
         """
-        if self.output_model:
-            # Create a dynamic RoutingResult with the specified content type
-            # 指定されたコンテンツ型で動的 RoutingResult を作成
-            return create_routing_result_model(self.output_model)
-        else:
-            # Use the standard RoutingResult with string content
-            # 文字列コンテンツで標準 RoutingResult を使用
-            return RoutingResult
+        # For now, always use the standard RoutingResult to avoid JSON schema issues
+        # JSON スキーマの問題を避けるため、現在は常に標準 RoutingResult を使用
+        return RoutingResult
+        
+        # TODO: Fix JSON schema generation for Union types in dynamic models
+        # TODO: 動的モデルでの Union 型の JSON スキーマ生成を修正
+        # if self.output_model:
+        #     # Create a dynamic RoutingResult with the specified content type
+        #     # 指定されたコンテンツ型で動的 RoutingResult を作成
+        #     return create_routing_result_model(self.output_model)
+        # else:
+        #     # Use the standard RoutingResult with string content
+        #     # 文字列コンテンツで標準 RoutingResult を使用
+        #     return RoutingResult
 
     def _build_routing_prompt(self, content: Any, routing_instruction: str) -> str:
         """
@@ -1030,7 +1117,7 @@ IMPORTANT: Do not deviate from this format."""
 上記の指示に従って、適切なルーティング判断を行い、指定された形式で出力してください。
 """
 
-    def _execute_routing(self, content: Any, ctx: Optional[Context] = None) -> Optional[RoutingResult]:
+    async def _execute_routing(self, content: Any, ctx: Optional[Context] = None) -> Optional[RoutingResult]:
         """
         Execute routing decision based on the generated content.
         生成されたコンテンツに基づいてルーティング判断を実行
@@ -1053,7 +1140,7 @@ IMPORTANT: Do not deviate from this format."""
             if self.routing_mode == "accurate_routing":
                 # Accurate routing: separate evaluation with dedicated agent
                 # 正確なルーティング: 専用エージェントによる分離評価
-                return self._execute_accurate_routing(content, routing_output_model, ctx)
+                return await self._execute_accurate_routing(content, routing_output_model, ctx)
             elif self.routing_mode == "fast_routing":
                 # Fast routing: integrated processing
                 # 高速ルーティング: 統合処理
@@ -1069,7 +1156,7 @@ IMPORTANT: Do not deviate from this format."""
             print(f"Warning: Routing execution failed: {e}")
             return None
 
-    def _execute_accurate_routing(self, content: Any, routing_output_model: Type[BaseModel], ctx: Optional[Context] = None) -> Optional[RoutingResult]:
+    async def _execute_accurate_routing(self, content: Any, routing_output_model: Type[BaseModel], ctx: Optional[Context] = None) -> Optional[RoutingResult]:
         """
         Execute accurate routing with dedicated routing agent.
         専用ルーティングエージェントによる正確なルーティング実行
@@ -1092,8 +1179,23 @@ IMPORTANT: Do not deviate from this format."""
             # Note: We need to avoid circular imports, so we'll use a different approach
             # 循環インポートを避けるため、異なるアプローチを使用
             
+            # Check for existing traces and generate unique router name
+            # 既存のトレースを確認し、ユニークなルーター名を生成
+            from ...core.trace_registry import get_global_registry
+            
+            registry = get_global_registry()
+            router_base_name = f"{self.name}_router"
+            router_name = router_base_name
+            
+            # Check if a trace with this name already exists and generate unique name if needed
+            # この名前のトレースが既に存在するかチェックし、必要に応じてユニーク名を生成
+            counter = 1
+            while any(trace.agent_names and router_name in trace.agent_names for trace in registry.get_all_traces()):
+                router_name = f"{router_base_name}_{counter}"
+                counter += 1
+            
             routing_agent = self.__class__(
-                name=f"{self.name}_router",
+                name=router_name,
                 generation_instructions=routing_prompt,
                 output_model=routing_output_model,
                 model=self.model_name,
@@ -1103,7 +1205,7 @@ IMPORTANT: Do not deviate from this format."""
             
             # Execute routing
             # ルーティングを実行
-            routing_result = routing_agent.run("", ctx)
+            routing_result = await routing_agent.run_async("", ctx)
             
             # Return the routing result
             # ルーティング結果を返す

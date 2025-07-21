@@ -94,8 +94,8 @@ async def debug_non_streaming():
         ctx = Context()
         result = await agent.run_async("Hello", ctx)
         
-        print(f"✅ Non-streaming result: {result.result}")
-        print(f"   Result type: {type(result.result)}")
+        print(f"✅ Non-streaming result: {result.content}")
+        print(f"   Result type: {type(result.content)}")
         
     except Exception as e:
         print(f"❌ Non-streaming debug failed: {e}")

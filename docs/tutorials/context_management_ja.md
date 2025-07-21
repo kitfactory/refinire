@@ -27,7 +27,8 @@ ctx = Context()
 ctx.result              # 現在のステップの実行結果
 ctx.shared_state        # ステップ間で共有される辞書型データ
 ctx.evaluation_result   # RefinireAgentの評価結果（評価機能使用時）
-ctx.prev_outputs        # 過去のエージェント出力の履歴
+# 過去のエージェント出力は ctx.shared_state に保存されます
+# 例: ctx.shared_state["agent_name_result"] でアクセス可能
 ```
 
 ### Contextのライフサイクル
@@ -752,10 +753,10 @@ difficulty_assessor = RefinireAgent(
 # コンテキスト統合関数
 def integrate_analysis_context(data, ctx):
     """複数の分析結果を統合"""
-    # 前の分析結果を保存
-    ctx.shared_state["domain"] = ctx.prev_outputs.get("domain_classifier", "一般")
-    ctx.shared_state["difficulty"] = ctx.prev_outputs.get("difficulty_assessor", "5")
-    ctx.shared_state["user_level"] = ctx.prev_outputs.get("level_analyzer", "intermediate")
+    # 前の分析結果を保存（エージェント結果は自動的にshared_stateに保存されます）
+    ctx.shared_state["domain"] = ctx.shared_state.get("domain_classifier_result", "一般")
+    ctx.shared_state["difficulty"] = ctx.shared_state.get("difficulty_assessor_result", "5")
+    ctx.shared_state["user_level"] = ctx.shared_state.get("level_analyzer_result", "intermediate")
     
     return data
 
@@ -911,7 +912,7 @@ async def context_access_example():
     # 結果へのアクセス方法（すべて同じ内容）
     print(f"ctx.result: {ctx.result}")                           # 最新結果
     print(f"shared_state: {ctx.shared_state['custom_output']}")  # カスタムキー
-    print(f"prev_outputs: {ctx.prev_outputs['multi_access_agent']}")  # エージェント名キー
+    print(f"shared_state: {ctx.shared_state['multi_access_agent_result']}")  # エージェント名キー
 ```
 
 ### Flow内での戦略的な結果管理
@@ -1161,7 +1162,7 @@ async def variable_embedding_example():
         result  # コンテキストを引き継ぎ
     )
     
-    print(f"最終レポート: {final_result.result}")
+    print(f"最終レポート: {final_result.content}")
 ```
 
 ### generation_instructionsでの変数活用
@@ -1445,7 +1446,7 @@ async def evaluation_variable_example():
         result
     )
     
-    print(f"改善されたコンテンツ: {improved_result.result}")
+    print(f"改善されたコンテンツ: {improved_result.content}")
 ```
 
 ### 複雑なワークフローでの変数活用

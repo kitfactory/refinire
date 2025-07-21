@@ -522,9 +522,15 @@ class TestFlowUserInput:
         # 初期はプロンプトなし
         assert flow.next_prompt() is None
         
-        # Set waiting state
-        # 待機状態を設定
-        flow.context.set_waiting_for_user_input("Test prompt")
+        # Set waiting state manually using routing_result
+        # routing_resultを使用して手動で待機状態を設定
+        flow.context.awaiting_prompt = "Test prompt"
+        flow.context.awaiting_user_input = True
+        if not flow.context.routing_result:
+            flow.context.routing_result = {}
+        flow.context.routing_result['needs_user_input'] = True
+        flow.context.routing_result['prompt'] = "Test prompt"
+        
         assert flow.next_prompt() == "Test prompt"
     
     def test_flow_feed(self):

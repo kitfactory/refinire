@@ -85,13 +85,13 @@ def test_normal_mode_with_output_model():
     result = agent.run("Revenue grew 30%, but market competition increased")
     
     print(f"Result type: {type(result)}")  # Context オブジェクト
-    print(f"result.result type: {type(result.result)}")
+    print(f"result.content type: {type(result.content)}")
     
-    if isinstance(result.result, BusinessAnalysis):
+    if isinstance(result.content, BusinessAnalysis):
         print("✅ Normal mode: Pydantic object in Context.result")
-        print(f"Summary: {result.result.summary}")
+        print(f"Summary: {result.content.summary}")
     else:
-        print(f"❌ Expected BusinessAnalysis, got: {type(result.result)}")
+        print(f"❌ Expected BusinessAnalysis, got: {type(result.content)}")
     print()
 
 def test_data_type_inspection():
