@@ -80,12 +80,22 @@ class RoutingResult(BaseModel):
         if not v:
             raise ValueError("next_route cannot be empty")
         
+        # Allow flow control constants that start with underscore
+        # アンダースコアで始まるフロー制御定数を許可
+        flow_control_constants = {
+            "_FLOW_END_", "_FLOW_TERMINATE_", "_FLOW_FINISH_"
+        }
+        
+        if v in flow_control_constants:
+            return v
+        
         # Check route name pattern: must start with letter, can contain letters, numbers, underscore, hyphen
         # ルート名パターンをチェック: 文字で始まり、文字、数字、アンダースコア、ハイフンを含むことができる
         if not re.match(r'^[a-zA-Z][a-zA-Z0-9_-]*$', v):
             raise ValueError(
                 f"Invalid route name format: '{v}'. "
-                "Route names must start with a letter and contain only letters, numbers, underscores, and hyphens."
+                "Route names must start with a letter and contain only letters, numbers, underscores, and hyphens. "
+                f"Flow control constants {flow_control_constants} are also allowed."
             )
         
         # Check maximum length

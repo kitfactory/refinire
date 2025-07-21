@@ -350,7 +350,11 @@ class Context(BaseModel):
             bool: True if finished / 完了している場合True
         """
         if self.routing_result:
-            return self.routing_result.get('next_route') is None
+            next_route = self.routing_result.get('next_route')
+            # Check for None or special termination constants
+            # Noneまたは特別な終了定数をチェック
+            return (next_route is None or 
+                    next_route in ("_FLOW_TERMINATE_", "_FLOW_END_", "_FLOW_FINISH_"))
         return True  # No routing result means finished
     
     @property

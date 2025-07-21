@@ -7,6 +7,8 @@ import pytest
 import tempfile
 import os
 from refinire.agents.pipeline.llm_pipeline import RefinireAgent
+from refinire.agents.providers.conversation_history import ConversationHistoryProvider
+from refinire.agents.providers.fixed_file import FixedFileProvider
 
 
 class TestRefinireAgentContextIntegration:
@@ -16,7 +18,8 @@ class TestRefinireAgentContextIntegration:
         """Test agent without context providers (backward compatibility)"""
         agent = RefinireAgent(
             name="test_agent",
-            generation_instructions="You are a helpful assistant."
+            generation_instructions="You are a helpful assistant.",
+            context_providers_config=[]  # Explicitly disable context providers
         )
         
         # Should work normally without context providers

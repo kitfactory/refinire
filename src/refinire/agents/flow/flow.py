@@ -40,6 +40,12 @@ class Flow:
     - Error handling and observability / エラーハンドリングとオブザーバビリティ
     """
     
+    # Special step constants for flow control
+    # フロー制御用の特別ステップ定数
+    TERMINATE = "_FLOW_TERMINATE_"  # フロー終了
+    END = "_FLOW_END_"  # フロー終了（別名）
+    FINISH = "_FLOW_FINISH_"  # フロー終了（別名）
+    
     def __init__(
         self, 
         start: Optional[str] = None, 
@@ -705,6 +711,13 @@ class Flow:
             
             while not self.finished and step_count < self.max_steps:
                 step_name = self.context.next_label
+                
+                # Check for special termination constants
+                # 特別な終了定数をチェック
+                if step_name in (self.TERMINATE, self.END, self.FINISH):
+                    self.context.finish()  # Finish flow with special constants
+                    break
+                
                 if not step_name or step_name not in self.steps:
                     self.context.finish()  # Finish flow when no next step or unknown step
                     break
@@ -717,6 +730,13 @@ class Flow:
                     await self._execute_step(step, current_input)
                     current_input = None  # Only use initial input for first step
                     step_count += 1
+                    
+                    # Check for special termination constants after step execution
+                    # ステップ実行後に特別な終了定数をチェック
+                    next_step_name = self.context.next_label
+                    if next_step_name in (self.TERMINATE, self.END, self.FINISH):
+                        self.context.finish()  # Finish flow with special constants
+                        break
                     
                     # If step is waiting for user input, break
                     # ステップがユーザー入力を待機している場合、中断
@@ -807,6 +827,13 @@ class Flow:
             
             while not self.finished and step_count < self.max_steps:
                 step_name = self.context.next_label
+                
+                # Check for special termination constants
+                # 特別な終了定数をチェック
+                if step_name in (self.TERMINATE, self.END, self.FINISH):
+                    self.context.finish()  # Finish flow with special constants
+                    break
+                
                 if not step_name or step_name not in self.steps:
                     self.context.finish()  # Finish flow when no next step or unknown step
                     break
@@ -819,6 +846,13 @@ class Flow:
                     await self._execute_step(step, current_input)
                     current_input = None
                     step_count += 1
+                    
+                    # Check for special termination constants after step execution
+                    # ステップ実行後に特別な終了定数をチェック
+                    next_step_name = self.context.next_label
+                    if next_step_name in (self.TERMINATE, self.END, self.FINISH):
+                        self.context.finish()  # Finish flow with special constants
+                        break
                     
                     # If step is waiting for user input, wait for feed()
                     # ステップがユーザー入力を待機している場合、feed()を待つ

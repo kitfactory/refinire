@@ -323,12 +323,19 @@ class RefinireAgent(Step):
         
         # Context providers
         self.context_providers = []
+        # Store original config for inheritance by routing agents
+        # ルーティングエージェントの継承用に元の設定を保存
+        self._original_context_providers_config = context_providers_config
+        
         if context_providers_config is None or (isinstance(context_providers_config, str) and not context_providers_config.strip()):
             # Default to conversation history provider
             # デフォルトで会話履歴プロバイダーを使用
             context_providers_config = [
                 {"type": "conversation_history", "max_items": 10}
             ]
+            # Also update the stored original config
+            # 保存されている元の設定も更新
+            self._original_context_providers_config = context_providers_config
         
         # Prepare orchestration system instruction template
         # オーケストレーション用システム指示テンプレートを準備
@@ -1103,7 +1110,9 @@ IMPORTANT: Do not deviate from this format."""
             Formatted routing prompt string
         """
         return f"""
-生成されたコンテンツを分析し、次のルーティング判断を行ってください。
+これまでの会話履歴と生成されたコンテンツを分析し、次のルーティング判断を行ってください。
+
+重要: 会話履歴に含まれる全ての情報を考慮して判断してください。最新の応答だけでなく、過去のユーザー入力も確認してください。
 
 === 生成コンテンツ ===
 {content}
@@ -1113,6 +1122,51 @@ IMPORTANT: Do not deviate from this format."""
 
 上記の指示に従って、適切なルーティング判断を行い、指定された形式で出力してください。
 """
+
+    def _build_routing_prompt_with_history(self, content: Any, routing_instruction: str, ctx: Optional[Context] = None) -> str:
+        """
+        Build a routing prompt that includes conversation history.
+        会話履歴を含むルーティングプロンプトを構築
+        
+        Args:
+            content: Generated content to evaluate
+            routing_instruction: Routing instruction for decision making
+            ctx: Context containing conversation history
+            
+        Returns:
+            Formatted routing prompt string with conversation history
+        """
+        # Extract conversation history from session_history
+        # session_historyから会話履歴を抽出
+        history_text = ""
+        if hasattr(self, 'session_history') and self.session_history:
+            # Use the last few entries from session_history for better context
+            # より良いコンテキストのためsession_historyの最後の数エントリを使用
+            recent_history = self.session_history[-5:]  # Last 5 conversation rounds
+            if recent_history:
+                history_text = "\n".join(recent_history)
+        
+        # Build prompt with history
+        # 履歴付きプロンプトを構築
+        if history_text:
+            return f"""
+これまでの会話履歴と生成されたコンテンツを分析し、次のルーティング判断を行ってください。
+
+=== 会話履歴 ===
+{history_text}
+
+=== 最新の生成コンテンツ ===
+{content}
+
+=== ルーティング指示 ===
+{routing_instruction}
+
+上記の会話履歴と指示に従って、適切なルーティング判断を行い、指定された形式で出力してください。
+"""
+        else:
+            # Fallback to original format if no history
+            # 履歴がない場合は元の形式にフォールバック
+            return self._build_routing_prompt(content, routing_instruction)
 
     async def _execute_routing(self, content: Any, ctx: Optional[Context] = None) -> Optional[RoutingResult]:
         """
@@ -1128,7 +1182,6 @@ IMPORTANT: Do not deviate from this format."""
         """
         if not self.routing_instruction:
             return None
-        
         try:
             # Create the appropriate output model
             # 適切な出力モデルを作成
@@ -1167,9 +1220,9 @@ IMPORTANT: Do not deviate from this format."""
             RoutingResult if successful, None otherwise
         """
         try:
-            # Build routing prompt
-            # ルーティングプロンプトを構築
-            routing_prompt = self._build_routing_prompt(content, self.routing_instruction)
+            # Build routing prompt with conversation history
+            # 会話履歴付きルーティングプロンプトを構築
+            routing_prompt = self._build_routing_prompt_with_history(content, self.routing_instruction, ctx)
             
             # Create dedicated routing agent
             # 専用ルーティングエージェントを作成
@@ -1197,16 +1250,44 @@ IMPORTANT: Do not deviate from this format."""
                 output_model=routing_output_model,
                 model=self.model_name,
                 temperature=0.1,  # Lower temperature for more consistent routing
-                namespace=self.namespace
+                namespace=self.namespace,
+                context_providers_config=[]  # No context providers needed, history is in prompt
             )
             
-            # Execute routing
-            # ルーティングを実行
-            routing_result = await routing_agent.run_async("", ctx)
+            # Execute routing with proper input
+            # 適切な入力でルーティングを実行
+            routing_result = await routing_agent.run_async("Please analyze the content and determine the next route.", ctx)
             
-            # Return the routing result
-            # ルーティング結果を返す
-            return routing_result.content if routing_result.success else None
+            # Parse and return the routing result
+            # ルーティング結果をパースして返す
+            if routing_result and routing_result.success and routing_result.content:
+                # Check if content is already a RoutingResult object (due to output_model)
+                # コンテンツが既にRoutingResultオブジェクトかチェック（output_modelのため）
+                from ...core.routing import RoutingResult
+                if isinstance(routing_result.content, RoutingResult):
+                    return routing_result.content
+                
+                # If content is a string, try to parse it as JSON
+                # コンテンツが文字列の場合、JSONとしてパースを試行
+                if isinstance(routing_result.content, str):
+                    try:
+                        import json
+                        parsed_data = json.loads(routing_result.content)
+                        return RoutingResult(
+                            content=parsed_data.get('content', ''),
+                            next_route=parsed_data.get('next_route', 'continue'),
+                            confidence=parsed_data.get('confidence', 0.5),
+                            reasoning=parsed_data.get('reasoning', 'No reasoning provided')
+                        )
+                    except (json.JSONDecodeError, KeyError) as e:
+                        print(f"Warning: Failed to parse routing result JSON: {e}")
+                        return None
+                
+                # If content is neither RoutingResult nor string, log and return None
+                # コンテンツがRoutingResultでも文字列でもない場合、ログを出力してNoneを返す
+                print(f"Warning: Unexpected routing result content type: {type(routing_result.content)}")
+                return None
+            return None
         
         except Exception as e:
             print(f"Warning: Accurate routing execution failed: {e}")
@@ -1272,9 +1353,18 @@ IMPORTANT: Do not deviate from this format."""
         
         # Add context from context providers (with chaining)
         # コンテキストプロバイダーからのコンテキストを追加（連鎖機能付き）
+        has_conversation_provider = False
         if hasattr(self, 'context_providers') and self.context_providers:
             context_parts = []
             previous_context = ""
+            
+            # Check if any context provider is for conversation history
+            # 会話履歴用のコンテキストプロバイダーがあるかチェック
+            for provider in self.context_providers:
+                if hasattr(provider, 'provider_name') and provider.provider_name == 'conversation_history':
+                    has_conversation_provider = True
+                elif provider.__class__.__name__ == 'ConversationHistoryProvider':
+                    has_conversation_provider = True
             
             for provider in self.context_providers:
                 try:
@@ -1296,8 +1386,9 @@ IMPORTANT: Do not deviate from this format."""
                 context_text = "\n\n".join(context_parts)
                 prompt_parts.append(f"Context:\n{context_text}")
         
-        # Add history if available
-        if self.session_history:
+        # Add history if available and no conversation provider is used
+        # 利用可能で会話プロバイダーが使用されていない場合は履歴を追加
+        if self.session_history and not has_conversation_provider:
             history_text = "\n".join(self.session_history[-self.history_size:])
             prompt_parts.append(f"Previous context:\n{history_text}")
         
