@@ -7,7 +7,7 @@ Refinireの第三の柱である組み合わせ可能なフローアーキテク
 従来の線形処理から脱却し、条件分岐、ループ、並列処理を含む複雑なワークフローを直感的に定義・実行できます。
 
 ```python
-from refinire import Flow, FunctionStep, create_simple_gen_agent
+from refinire import Flow, FunctionStep, RefinireAgent
 import asyncio
 
 # 超シンプルなFlow - エージェント1つだけ
@@ -46,7 +46,7 @@ flow = Flow({
 ```python
 # 基本ステップを定義
 preprocess_step = FunctionStep("preprocess", preprocess_data)
-analysis_step = create_simple_gen_agent("analyzer", "データを分析してください", "gpt-4o-mini")
+analysis_step = RefinireAgent(name="analyzer", generation_instructions="データを分析してください", model="gpt-4o-mini")
 format_step = FunctionStep("format", format_results)
 
 # 異なる組み合わせで再利用
@@ -108,12 +108,12 @@ def step2(user_input: str, ctx: Context) -> Context:
 ### パターン1: 単一エージェントFlow（最もシンプル）
 
 ```python
-from refinire import create_simple_gen_agent, Flow
+from refinire import RefinireAgent, Flow
 
 # エージェント作成
-agent = create_simple_gen_agent(
+agent = RefinireAgent(
     name="assistant",
-    instructions="ユーザーの質問に親切に回答してください。",
+    generation_instructions="ユーザーの質問に親切に回答してください。",
     model="gpt-4o-mini"
 )
 
@@ -128,7 +128,7 @@ print(result.shared_state["assistant_result"])
 ### パターン2: シーケンシャルFlow（自動順次実行）
 
 ```python
-from refinire import Flow, FunctionStep, create_simple_gen_agent
+from refinire import Flow, FunctionStep, RefinireAgent
 
 def validate_input(user_input: str, ctx: Context) -> Context:
     """入力データの検証を行う"""
@@ -147,9 +147,9 @@ def preprocess_text(user_input: str, ctx: Context) -> Context:
     return ctx
 
 # 生成エージェント
-generator = create_simple_gen_agent(
+generator = RefinireAgent(
     name="content_gen",
-    instructions="前処理されたテキストに基づいて、有用な内容を生成してください。",
+    generation_instructions="前処理されたテキストに基づいて、有用な内容を生成してください。",
     model="gpt-4o-mini"
 )
 
@@ -194,16 +194,16 @@ def route_by_complexity(ctx: Context) -> str:
     return ctx.shared_state["complexity"]
 
 # 単純な処理用エージェント
-simple_agent = create_simple_gen_agent(
+simple_agent = RefinireAgent(
     name="simple_processor",
-    instructions="簡潔に回答してください。",
+    generation_instructions="簡潔に回答してください。",
     model="gpt-4o-mini"
 )
 
 # 複雑な処理用エージェント
-complex_agent = create_simple_gen_agent(
+complex_agent = RefinireAgent(
     name="complex_processor", 
-    instructions="詳細で包括的な分析を行い、段階的に説明してください。",
+    generation_instructions="詳細で包括的な分析を行い、段階的に説明してください。",
     model="gpt-4o-mini"
 )
 
@@ -321,7 +321,7 @@ print(f"速度向上: {sequential_time/parallel_time:.1f}倍")
 ### パターン5: 複合Flow（エージェント+関数+条件分岐）
 
 ```python
-from refinire import Flow, FunctionStep, ConditionStep, create_evaluated_gen_agent
+from refinire import Flow, FunctionStep, ConditionStep, RefinireAgent
 
 # 入力分析
 def analyze_request(user_input: str, ctx: Context) -> Context:
@@ -342,7 +342,7 @@ def route_request(ctx: Context) -> str:
     return ctx.shared_state["request_type"]
 
 # 専門エージェント（評価機能付き）
-coding_agent = create_evaluated_gen_agent(
+coding_agent = RefinireAgent(
     name="coding_expert",
     generation_instructions="""
     あなたはプログラミングの専門家です。
@@ -358,7 +358,7 @@ coding_agent = create_evaluated_gen_agent(
     model="gpt-4o-mini"
 )
 
-explanation_agent = create_evaluated_gen_agent(
+explanation_agent = RefinireAgent(
     name="explanation_expert",
     generation_instructions="""
     あなたは教育の専門家です。
@@ -374,9 +374,9 @@ explanation_agent = create_evaluated_gen_agent(
     model="gpt-4o-mini"
 )
 
-general_agent = create_simple_gen_agent(
+general_agent = RefinireAgent(
     name="general_assistant",
-    instructions="親切で丁寧な一般的なアシスタントとして回答してください。",
+    generation_instructions="親切で丁寧な一般的なアシスタントとして回答してください。",
     model="gpt-4o-mini"
 )
 

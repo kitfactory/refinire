@@ -7,11 +7,11 @@ Refinireの第二の柱である自律品質保証は、AIエージェントの�
 従来の手動品質管理から脱却し、AIが自らの出力を評価・改善する自律的な品質保証メカニズムを提供します。
 
 ```python
-from refinire import create_evaluated_gen_agent, Context
+from refinire import RefinireAgent, Context
 import asyncio
 
 # 品質評価付きエージェント
-agent = create_evaluated_gen_agent(
+agent = RefinireAgent(
     name="quality_assistant",
     generation_instructions="役立つ回答を生成してください",
     evaluation_instructions="正確性と有用性を評価してください",
@@ -28,10 +28,10 @@ result = asyncio.run(agent.run("量子コンピューティングを説明して
 ### 1. 基本的な品質評価
 
 ```python
-from refinire import create_evaluated_gen_agent, Context
+from refinire import RefinireAgent, Context
 
 # 品質しきい値を設定したエージェント
-agent = create_evaluated_gen_agent(
+agent = RefinireAgent(
     name="qa_agent",
     generation_instructions="詳細で正確な回答をしてください",
     evaluation_instructions="回答の正確性を1-100で評価",
@@ -48,7 +48,7 @@ print(f"回答: {result.shared_state['qa_agent_result']}")
 
 ```python
 # より厳しい評価基準
-strict_agent = create_evaluated_gen_agent(
+strict_agent = RefinireAgent(
     name="strict_agent",
     generation_instructions="科学的に正確で詳細な回答をしてください",
     evaluation_instructions="""
@@ -74,7 +74,7 @@ class MedicalQAAgent:
     """医療情報専用の品質保証エージェント"""
     
     def __init__(self):
-        self.agent = create_evaluated_gen_agent(
+        self.agent = RefinireAgent(
             name="medical_qa",
             generation_instructions="""
             医療情報について正確で責任ある回答をしてください。
@@ -112,7 +112,7 @@ class MultiLayerQualitySystem:
     
     def __init__(self):
         # 基本品質チェック
-        self.basic_agent = create_evaluated_gen_agent(
+        self.basic_agent = RefinireAgent(
             name="basic_check",
             generation_instructions="基本的な回答をしてください",
             evaluation_instructions="基本的な正確性を評価",
@@ -121,7 +121,7 @@ class MultiLayerQualitySystem:
         )
         
         # 詳細品質チェック
-        self.detail_agent = create_evaluated_gen_agent(
+        self.detail_agent = RefinireAgent(
             name="detail_check", 
             generation_instructions="詳細で高品質な回答をしてください",
             evaluation_instructions="""
@@ -136,7 +136,7 @@ class MultiLayerQualitySystem:
         )
         
         # 最終品質チェック
-        self.expert_agent = create_evaluated_gen_agent(
+        self.expert_agent = RefinireAgent(
             name="expert_check",
             generation_instructions="専門家レベルの回答をしてください",
             evaluation_instructions="""
@@ -195,7 +195,7 @@ class AdaptiveQualitySystem:
             "clarity": 0.8
         }
         
-        self.agent = create_evaluated_gen_agent(
+        self.agent = RefinireAgent(
             name="adaptive_agent",
             generation_instructions=self._generate_dynamic_instructions(),
             evaluation_instructions=self._generate_dynamic_evaluation(),
@@ -278,7 +278,7 @@ class AdaptiveQualitySystem:
                 )
         
         # エージェント設定の更新
-        self.agent = create_evaluated_gen_agent(
+        self.agent = RefinireAgent(
             name="adaptive_agent",
             generation_instructions=self._generate_dynamic_instructions(),
             evaluation_instructions=self._generate_dynamic_evaluation(),
@@ -345,7 +345,7 @@ class RealTimeQualityMonitor:
         self.monitor_thread: Optional[threading.Thread] = None
         self.quality_alerts = []
         
-        self.agent = create_evaluated_gen_agent(
+        self.agent = RefinireAgent(
             name="monitored_agent",
             generation_instructions="監視下での高品質回答を生成",
             evaluation_instructions="品質を厳格に評価",

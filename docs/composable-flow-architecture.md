@@ -100,22 +100,22 @@ print(f"長い入力: {long_result.shared_state['result']}")
 ### 3. AIエージェント組み込みフロー
 
 ```python
-from refinire import Flow, FunctionStep, create_simple_gen_agent
+from refinire import Flow, FunctionStep, RefinireAgent
 
 def create_ai_workflow():
     """AIエージェントを組み込んだワークフロー"""
     
     # AIエージェント作成
-    analyzer = create_simple_gen_agent(
-        "analyzer", 
-        "入力を分析して要点を抽出してください",
-        "gpt-4o-mini"
+    analyzer = RefinireAgent(
+        name="analyzer", 
+        generation_instructions="入力を分析して要点を抽出してください",
+        model="gpt-4o-mini"
     )
     
-    responder = create_simple_gen_agent(
-        "responder",
-        "分析結果に基づいて親切な回答を生成してください", 
-        "gpt-4o-mini"
+    responder = RefinireAgent(
+        name="responder",
+        generation_instructions="分析結果に基づいて親切な回答を生成してください", 
+        model="gpt-4o-mini"
     )
     
     def ai_analysis_step(input_data, context):
@@ -153,7 +153,7 @@ print(f"最終回答: {result.shared_state['final_response']}")
 ### 4. DAG並列処理フロー
 
 ```python
-from refinire import Flow, FunctionStep, create_simple_gen_agent
+from refinire import Flow, FunctionStep, RefinireAgent
 
 def create_parallel_analysis_flow():
     """複数の分析を並列実行するフロー"""
@@ -253,7 +253,7 @@ class DynamicFlowBuilder:
     
     def add_ai_agent_step(self, name: str, instructions: str, model: str = "gpt-4o-mini"):
         """AIエージェントステップを追加"""
-        agent = create_simple_gen_agent(name, instructions, model)
+        agent = RefinireAgent(name=name, generation_instructions=instructions, model=model)
         
         def ai_step(input_data, context):
             result = agent.run_sync(input_data, context)

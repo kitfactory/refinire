@@ -7,8 +7,6 @@
 | 名前                     | 種別     | 概要                                                        |
 |--------------------------|----------|-------------------------------------------------------------|
 | get_llm                  | 関数     | モデル名・プロバイダー名からLLMインスタンスを取得           |
-| create_simple_gen_agent  | 関数     | シンプルな生成エージェントを作成                           |
-| create_evaluated_gen_agent| 関数    | 評価機能付き生成エージェントを作成                         |
 | Flow                     | クラス   | ワークフロー管理の中心クラス                               |
 | GenAgent                 | クラス   | 生成・評価機能を持つエージェントクラス                     |
 | ClarifyAgent             | クラス   | 対話型タスク明確化エージェント                             |
@@ -80,57 +78,6 @@ llm = get_llm("llama3.1:8b")
 
 ---
 
-## エージェント作成関数
-
-### create_simple_gen_agent
-
-シンプルな生成エージェントを作成します。
-
-```python
-from refinire import create_simple_gen_agent
-
-agent = create_simple_gen_agent(
-    name="assistant",
-    instructions="あなたは親切なアシスタントです。",
-    model="gpt-4o-mini"
-)
-```
-
-#### 引数
-
-| 名前         | 型    | 必須/オプション | デフォルト | 説明                           |
-|--------------|-------|----------------|------------|--------------------------------|
-| name         | str   | 必須           | -          | エージェント名                 |
-| instructions | str   | 必須           | -          | システムプロンプト             |
-| model        | str   | 必須           | -          | 使用するモデル名               |
-| tools        | list  | オプション     | None       | 使用可能なツールのリスト       |
-
-### create_evaluated_gen_agent
-
-評価機能付きの生成エージェントを作成します。
-
-```python
-from refinire import create_evaluated_gen_agent
-
-agent = create_evaluated_gen_agent(
-    name="quality_assistant",
-    generation_instructions="役立つ回答を生成してください。",
-    evaluation_instructions="正確性と有用性を評価してください。",
-    threshold=80.0,
-    model="gpt-4o-mini"
-)
-```
-
-#### 引数
-
-| 名前                      | 型    | 必須/オプション | デフォルト | 説明                           |
-|---------------------------|-------|----------------|------------|--------------------------------|
-| name                      | str   | 必須           | -          | エージェント名                 |
-| generation_instructions   | str   | 必須           | -          | 生成用システムプロンプト       |
-| evaluation_instructions   | str   | 必須           | -          | 評価用システムプロンプト       |
-| threshold                 | float | 必須           | -          | 品質閾値（0-100）              |
-| model                     | str   | 必須           | -          | 使用するモデル名               |
-| tools                     | list  | オプション     | None       | 使用可能なツールのリスト       |
 
 ---
 
@@ -520,13 +467,13 @@ classDiagram
 ### 基本的な使用パターン
 
 ```python
-from refinire import create_simple_gen_agent, Flow, Context
+from refinire import RefinireAgent, Flow, Context
 import asyncio
 
 # 1. エージェント作成
-agent = create_simple_gen_agent(
+agent = RefinireAgent(
     name="assistant",
-    instructions="親切なアシスタントとして回答してください。",
+    generation_instructions="親切なアシスタントとして回答してください。",
     model="gpt-4o-mini"
 )
 
@@ -544,14 +491,14 @@ asyncio.run(main())
 ### 複雑なワークフローの例
 
 ```python
-from refinire import Flow, FunctionStep, create_evaluated_gen_agent
+from refinire import RefinireAgent, Flow, FunctionStep
 import asyncio
 
 def preprocess(user_input: str, ctx: Context) -> Context:
     ctx.shared_state["processed_input"] = user_input.strip().lower()
     return ctx
 
-agent = create_evaluated_gen_agent(
+agent = RefinireAgent(
     name="analyzer",
     generation_instructions="入力を分析してください。",
     evaluation_instructions="分析の正確性を評価してください。",
