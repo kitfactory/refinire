@@ -16,7 +16,7 @@ Key Features:
 - Interactive multi-turn conversation support
 """
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 
 # Core LLM functionality - most commonly used
 from .core import (
