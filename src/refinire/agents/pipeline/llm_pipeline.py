@@ -160,6 +160,20 @@ class RefinireAgent(Step):
         self.routing_instruction = routing_instruction
         self.routing_destinations = routing_destinations
         
+        # Validate routing parameters consistency  
+        # ルーティングパラメータの整合性を検証
+        if (routing_instruction is None) != (routing_destinations is None):
+            if routing_instruction is None:
+                raise ValueError(
+                    "routing_instruction is required when routing_destinations is provided. "
+                    "Both parameters must be specified together for routing functionality."
+                )
+            else:
+                raise ValueError(
+                    "routing_destinations is required when routing_instruction is provided. "
+                    "Both parameters must be specified together for routing functionality."
+                )
+        
         # Initialize dedicated agents (will be created after model setup)
         # 専用エージェントを初期化（モデル設定後に作成）
         self._routing_agent = None

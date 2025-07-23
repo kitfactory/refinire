@@ -100,6 +100,8 @@ RefinireAgent(
 - `routing_instruction` (str, optional): Instructions for routing decisions in workflows
 - `routing_destinations` (List[str], optional): List of possible routing destinations for workflow routing
 
+**Note**: `routing_instruction` and `routing_destinations` must be provided together. Specifying only one will raise a `ValueError`.
+
 **Other:**
 - `locale` (str, default: "en"): Language locale ("en" or "ja")
 - `namespace` (str, optional): Environment variable namespace for oneenv integration
