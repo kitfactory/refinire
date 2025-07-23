@@ -6,10 +6,11 @@ This document provides comprehensive API documentation for the core components o
 
 1. [RefinireAgent API](#refinireagent-api)
 2. [Flow API](#flow-api)
-3. [Context API](#context-api)
-4. [Step Classes](#step-classes)
-5. [Factory Functions](#factory-functions)
-6. [Unified LLM Interface](#unified-llm-interface)
+3. [RoutingAgent API](#routingagent-api)
+4. [Context API](#context-api)
+5. [Step Classes](#step-classes)
+6. [Factory Functions](#factory-functions)
+7. [Unified LLM Interface](#unified-llm-interface)
 
 ---
 
@@ -51,6 +52,7 @@ RefinireAgent(
     store_result_key: Optional[str] = None,
     orchestration_mode: bool = False,
     routing_instruction: Optional[str] = None,
+    routing_destinations: Optional[List[str]] = None,
     namespace: Optional[str] = None
 )
 ```
@@ -96,6 +98,7 @@ RefinireAgent(
 - `next_step` (str, optional): Next step name for Flow integration
 - `store_result_key` (str, optional): Key for storing results in workflow context
 - `routing_instruction` (str, optional): Instructions for routing decisions in workflows
+- `routing_destinations` (List[str], optional): List of possible routing destinations for workflow routing
 
 **Other:**
 - `locale` (str, default: "en"): Language locale ("en" or "ja")
@@ -200,6 +203,45 @@ Returns a copy of the execution history.
 ##### clear_context() -> None
 
 Clears context providers while preserving session history.
+
+#### Workflow Routing
+
+RefinireAgent supports intelligent workflow routing using the `routing_instruction` and `routing_destinations` parameters.
+
+```python
+from refinire.agents.pipeline.llm_pipeline import RefinireAgent
+from refinire.agents.flow.flow import Flow
+
+# Create agent with routing capabilities
+agent = RefinireAgent(
+    name="content_processor",
+    generation_instructions="Generate high-quality content based on user input.",
+    routing_instruction="""
+    Analyze the generated content and decide next action:
+    - If content needs improvement → 'enhance'
+    - If content needs validation → 'validate'  
+    - If content is complete and ready → Flow.END
+    """,
+    routing_destinations=["enhance", "validate", Flow.END],
+    model="gpt-4o-mini"
+)
+
+# Execute with automatic routing
+result = agent.run("Write a technical blog post about AI")
+
+# Check routing result
+if hasattr(result, 'routing_result') and result.routing_result:
+    print(f"Next route: {result.routing_result.next_route}")
+    print(f"Routing confidence: {result.routing_result.confidence}")
+    print(f"Reasoning: {result.routing_result.reasoning}")
+```
+
+The `routing_destinations` parameter provides several benefits:
+
+- **Validation**: Ensures routing decisions are from valid destinations
+- **Clarity**: Makes available routes explicit to the LLM
+- **Stability**: Reduces routing errors through destination validation
+- **Fallback**: Provides automatic fallback for invalid route selections
 
 #### Properties
 
@@ -479,6 +521,95 @@ Returns possible next steps from a given step.
 ```python
 routes = flow.get_possible_routes("decision_step")
 print(f"Possible routes: {routes}")
+```
+
+---
+
+## RoutingAgent API
+
+The `RoutingAgent` class provides dedicated routing functionality for RefinireAgent workflows, enabling intelligent flow control based on content analysis.
+
+### Class: RoutingAgent
+
+```python
+from refinire.agents.routing_agent import RoutingAgent
+```
+
+#### Constructor
+
+```python
+RoutingAgent(
+    name: str,
+    routing_instruction: str,
+    routing_destinations: Optional[List[str]] = None,
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.1,
+    max_retries: int = 3,
+    timeout: Optional[float] = None,
+    **kwargs
+)
+```
+
+##### Parameters
+
+- `name` (str): Agent name for identification
+- `routing_instruction` (str): Instructions for routing decision logic
+- `routing_destinations` (List[str], optional): List of possible routing destinations
+- `model` (str, default: "gpt-4o-mini"): LLM model to use for routing decisions
+- `temperature` (float, default: 0.1): Low temperature for consistent routing decisions
+- `max_retries` (int, default: 3): Maximum retry attempts for routing calls
+- `timeout` (float, optional): Request timeout in seconds
+- `**kwargs`: Additional arguments passed to LLM initialization
+
+#### Methods
+
+##### run(input_text: str, context: Context) -> Context
+
+Executes routing decision synchronously.
+
+**Parameters:**
+- `input_text` (str): Input text (typically routing instruction)
+- `context` (Context): Context containing shared_state with previous generation results
+
+**Returns:**
+- `Context`: Updated context with routing result in `context.routing_result`
+
+##### run_async(input_text: str, context: Context) -> Context
+
+Executes routing decision asynchronously.
+
+#### Usage Example
+
+```python
+from refinire.agents.routing_agent import RoutingAgent
+from refinire.agents.flow.context import Context
+from refinire.agents.flow.flow import Flow
+
+# Create routing agent with specific destinations
+routing_agent = RoutingAgent(
+    name="content_router",
+    routing_instruction="""
+    Analyze the content quality and decide the next action:
+    - If content needs improvement → 'enhance'
+    - If content needs validation → 'validate'
+    - If content is complete → Flow.END
+    """,
+    routing_destinations=["enhance", "validate", Flow.END],
+    model="gpt-4o-mini"
+)
+
+# Set up context with previous generation
+context = Context()
+context.shared_state['_last_prompt'] = "Write a blog post"
+context.shared_state['_last_generation'] = "Short draft content..."
+
+# Execute routing
+result_context = routing_agent.run("", context)
+routing_result = result_context.routing_result
+
+print(f"Next route: {routing_result.next_route}")
+print(f"Confidence: {routing_result.confidence}")
+print(f"Reasoning: {routing_result.reasoning}")
 ```
 
 ---
