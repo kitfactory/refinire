@@ -5,7 +5,7 @@ RefinireAgentワークフローのルーティング専用エージェント
 """
 
 import asyncio
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
 
 from ..core.llm import get_llm
@@ -29,6 +29,7 @@ class RoutingAgent:
         self,
         name: str,
         routing_instruction: str,
+        routing_destinations: Optional[List[str]] = None,
         model: str = "gpt-4o-mini",
         temperature: float = 0.1,  # 低温度でより確実な判定
         max_retries: int = 3,
@@ -41,6 +42,7 @@ class RoutingAgent:
         Args:
             name: Agent name for identification
             routing_instruction: Instructions for routing decision logic
+            routing_destinations: List of possible routing destinations (optional)
             model: LLM model to use
             temperature: Low temperature for consistent routing
             # provider: Automatically detected from model name patterns and environment variables
@@ -49,6 +51,7 @@ class RoutingAgent:
         """
         self.name = name
         self.routing_instruction = routing_instruction
+        self.routing_destinations = routing_destinations or []
         self.model_name = model
         self.temperature = temperature
         self.max_retries = max_retries
@@ -102,6 +105,15 @@ class RoutingAgent:
                     # ルーティング結果を解析
                     routing_result = self._parse_routing_result(llm_result, context)
                     
+                    # Validate routing destination if specified
+                    # 分岐先が指定されている場合は検証
+                    if not self._validate_routing_destination(routing_result.next_route):
+                        # Create fallback routing result for invalid destination
+                        # 無効な分岐先に対するフォールバックルーティング結果を作成
+                        routing_result = self._create_fallback_routing_result(
+                            context, routing_result.next_route
+                        )
+                    
                     # Store results in context
                     # 結果をcontextに保存
                     context.routing_result = routing_result
@@ -146,26 +158,21 @@ class RoutingAgent:
     
     def _build_routing_prompt(self, context: Context, input_text: str) -> str:
         """
-        Build routing prompt using context shared_state
-        
-        Template:
-        ```
-        直前の生成プロセスを分析し、ルーティング判断を行ってください。
-        
-        === 直前の生成プロンプト ===
-        {context.shared_state.get('_last_prompt', 'N/A')}
-        
-        === 直前の生成結果 ===
-        {context.shared_state.get('_last_generation', 'N/A')}
-        
-        === ルーティング指示 ===
-        {self.routing_instruction}
-        
-        上記の情報に基づいて、適切なルーティング判断を行い、指定されたJSON形式で出力してください。
-        ```
+        Build routing prompt using context shared_state and routing destinations
+        コンテキストのshared_stateとrouting_destinationsを使用してルーティングプロンプトを構築
         """
         last_prompt = context.shared_state.get('_last_prompt', 'N/A')
         last_generation = context.shared_state.get('_last_generation', 'N/A')
+        
+        # Format available destinations if provided
+        # 利用可能な分岐先を整形（提供されている場合）
+        destinations_section = ""
+        if self.routing_destinations:
+            destinations_text = self._format_routing_destinations()
+            destinations_section = f"""
+=== 利用可能な分岐先 ===
+{destinations_text}
+"""
         
         prompt = f"""直前の生成プロセスを分析し、ルーティング判断を行ってください。
 
@@ -174,7 +181,7 @@ class RoutingAgent:
 
 === 直前の生成結果 ===
 {last_generation}
-
+{destinations_section}
 === ルーティング指示 ===
 {self.routing_instruction}
 
@@ -182,29 +189,78 @@ class RoutingAgent:
 
 {{
   "content": "生成結果のコピー",
-  "next_route": "次のルート名",
+  "next_route": "次のルート名{' (上記の分岐先から選択)' if self.routing_destinations else ''}",
   "confidence": 0.0〜1.0の信頼度,
   "reasoning": "判断理由の説明"
 }}"""
         
         return prompt
     
+    def _format_routing_destinations(self) -> str:
+        """
+        Format routing destinations for display in prompt
+        プロンプト表示用にルーティング先を整形
+        """
+        if not self.routing_destinations:
+            return "指定なし"
+        
+        formatted_destinations = []
+        for i, dest in enumerate(self.routing_destinations, 1):
+            # Add description for flow control constants
+            # フロー制御定数に説明を追加
+            if dest in ("_FLOW_END_", "_FLOW_TERMINATE_", "_FLOW_FINISH_"):
+                formatted_destinations.append(f"{i}. '{dest}' - フロー終了")
+            else:
+                formatted_destinations.append(f"{i}. '{dest}'")
+        
+        return "\n".join(formatted_destinations)
+    
+    def _validate_routing_destination(self, selected_route: str) -> bool:
+        """
+        Validate if the selected route is in the allowed destinations
+        選択されたルートが許可された分岐先に含まれるかを検証
+        
+        Args:
+            selected_route: The route selected by the LLM
+            
+        Returns:
+            True if valid or no destinations specified, False otherwise
+        """
+        if not self.routing_destinations:
+            # No restrictions if destinations not specified
+            # 分岐先が指定されていない場合は制限なし
+            return True
+        
+        return selected_route in self.routing_destinations
+    
     async def _execute_llm_call(self, prompt: str) -> Any:
         """Execute LLM call with timeout handling"""
+        from agents import Runner, Agent
+        
+        # Create a simple agent for the LLM call
+        # LLM呼び出し用のシンプルなエージェントを作成
+        temp_agent = Agent(
+            name="routing_agent",
+            instructions="You are a routing decision agent. Provide JSON output as requested.",
+            model=self.llm
+        )
+        
         if self.timeout:
             return await asyncio.wait_for(
-                self.llm.generate_async(prompt),
+                Runner.run(temp_agent, prompt),
                 timeout=self.timeout
             )
         else:
-            return await self.llm.generate_async(prompt)
+            return await Runner.run(temp_agent, prompt)
     
     def _parse_routing_result(self, llm_result: Any, context: Context) -> RoutingResult:
         """Parse LLM result into RoutingResult"""
         try:
             # Try to extract content from LLM result
             # LLM結果からコンテンツを抽出を試行
-            if hasattr(llm_result, 'content'):
+            if hasattr(llm_result, 'final_output'):
+                content = llm_result.final_output
+            elif hasattr(llm_result, 'content'):
                 content = llm_result.content
             else:
                 content = str(llm_result)
@@ -266,6 +322,33 @@ class RoutingAgent:
             next_route=next_route,
             confidence=confidence,
             reasoning=reasoning
+        )
+    
+    def _create_fallback_routing_result(self, context: Context, invalid_route: str) -> RoutingResult:
+        """
+        Create fallback routing result when invalid destination is selected
+        無効な分岐先が選択された場合のフォールバックルーティング結果を作成
+        
+        Args:
+            context: Current context
+            invalid_route: The invalid route that was selected
+            
+        Returns:
+            RoutingResult with fallback route
+        """
+        # Choose fallback route: first destination if available, otherwise 'continue'
+        # フォールバックルートを選択: 利用可能な場合は最初の分岐先、そうでなければ'continue'
+        fallback_route = (
+            self.routing_destinations[0] 
+            if self.routing_destinations 
+            else 'continue'
+        )
+        
+        return RoutingResult(
+            content=context.shared_state.get('_last_generation', ''),
+            next_route=fallback_route,
+            confidence=0.3,
+            reasoning=f"無効なルート '{invalid_route}' が選択されました。利用可能な分岐先: {self.routing_destinations}。フォールバック先 '{fallback_route}' を使用します。"
         )
     
     def _create_llm_result(self, routing_result: RoutingResult, success: bool) -> Any:

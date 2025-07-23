@@ -42,8 +42,8 @@ class Flow:
     
     # Special step constants for flow control
     # フロー制御用の特別ステップ定数
-    TERMINATE = "_FLOW_TERMINATE_"  # フロー終了
-    END = "_FLOW_END_"  # フロー終了（別名）
+    END = "_FLOW_END_"  # フロー終了
+    TERMINATE = "_FLOW_TERMINATE_"  # フロー終了（別名）
     FINISH = "_FLOW_FINISH_"  # フロー終了（別名）
     
     def __init__(

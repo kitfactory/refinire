@@ -111,6 +111,7 @@ class RefinireAgent(Step):
         orchestration_mode: bool = False,
         # New routing parameters / 新しいルーティングパラメータ
         routing_instruction: Optional[str] = None,
+        routing_destinations: Optional[List[str]] = None,
         # Environment variable namespace / 環境変数名前空間
         namespace: Optional[str] = None
     ) -> None:
@@ -143,6 +144,7 @@ class RefinireAgent(Step):
             store_result_key: Key to store result in Flow context / Flow context内での結果保存キー
             orchestration_mode: Enable orchestration mode with structured JSON output / 構造化JSON出力付きオーケストレーションモード有効化
             routing_instruction: Instruction for routing decision / ルーティング決定用指示
+            routing_destinations: List of possible routing destinations / 可能なルーティング先のリスト
             namespace: Environment variable namespace for oneenv / oneenv用環境変数名前空間
         """
         # Initialize Step base class
@@ -156,6 +158,7 @@ class RefinireAgent(Step):
         # Store routing parameters
         # ルーティングパラメータを保存
         self.routing_instruction = routing_instruction
+        self.routing_destinations = routing_destinations
         
         # Initialize dedicated agents (will be created after model setup)
         # 専用エージェントを初期化（モデル設定後に作成）
@@ -1130,6 +1133,7 @@ IMPORTANT: Do not deviate from this format."""
             self._routing_agent = RoutingAgent(
                 name=f"{self.name}_router",
                 routing_instruction=self.routing_instruction,
+                routing_destinations=self.routing_destinations,
                 model=self.model_name,
                 temperature=0.1,  # Low temperature for consistent routing
                 namespace=self.namespace

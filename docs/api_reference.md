@@ -374,8 +374,8 @@ Executes one step synchronously (for CLI applications).
 
 ```python
 # Flow termination constants
-Flow.TERMINATE    # "_FLOW_TERMINATE_"
-Flow.END         # "_FLOW_END_" 
+Flow.END         # "_FLOW_END_"
+Flow.TERMINATE   # "_FLOW_TERMINATE_"
 Flow.FINISH      # "_FLOW_FINISH_"
 
 # Usage in steps
