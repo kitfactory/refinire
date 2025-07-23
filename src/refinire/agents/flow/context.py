@@ -138,8 +138,14 @@ class Context(BaseModel):
         # Check routing result for error conditions
         # ルーティング結果でエラー条件をチェック
         if self.routing_result:
-            if self.routing_result.get('next_route') == 'error':
-                return False
+            if hasattr(self.routing_result, 'next_route'):
+                # Handle RoutingResult object
+                if self.routing_result.next_route == 'error':
+                    return False
+            elif isinstance(self.routing_result, dict):
+                # Handle legacy dictionary format  
+                if self.routing_result.get('next_route') == 'error':
+                    return False
         
         return True
     
@@ -166,7 +172,12 @@ class Context(BaseModel):
         next_labelの互換性プロパティ（routing_resultに保存）
         """
         if self.routing_result:
-            return self.routing_result.get('next_route')
+            if hasattr(self.routing_result, 'next_route'):
+                # Handle RoutingResult object
+                return self.routing_result.next_route
+            elif isinstance(self.routing_result, dict):
+                # Handle legacy dictionary format
+                return self.routing_result.get('next_route')
         return None
     
     @next_label.setter
@@ -175,9 +186,21 @@ class Context(BaseModel):
         Setter for next_label (stores in routing_result)
         next_labelのセッター（routing_resultに保存）
         """
-        if not self.routing_result:
-            self.routing_result = {}
-        self.routing_result['next_route'] = value
+        # Handle both RoutingResult object and dictionary format
+        if self.routing_result and hasattr(self.routing_result, 'next_route'):
+            # Handle RoutingResult object - create new object with updated route
+            from ...core.routing import RoutingResult
+            self.routing_result = RoutingResult(
+                content=self.routing_result.content,
+                next_route=value,
+                confidence=self.routing_result.confidence,
+                reasoning=f"Set next_label to {value}"
+            )
+        else:
+            # Handle legacy dictionary format or create new dictionary
+            if not self.routing_result:
+                self.routing_result = {}
+            self.routing_result['next_route'] = value
     
     # Results / 結果
     shared_state: Dict[str, Any] = Field(default_factory=dict)  # Arbitrary shared values (includes artifacts) / 任意の共有値（成果物を含む）
@@ -328,9 +351,21 @@ class Context(BaseModel):
         Args:
             label: Next step label / 次ステップのラベル
         """
-        if not self.routing_result:
-            self.routing_result = {}
-        self.routing_result['next_route'] = label
+        # Handle both RoutingResult object and dictionary format
+        if self.routing_result and hasattr(self.routing_result, 'next_route'):
+            # Handle RoutingResult object - create new object with updated route
+            from ...core.routing import RoutingResult
+            self.routing_result = RoutingResult(
+                content=self.routing_result.content,
+                next_route=label,
+                confidence=self.routing_result.confidence,
+                reasoning=f"Manual route to {label}"
+            )
+        else:
+            # Handle legacy dictionary format or create new dictionary
+            if not self.routing_result:
+                self.routing_result = {}
+            self.routing_result['next_route'] = label
     
     def finish(self) -> None:
         """
@@ -339,7 +374,20 @@ class Context(BaseModel):
         """
         if not self.routing_result:
             self.routing_result = {}
-        self.routing_result['next_route'] = None
+        
+        # Handle both RoutingResult object and dictionary format
+        if hasattr(self.routing_result, 'next_route'):
+            # Handle RoutingResult object - create new object with None route
+            from ...core.routing import RoutingResult
+            self.routing_result = RoutingResult(
+                content=self.routing_result.content,
+                next_route=None,
+                confidence=self.routing_result.confidence,
+                reasoning="Flow finished"
+            )
+        elif isinstance(self.routing_result, dict):
+            # Handle legacy dictionary format
+            self.routing_result['next_route'] = None
     
     def is_finished(self) -> bool:
         """
@@ -350,7 +398,15 @@ class Context(BaseModel):
             bool: True if finished / 完了している場合True
         """
         if self.routing_result:
-            next_route = self.routing_result.get('next_route')
+            # Handle both RoutingResult object and dictionary format
+            next_route = None
+            if hasattr(self.routing_result, 'next_route'):
+                # Handle RoutingResult object
+                next_route = self.routing_result.next_route
+            elif isinstance(self.routing_result, dict):
+                # Handle legacy dictionary format
+                next_route = self.routing_result.get('next_route')
+            
             # Check for None or special termination constants
             # Noneまたは特別な終了定数をチェック
             return (next_route is None or 

@@ -111,7 +111,6 @@ class RefinireAgent(Step):
         orchestration_mode: bool = False,
         # New routing parameters / 新しいルーティングパラメータ
         routing_instruction: Optional[str] = None,
-        routing_mode: str = "accurate_routing",
         # Environment variable namespace / 環境変数名前空間
         namespace: Optional[str] = None
     ) -> None:
@@ -144,7 +143,6 @@ class RefinireAgent(Step):
             store_result_key: Key to store result in Flow context / Flow context内での結果保存キー
             orchestration_mode: Enable orchestration mode with structured JSON output / 構造化JSON出力付きオーケストレーションモード有効化
             routing_instruction: Instruction for routing decision / ルーティング決定用指示
-            routing_mode: Routing mode - 'accurate_routing' or 'fast_routing' / ルーティングモード - 'accurate_routing' または 'fast_routing'
             namespace: Environment variable namespace for oneenv / oneenv用環境変数名前空間
         """
         # Initialize Step base class
@@ -158,12 +156,11 @@ class RefinireAgent(Step):
         # Store routing parameters
         # ルーティングパラメータを保存
         self.routing_instruction = routing_instruction
-        self.routing_mode = routing_mode
         
-        # Validate routing_mode
-        # routing_modeを検証
-        if routing_mode not in ["accurate_routing", "fast_routing"]:
-            raise ValueError(f"Invalid routing_mode: {routing_mode}. Must be 'accurate_routing' or 'fast_routing'.")
+        # Initialize dedicated agents (will be created after model setup)
+        # 専用エージェントを初期化（モデル設定後に作成）
+        self._routing_agent = None
+        self._evaluation_agent = None
         
         # Handle PromptReference for generation instructions
         self._generation_prompt_metadata = None
@@ -320,6 +317,10 @@ class RefinireAgent(Step):
             agent_kwargs["output_type"] = self.output_model
             
         self._sdk_agent = Agent(**agent_kwargs)
+        
+        # Initialize dedicated routing and evaluation agents
+        # 専用のルーティング・評価エージェントを初期化
+        self._initialize_dedicated_agents()
         
         # Context providers
         self.context_providers = []
@@ -629,16 +630,31 @@ IMPORTANT: Do not deviate from this format."""
                     span.span_data.output = None
                     span.span_data.error = "No input available"
             else:
+                # Save prompt to shared_state before execution for routing/evaluation
+                # routing/evaluation用に実行前にプロンプトをshared_stateに保存
+                full_prompt = self._build_prompt(input_text, include_instructions=True)
+                ctx.shared_state['_last_prompt'] = full_prompt
+                
                 # Execute RefinireAgent and get LLMResult
                 # RefinireAgentを実行してLLMResultを取得
                 llm_result = await self._run_standalone(input_text, ctx)
+                
+                # Save generation result to shared_state for routing/evaluation
+                # routing/evaluation用に生成結果をshared_stateに保存
+                if llm_result.success and llm_result.content:
+                    ctx.shared_state['_last_generation'] = llm_result.content
                 
                 # Perform evaluation if evaluation_instructions are provided
                 # evaluation_instructionsが提供されている場合は評価を実行
                 evaluation_result = None
                 if self.evaluation_instructions and llm_result.success and llm_result.content:
+                    # Preserve _last_prompt and _last_generation during evaluation execution
+                    # evaluation実行中の_last_prompt/_last_generation保護
+                    preserved_last_prompt = ctx.shared_state.get('_last_prompt') if ctx else None
+                    preserved_last_generation = ctx.shared_state.get('_last_generation') if ctx else None
+                    
                     try:
-                        evaluation_result = self._evaluate_content(input_text, llm_result.content)
+                        evaluation_result = await self._execute_evaluation(input_text, llm_result.content, ctx)
                         # Store evaluation result in context
                         # 評価結果をコンテキストに保存
                         ctx.evaluation_result = {
@@ -659,6 +675,14 @@ IMPORTANT: Do not deviate from this format."""
                             "feedback": f"Evaluation failed: {str(e)}",
                             "metadata": {"error": str(e)}
                         }
+                    finally:
+                        # Restore _last_prompt and _last_generation to prevent overwrite
+                        # 上書きを防ぐために_last_prompt/_last_generationを復元
+                        if ctx:
+                            if preserved_last_prompt is not None:
+                                ctx.shared_state['_last_prompt'] = preserved_last_prompt
+                            if preserved_last_generation is not None:
+                                ctx.shared_state['_last_generation'] = preserved_last_generation
                 
                 # Execute routing if routing_instruction is provided
                 # routing_instructionが提供されている場合はルーティングを実行
@@ -667,14 +691,9 @@ IMPORTANT: Do not deviate from this format."""
                     try:
                         routing_result = await self._execute_routing(llm_result.content, ctx)
                         if routing_result:
-                            # Store routing result in context without overwriting the main result
-                            # メイン結果を上書きせずにルーティング結果をコンテキストに保存
-                            ctx.routing_result = {
-                                "next_route": routing_result.next_route,
-                                "confidence": routing_result.confidence,
-                                "reasoning": routing_result.reasoning,
-                                "routing_content": routing_result.content  # Store routing-specific content separately
-                            }
+                            # Store routing result object in context without overwriting the main result
+                            # メイン結果を上書きせずにルーティング結果オブジェクトをコンテキストに保存
+                            ctx.routing_result = routing_result
                             # Keep the original LLM result as the main result
                             # 元のLLM結果をメイン結果として保持
                             ctx.result = llm_result
@@ -686,11 +705,13 @@ IMPORTANT: Do not deviate from this format."""
                         # Handle routing errors gracefully - store complete LLMResult object
                         # ルーティングエラーを適切に処理 - 完全なLLMResultオブジェクトを格納
                         ctx.result = llm_result
-                        ctx.routing_result = {
-                            "next_route": "error",
-                            "confidence": 0.0,
-                            "reasoning": f"Routing failed: {str(e)}"
-                        }
+                        from ...core.routing import RoutingResult
+                        ctx.routing_result = RoutingResult(
+                            content="",
+                            next_route="error",
+                            confidence=0.0,
+                            reasoning=f"Routing failed: {str(e)}"
+                        )
                 else:
                     # No routing, use original result - store complete LLMResult object
                     # ルーティングなし、元の結果を使用 - 完全なLLMResultオブジェクトを格納
@@ -1097,6 +1118,36 @@ IMPORTANT: Do not deviate from this format."""
         #     # 文字列コンテンツで標準 RoutingResult を使用
         #     return RoutingResult
 
+    def _initialize_dedicated_agents(self) -> None:
+        """
+        Initialize dedicated routing and evaluation agents
+        専用のルーティング・評価エージェントを初期化
+        """
+        # Initialize RoutingAgent if routing_instruction is provided
+        # routing_instructionが提供されている場合はRoutingAgentを初期化
+        if self.routing_instruction:
+            from ..routing_agent import RoutingAgent
+            self._routing_agent = RoutingAgent(
+                name=f"{self.name}_router",
+                routing_instruction=self.routing_instruction,
+                model=self.model_name,
+                temperature=0.1,  # Low temperature for consistent routing
+                namespace=self.namespace
+            )
+        
+        # Initialize EvaluationAgent if evaluation_instructions is provided
+        # evaluation_instructionsが提供されている場合はEvaluationAgentを初期化
+        if self.evaluation_instructions:
+            from ..evaluation_agent import EvaluationAgent
+            self._evaluation_agent = EvaluationAgent(
+                name=f"{self.name}_evaluator",
+                evaluation_instruction=self.evaluation_instructions,
+                pass_threshold=self.threshold / 100.0,  # Convert percentage to 0-1 scale
+                model=self.evaluation_model_name,
+                temperature=0.2,  # Low temperature for consistent evaluation
+                namespace=self.namespace
+            )
+
     def _build_routing_prompt(self, content: Any, routing_instruction: str) -> str:
         """
         Build a routing prompt for evaluating generated content.
@@ -1123,50 +1174,95 @@ IMPORTANT: Do not deviate from this format."""
 上記の指示に従って、適切なルーティング判断を行い、指定された形式で出力してください。
 """
 
-    def _build_routing_prompt_with_history(self, content: Any, routing_instruction: str, ctx: Optional[Context] = None) -> str:
+    def _build_routing_prompt_with_context(self, content: Any, routing_instruction: str, ctx: Optional[Context] = None) -> str:
         """
-        Build a routing prompt that includes conversation history.
-        会話履歴を含むルーティングプロンプトを構築
+        Build a routing prompt using shared_state for last prompt and generation.
+        shared_stateを使用して直前のプロンプトと生成結果でルーティングプロンプトを構築
         
         Args:
             content: Generated content to evaluate
             routing_instruction: Routing instruction for decision making
-            ctx: Context containing conversation history
+            ctx: Context containing shared_state with _last_prompt/_last_generation
             
         Returns:
-            Formatted routing prompt string with conversation history
+            Formatted routing prompt string with last prompt and generation
         """
-        # Extract conversation history from session_history
-        # session_historyから会話履歴を抽出
-        history_text = ""
-        if hasattr(self, 'session_history') and self.session_history:
-            # Use the last few entries from session_history for better context
-            # より良いコンテキストのためsession_historyの最後の数エントリを使用
-            recent_history = self.session_history[-5:]  # Last 5 conversation rounds
-            if recent_history:
-                history_text = "\n".join(recent_history)
+        # Extract last prompt and generation from shared_state
+        # shared_stateから直前のプロンプトと生成結果を抽出
+        last_prompt = ctx.shared_state.get('_last_prompt', '') if ctx else ''
+        last_generation = ctx.shared_state.get('_last_generation', content) if ctx else content
         
-        # Build prompt with history
-        # 履歴付きプロンプトを構築
-        if history_text:
+        # Build prompt with last prompt and generation
+        # 直前のプロンプトと生成結果でプロンプトを構築
+        if last_prompt:
             return f"""
-これまでの会話履歴と生成されたコンテンツを分析し、次のルーティング判断を行ってください。
+直前の生成プロセスを分析し、ルーティング判断を行ってください。
 
-=== 会話履歴 ===
-{history_text}
+=== 直前の生成プロンプト ===
+{last_prompt}
 
-=== 最新の生成コンテンツ ===
-{content}
+=== 直前の生成結果 ===
+{last_generation}
 
 === ルーティング指示 ===
 {routing_instruction}
 
-上記の会話履歴と指示に従って、適切なルーティング判断を行い、指定された形式で出力してください。
+上記の情報に基づいて、適切なルーティング判断を行い、指定された形式で出力してください。
 """
         else:
-            # Fallback to original format if no history
-            # 履歴がない場合は元の形式にフォールバック
+            # Fallback to original format if no last_prompt
+            # last_promptがない場合は元の形式にフォールバック
             return self._build_routing_prompt(content, routing_instruction)
+
+    def _build_evaluation_prompt(self, content: Any, evaluation_instruction: str, ctx: Optional[Context] = None) -> str:
+        """
+        Build an evaluation prompt using shared_state for last prompt and generation.
+        shared_stateを使用して直前のプロンプトと生成結果で評価プロンプトを構築
+        
+        Args:
+            content: Generated content to evaluate
+            evaluation_instruction: Evaluation instruction for quality assessment
+            ctx: Context containing shared_state with _last_prompt/_last_generation
+            
+        Returns:
+            Formatted evaluation prompt string with last prompt and generation
+        """
+        # Extract last prompt and generation from shared_state
+        # shared_stateから直前のプロンプトと生成結果を抽出
+        last_prompt = ctx.shared_state.get('_last_prompt', '') if ctx else ''
+        last_generation = ctx.shared_state.get('_last_generation', content) if ctx else content
+        
+        # Build evaluation prompt with last prompt and generation
+        # 直前のプロンプトと生成結果で評価プロンプトを構築
+        if last_prompt:
+            return f"""
+生成プロセスの品質を評価してください。
+
+=== 元のプロンプト ===
+{last_prompt}
+
+=== 生成結果 ===
+{last_generation}
+
+=== 評価指示 ===
+{evaluation_instruction}
+
+上記の情報に基づいて品質を評価し、指定された形式で出力してください。
+"""
+        else:
+            # Fallback to basic evaluation if no last_prompt
+            # last_promptがない場合は基本評価にフォールバック
+            return f"""
+生成結果の品質を評価してください。
+
+=== 生成結果 ===
+{content}
+
+=== 評価指示 ===
+{evaluation_instruction}
+
+上記の情報に基づいて品質を評価し、指定された形式で出力してください。
+"""
 
     async def _execute_routing(self, content: Any, ctx: Optional[Context] = None) -> Optional[RoutingResult]:
         """
@@ -1182,29 +1278,37 @@ IMPORTANT: Do not deviate from this format."""
         """
         if not self.routing_instruction:
             return None
+            
+        # Preserve _last_prompt and _last_generation during routing execution
+        # routing実行中の_last_prompt/_last_generation保護
+        preserved_last_prompt = None
+        preserved_last_generation = None
+        if ctx:
+            preserved_last_prompt = ctx.shared_state.get('_last_prompt')
+            preserved_last_generation = ctx.shared_state.get('_last_generation')
+        
         try:
             # Create the appropriate output model
             # 適切な出力モデルを作成
             routing_output_model = self._create_routing_output_model()
             
-            if self.routing_mode == "accurate_routing":
-                # Accurate routing: separate evaluation with dedicated agent
-                # 正確なルーティング: 専用エージェントによる分離評価
-                return await self._execute_accurate_routing(content, routing_output_model, ctx)
-            elif self.routing_mode == "fast_routing":
-                # Fast routing: integrated processing
-                # 高速ルーティング: 統合処理
-                return self._execute_fast_routing(content, routing_output_model, ctx)
-            else:
-                # This should not happen due to validation in __init__
-                # __init__での検証により、これは発生しないはず
-                raise ValueError(f"Invalid routing_mode: {self.routing_mode}")
+            # Execute accurate routing with dedicated agent
+            # 専用エージェントによる正確なルーティング実行
+            return await self._execute_accurate_routing(content, routing_output_model, ctx)
         
         except Exception as e:
             # Log error but don't fail the entire process
             # エラーをログに記録するが、プロセス全体を失敗させない
             print(f"Warning: Routing execution failed: {e}")
             return None
+        finally:
+            # Restore _last_prompt and _last_generation to prevent overwrite
+            # 上書きを防ぐために_last_prompt/_last_generationを復元
+            if ctx:
+                if preserved_last_prompt is not None:
+                    ctx.shared_state['_last_prompt'] = preserved_last_prompt
+                if preserved_last_generation is not None:
+                    ctx.shared_state['_last_generation'] = preserved_last_generation
 
     async def _execute_accurate_routing(self, content: Any, routing_output_model: Type[BaseModel], ctx: Optional[Context] = None) -> Optional[RoutingResult]:
         """
@@ -1220,9 +1324,29 @@ IMPORTANT: Do not deviate from this format."""
             RoutingResult if successful, None otherwise
         """
         try:
-            # Build routing prompt with conversation history
-            # 会話履歴付きルーティングプロンプトを構築
-            routing_prompt = self._build_routing_prompt_with_history(content, self.routing_instruction, ctx)
+            # Use dedicated RoutingAgent if available
+            # 利用可能な場合は専用RoutingAgentを使用
+            if self._routing_agent and ctx:
+                result_context = await self._routing_agent.run_async("", ctx)
+                return result_context.routing_result
+            
+            # Fallback to legacy routing implementation
+            # レガシールーティング実装にフォールバック
+            return await self._execute_legacy_routing(content, routing_output_model, ctx)
+            
+        except Exception as e:
+            print(f"Warning: Accurate routing failed: {e}")
+            return None
+
+    async def _execute_legacy_routing(self, content: Any, routing_output_model: Type[BaseModel], ctx: Optional[Context] = None) -> Optional[RoutingResult]:
+        """
+        Legacy routing implementation using RefinireAgent
+        RefinireAgentを使用したレガシールーティング実装
+        """
+        try:
+            # Build routing prompt with last prompt and generation from shared_state
+            # shared_stateの直前プロンプトと生成結果でルーティングプロンプトを構築
+            routing_prompt = self._build_routing_prompt_with_context(content, self.routing_instruction, ctx)
             
             # Create dedicated routing agent
             # 専用ルーティングエージェントを作成
@@ -1293,42 +1417,6 @@ IMPORTANT: Do not deviate from this format."""
             print(f"Warning: Accurate routing execution failed: {e}")
             return None
 
-    def _execute_fast_routing(self, content: Any, routing_output_model: Type[BaseModel], ctx: Optional[Context] = None) -> Optional[RoutingResult]:
-        """
-        Execute fast routing with integrated processing.
-        統合処理による高速ルーティング実行
-        
-        Args:
-            content: Generated content to evaluate
-            routing_output_model: The routing output model to use
-            ctx: Context for routing execution
-            
-        Returns:
-            RoutingResult if successful, None otherwise
-        """
-        try:
-            # In fast routing mode, we need to integrate routing with the original generation
-            # 高速ルーティングモードでは、元の生成とルーティングを統合する必要がある
-            
-            # For now, create a simple routing result
-            # 現在のところ、シンプルなルーティング結果を作成
-            # This would be enhanced in a full implementation
-            # これは完全な実装では拡張される
-            
-            # Create routing result with the content and basic routing info
-            # コンテンツと基本的なルーティング情報でルーティング結果を作成
-            routing_result = routing_output_model(
-                content=content,
-                next_route="continue",  # Default route for fast routing
-                confidence=0.8,  # Default confidence
-                reasoning="Fast routing mode - integrated processing"
-            )
-            
-            return routing_result
-        
-        except Exception as e:
-            print(f"Warning: Fast routing execution failed: {e}")
-            return None
 
     def _build_prompt(self, user_input: str, include_instructions: bool = True, ctx: Optional[Context] = None) -> str:
         """
@@ -1422,17 +1510,11 @@ IMPORTANT: Do not deviate from this format."""
             # パースに失敗した場合は生のコンテンツにフォールバック
             return content
     
-    def _evaluate_content(self, user_input: str, generated_content: Any) -> EvaluationResult:
+    def _evaluate_content(self, user_input: str, generated_content: Any, ctx: Optional[Context] = None) -> EvaluationResult:
         """Evaluate generated content / 生成されたコンテンツを評価"""
-        evaluation_prompt = f"""
-{self.evaluation_instructions}
-
-User Input: {user_input}
-Generated Content: {generated_content}
-
-Please provide a score from 0 to 100 and brief feedback.
-Return your response as JSON with 'score' and 'feedback' fields.
-"""
+        # Use the new prompt building method that leverages shared_state
+        # shared_stateを活用する新しいプロンプト構築メソッドを使用
+        evaluation_prompt = self._build_evaluation_prompt(generated_content, self.evaluation_instructions, ctx)
         
         messages = [{"role": "user", "content": evaluation_prompt}]
         
@@ -1473,6 +1555,45 @@ Return your response as JSON with 'score' and 'feedback' fields.
                 feedback=f"Evaluation completed with fallback scoring. Original error: {str(e)}",
                 metadata={"error": str(e), "fallback": True}
             )
+    
+    async def _execute_evaluation(self, user_input: str, generated_content: Any, ctx: Optional[Context] = None) -> EvaluationResult:
+        """
+        Execute evaluation with dedicated evaluation agent.
+        専用評価エージェントによる評価実行
+        
+        Args:
+            user_input: User input text
+            generated_content: Generated content to evaluate
+            ctx: Context for evaluation execution
+            
+        Returns:
+            EvaluationResult with evaluation details
+        """
+        try:
+            # Use dedicated EvaluationAgent if available
+            # 利用可能な場合は専用EvaluationAgentを使用
+            if self._evaluation_agent and ctx:
+                result_context = await self._evaluation_agent.run_async("", ctx)
+                if result_context.evaluation_result:
+                    # Convert 0-1 scale to 0-100 scale for backward compatibility
+                    # 後方互換性のため0-1スケールを0-100スケールに変換
+                    evaluation_result = EvaluationResult(
+                        score=result_context.evaluation_result.score * 100.0,  # Convert to 0-100 scale
+                        passed=result_context.evaluation_result.passed,
+                        feedback=result_context.evaluation_result.feedback,
+                        metadata=result_context.evaluation_result.metadata
+                    )
+                    return evaluation_result
+            
+            # Fallback to legacy evaluation implementation
+            # レガシー評価実装にフォールバック
+            return self._evaluate_content(user_input, generated_content, ctx)
+            
+        except Exception as e:
+            print(f"Warning: Evaluation execution failed: {e}")
+            # Fallback to legacy evaluation
+            # レガシー評価にフォールバック
+            return self._evaluate_content(user_input, generated_content, ctx)
     
     def _store_in_history(self, user_input: str, result: LLMResult) -> None:
         """Store interaction in history and update context providers / 対話を履歴に保存し、コンテキストプロバイダーを更新"""

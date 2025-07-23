@@ -531,7 +531,7 @@ agent = RefinireAgent(
     generation_instructions="Create detailed articles on specified topics",
     output_model=ArticleOutput,
     routing_instruction="Evaluate article quality and determine next processing: excellent → 'publish', good → 'review', needs improvement → 'revise'",
-    routing_mode="fast_routing",  # Performance-focused
+    routing_mode="accurate_routing",  # Accuracy-focused analysis
     model="gpt-4o-mini"
 )
 
@@ -596,20 +596,14 @@ accurate_agent = RefinireAgent(
     model="gpt-4o-mini"
 )
 
-# Performance-focused mode - fast routing decisions
-fast_agent = RefinireAgent(
-    name="speed_processor",
-    generation_instructions="Generate content efficiently", 
-    routing_instruction="Quickly evaluate content and determine next step",
-    routing_mode="fast_routing",  # Integrated execution for high speed
-    model="gpt-4o-mini"
-)
+# Note: Only accurate_routing mode is supported
+# Routing decisions are made by separate agents for highest accuracy
 ```
 
 **Key Routing Features**:
 - **Dynamic Content Analysis**: Automatic quality assessment of generated content
 - **Flexible Routing Instructions**: Define custom routing logic
-- **Execution Mode Selection**: Accuracy-focused vs performance-focused
+- **Accurate Routing**: Routing decisions made by separate agents for highest quality
 - **Structured Output Support**: Complete integration with custom data types
 - **Flow Integration**: Automatic routing decisions within workflows
 - **Context Preservation**: Share routing results across workflow stages

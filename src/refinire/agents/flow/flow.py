@@ -691,11 +691,15 @@ class Flow:
             # Flow acquired execution lock, starting execution
             # フローが実行ロックを取得し、実行を開始
             
-            # Reset context for new execution
-            # 新しい実行用にコンテキストをリセット
-            if self.context.step_count > 0:
-                self.context = Context(trace_id=self.trace_id)
-                self.context.next_label = self.start
+            # Initialize context for new execution if needed
+            # 必要に応じて新しい実行用にコンテキストを初期化
+            if self.context.step_count == 0:
+                # First execution - ensure next_label is set to start
+                # 初回実行 - next_labelがstartに設定されていることを確認
+                if not self.context.next_label:
+                    self.context.next_label = self.start
+            # For continuing execution, preserve existing context and next_label
+            # 実行継続の場合、既存のコンテキストとnext_labelを保持
             
             # Determine input to use (input_data takes precedence)
             # 使用する入力を決定（input_dataが優先）
@@ -859,7 +863,16 @@ class Flow:
                     if self.context.awaiting_user_input:
                         # Check routing_result for user input requirements
                         # routing_resultでユーザー入力要件をチェック
-                        if self.context.routing_result and self.context.routing_result.get('needs_user_input'):
+                        needs_input = False
+                        if self.context.routing_result:
+                            if hasattr(self.context.routing_result, 'next_route'):
+                                # Handle RoutingResult object - check if it has needs_user_input attribute
+                                needs_input = getattr(self.context.routing_result, 'needs_user_input', False)
+                            elif isinstance(self.context.routing_result, dict):
+                                # Handle legacy dictionary format
+                                needs_input = self.context.routing_result.get('needs_user_input', False)
+                        
+                        if needs_input:
                             # Wait for user input event using the private attribute
                             # プライベート属性を使用してユーザー入力イベントを待機
                             if self.context._user_input_event:
@@ -928,8 +941,13 @@ class Flow:
         # 入力受信を示すためにrouting_resultを更新
         if not self.context.routing_result:
             self.context.routing_result = {}
-        self.context.routing_result['user_input_received'] = True
-        self.context.routing_result['last_input'] = user_input
+        
+        # Handle both RoutingResult object and dictionary format
+        if isinstance(self.context.routing_result, dict):
+            # Legacy dictionary format
+            self.context.routing_result['user_input_received'] = True
+            self.context.routing_result['last_input'] = user_input
+        # Note: For RoutingResult objects, we don't modify internal properties directly
         
         # Set user input event if available
         # 利用可能な場合はユーザー入力イベントを設定

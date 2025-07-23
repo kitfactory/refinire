@@ -140,20 +140,11 @@ class TestRefinireAgentRouting:
             name="test_agent",
             generation_instructions="Generate content",
             routing_instruction="Route based on quality",
-            routing_mode="accurate_routing"
         )
         
         assert agent.routing_instruction == "Route based on quality"
-        assert agent.routing_mode == "accurate_routing"
+        # routing_mode parameter removed
     
-    def test_routing_mode_validation(self):
-        """Test routing_mode validation."""
-        with pytest.raises(ValueError, match="Invalid routing_mode"):
-            RefinireAgent(
-                name="test_agent",
-                generation_instructions="Generate content",
-                routing_mode="invalid_mode"
-            )
     
     def test_create_routing_output_model_with_output_model(self):
         """Test _create_routing_output_model with output_model specified."""
@@ -232,7 +223,6 @@ class TestRefinireAgentRouting:
             name="test_agent",
             generation_instructions="Generate content",
             routing_instruction="Route based on quality",
-            routing_mode="accurate_routing"
         )
         
         # Mock the model name
@@ -248,25 +238,6 @@ class TestRefinireAgentRouting:
         assert result.next_route == "complete"
         assert result.confidence == 0.9
     
-    def test_execute_fast_routing(self):
-        """Test _execute_fast_routing method."""
-        agent = RefinireAgent(
-            name="test_agent",
-            generation_instructions="Generate content",
-            routing_instruction="Route based on quality",
-            routing_mode="fast_routing"
-        )
-        
-        result = agent._execute_fast_routing(
-            content="Test content",
-            routing_output_model=RoutingResult
-        )
-        
-        assert result is not None
-        assert result.content == "Test content"
-        assert result.next_route == "continue"
-        assert result.confidence == 0.8
-        assert "Fast routing mode" in result.reasoning
     
     def test_execute_routing_without_routing_instruction(self):
         """Test _execute_routing when routing_instruction is None."""
@@ -294,7 +265,6 @@ class TestRefinireAgentRouting:
             name="test_agent",
             generation_instructions="Generate content",
             routing_instruction="Route based on quality",
-            routing_mode="accurate_routing"
         )
         
         result = agent._execute_routing(content="Test content")
@@ -303,28 +273,6 @@ class TestRefinireAgentRouting:
         assert result.next_route == "complete"
         mock_accurate_routing.assert_called_once()
     
-    @patch('src.refinire.agents.pipeline.llm_pipeline.RefinireAgent._execute_fast_routing')
-    def test_execute_routing_fast_mode(self, mock_fast_routing):
-        """Test _execute_routing with fast_routing mode."""
-        mock_fast_routing.return_value = RoutingResult(
-            content="Test content",
-            next_route="continue",
-            confidence=0.8,
-            reasoning="Fast routing"
-        )
-        
-        agent = RefinireAgent(
-            name="test_agent",
-            generation_instructions="Generate content",
-            routing_instruction="Route based on quality",
-            routing_mode="fast_routing"
-        )
-        
-        result = agent._execute_routing(content="Test content")
-        
-        assert result is not None
-        assert result.next_route == "continue"
-        mock_fast_routing.assert_called_once()
 
 
 class TestDefaultRoutingInstructions:

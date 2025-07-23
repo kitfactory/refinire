@@ -397,7 +397,7 @@ agent = RefinireAgent(
     generation_instructions="指定されたトピックについて詳細な記事を作成してください",
     output_model=ArticleOutput,
     routing_instruction="記事品質を評価し、次の処理を決定：優秀なら'publish'、良好なら'review'、改善必要なら'revise'",
-    routing_mode="fast_routing",  # パフォーマンス重視
+    routing_mode="accurate_routing",  # 精度重視の分析
     model="gpt-4o-mini"
 )
 
@@ -462,20 +462,14 @@ accurate_agent = RefinireAgent(
     model="gpt-4o-mini"
 )
 
-# パフォーマンス重視モード - 高速なルーティング決定
-fast_agent = RefinireAgent(
-    name="speed_processor",
-    generation_instructions="効率的にコンテンツを生成してください", 
-    routing_instruction="素早くコンテンツを評価し、次ステップを決定してください",
-    routing_mode="fast_routing",  # 統合実行で高速処理
-    model="gpt-4o-mini"
-)
+# 注意: accurate_routingモードのみサポート
+# ルーティング決定は別エージェントによる最高精度の分析で行われます
 ```
 
 **主要ルーティング機能**:
 - **動的コンテンツ分析**: 生成されたコンテンツの自動品質評価
 - **柔軟なルーティング指示**: カスタムルーティングロジックの定義
-- **実行モード選択**: 精度重視 vs パフォーマンス重視
+- **高精度ルーティング**: 別エージェントによる最高品質のルーティング決定
 - **構造化出力対応**: カスタムデータ型との完全統合
 - **Flow統合**: ワークフロー内での自動ルーティング決定
 - **コンテキスト保存**: ルーティング結果のワークフロー間での共有

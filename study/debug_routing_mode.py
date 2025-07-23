@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Debug routing with different modes
-異なるモードでのルーティングデバッグ
+Debug routing with accurate_routing mode
+accurate_routingモードでのルーティングデバッグ
+
+Note: fast_routing mode is deprecated and no longer supported.
+注意: fast_routingモードは非推奨となり、サポートされていません。
 """
 
 import sys
@@ -66,9 +69,9 @@ Return a JSON with: content, next_route, confidence, reasoning.
 
 
 async def main():
-    """Test both routing modes"""
+    """Test routing mode - only accurate_routing is supported"""
     await test_routing_mode("accurate_routing")
-    await test_routing_mode("fast_routing")
+    # Note: fast_routing is deprecated and no longer supported
 
 
 if __name__ == "__main__":

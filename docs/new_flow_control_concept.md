@@ -8,17 +8,17 @@
 
 ## 新規ルーティング手法について
 
-新規手法としてRefinireAgentにrouting_instruction、routing_mode=accurate_routing/fast_routingを設けるものとする。
+新規手法としてRefinireAgentにrouting_instruction、routing_mode=accurate_routingを設けるものとする。
 
 routing_instructionが存在する場合、指示に従ったルーティング情報を生成する。Flowでは、そのルーティング情報を確認して、次のエージェントを実行することが可能である。
 
 routing_mode:accurate_routingでは、生成用のエージェントが生成した内容を、新たなRefinireAgentにより評価し、ルーティング情報を生成する。これによりrouting_instructionの影響を受けずに生成エージェントは動作することが可能である。
 
-routing_mode：fast_routingでは、現在のオーケストレーションモードの動作をする。generation_instructionで指示される生成の指示をコンテンツに持つ、データクラスを構造化出力させる。これにより、ルーティングの判断とコンテンツの生成を同時に行う。
+注意: fast_routingモードは非推奨となり、現在はaccurate_routingモードのみをサポートしています。これにより、ルーティングの判断と生成処理が分離され、より高品質な出力が保証されます。
 
-ただし、Flowから見て、どちらのモードであっても次の情報を取得するひつようがあるため、そこは基本的に同一のデータ型を基本クラスに持つよう出力する。
+Flowから見て、次の情報を取得する必要があるため、統一されたデータ型で出力します。
 
-refinireは高品質生成を念頭におくため、無指定時はrouting_mode=accurate_routingをデフォルトとする。
+refinireは高品質生成を念頭におくため、routing_mode=accurate_routingのみをサポートし、これがデフォルトとなります。
 
 ## routing_instruction の標準データ型設計
 
@@ -73,7 +73,7 @@ class RefinireAgent:
         self,
         # 既存パラメータ...
         routing_instruction: Optional[str] = None,
-        routing_mode: str = "accurate_routing"
+        routing_mode: str = "accurate_routing"  # Only accurate_routing is supported
     ):
         self.routing_instruction = routing_instruction
         self.routing_mode = routing_mode
@@ -286,7 +286,7 @@ regeneration_agent = RefinireAgent(
     generation_instructions="全く新しいアプローチでコンテンツを再生成してください",
     routing_instruction="完了したら'publish'を選択",
     output_model=ContentResult,
-    routing_mode="fast_routing"
+    routing_mode="accurate_routing"
 )
 
 # フローの定義
@@ -349,7 +349,7 @@ simple_processor = RefinireAgent(
     generation_instructions="シンプルなタスクを迅速に処理してください",
     routing_instruction="処理完了後は'complete'を選択",
     output_model=TaskResult,
-    routing_mode="fast_routing"
+    routing_mode="accurate_routing"
 )
 
 standard_processor = RefinireAgent(
@@ -373,7 +373,7 @@ validator_agent = RefinireAgent(
     generation_instructions="処理結果を検証し、必要に応じて修正してください",
     routing_instruction="検証完了後は'complete'を選択",
     output_model=TaskResult,
-    routing_mode="fast_routing"
+    routing_mode="accurate_routing"
 )
 
 # フローの定義
@@ -456,7 +456,7 @@ finalizer_agent = RefinireAgent(
     generation_instructions="統合レポートを最終レビューし、必要に応じて調整してください",
     routing_instruction="最終化完了後は'complete'を選択",
     output_model=IntegratedReport,
-    routing_mode="fast_routing"
+    routing_mode="accurate_routing"
 )
 
 # 並列処理と統合フローの定義

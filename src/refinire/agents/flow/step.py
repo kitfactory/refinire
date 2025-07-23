@@ -182,9 +182,14 @@ class UserInputStep(Step):
             # ユーザー入力情報でrouting_resultを更新
             if not ctx.routing_result:
                 ctx.routing_result = {}
-            ctx.routing_result['user_input_received'] = True
-            ctx.routing_result['prompt_fulfilled'] = self.prompt
-            ctx.routing_result['last_input'] = user_input
+            
+            # Handle both RoutingResult object and dictionary format
+            if isinstance(ctx.routing_result, dict):
+                # Legacy dictionary format
+                ctx.routing_result['user_input_received'] = True
+                ctx.routing_result['prompt_fulfilled'] = self.prompt
+                ctx.routing_result['last_input'] = user_input
+            # Note: For RoutingResult objects, we don't modify internal properties directly
             
             if self.next_step:
                 ctx.goto(self.next_step)
@@ -202,9 +207,14 @@ class UserInputStep(Step):
             # ユーザー入力が必要であることを示すrouting_resultを設定
             if not ctx.routing_result:
                 ctx.routing_result = {}
-            ctx.routing_result['needs_user_input'] = True
-            ctx.routing_result['prompt'] = self.prompt
-            ctx.routing_result['step_name'] = self.name
+            
+            # Handle both RoutingResult object and dictionary format
+            if isinstance(ctx.routing_result, dict):
+                # Legacy dictionary format
+                ctx.routing_result['needs_user_input'] = True
+                ctx.routing_result['prompt'] = self.prompt
+                ctx.routing_result['step_name'] = self.name
+            # Note: For RoutingResult objects, we don't modify internal properties directly
             
             # Set awaiting prompt event if available
             # 利用可能な場合は待機プロンプトイベントを設定
